@@ -1,4 +1,4 @@
-firpm library (double precision version)
+firpm library (double precision version)          {#mainpage}
 =========================================
 
 ## Installation instructions (double precision version)##
