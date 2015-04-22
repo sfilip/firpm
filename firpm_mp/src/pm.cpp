@@ -1,5 +1,22 @@
+//    firpm_mp
+//    Copyright (C) 2015  S. Filip
+//
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+
+//    You should have received a copy of the GNU General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>
+
+
+
 #include "firpm/pm.h"
-#include "firpm/balancing.h"
 #include "firpm/band.h"
 #include "firpm/barycentric.h"
 #include <set>
@@ -373,10 +390,12 @@ void findEigenExtrema(mpfr::mpreal& convergenceOrder,
         std::vector<mpfr::mpreal> derivCoeffs(Nmax);
         derivativeCoefficients2ndKind(derivCoeffs, chebyCoeffs);
 
+
         // solve the corresponding eigenvalue problem and determine the
         // local extrema situated in the current subinterval
         MatrixXq Cm(Nmax - 1u, Nmax - 1u);
-        generateColleagueMatrix2ndKindWithBalancing(Cm, derivCoeffs, prec);
+        generateColleagueMatrix2ndKind(Cm, derivCoeffs, true, prec);
+
 
         std::vector<mpfr::mpreal> eigenRoots;
         VectorXcq roots;

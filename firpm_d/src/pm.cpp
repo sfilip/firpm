@@ -1,5 +1,20 @@
+//    firpm_d
+//    Copyright (C) 2015  S. Filip
+//
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+
+//    You should have received a copy of the GNU General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>
+
 #include "firpm/pm.h"
-#include "firpm/balancing.h"
 #include "firpm/band.h"
 #include "firpm/barycentric.h"
 #include <set>
@@ -74,7 +89,6 @@ void referenceScaling(std::vector<double>& newX, std::vector<Band>& newChebyBand
         for(std::size_t i = 0u; i < chebyBands.size(); ++i)
         {
             newX.push_back(x[offset]);
-            //++newDistribution[i];
             if(chebyBands[i].extremas > 2u)
             {
                 ++multipointBands;
@@ -82,16 +96,9 @@ void referenceScaling(std::vector<double>& newX, std::vector<Band>& newChebyBand
                 {
                     newX.push_back((x[offset + j] + x[offset + j + 1]) / 2);
                     newX.push_back(x[offset + j]);
-                    //newDistribution[i] += 2u;
                 }
-                //if(chebyBands[i].extremas > 3u)
-                //{
-                //    newDistribution[i] += 1;
-                //    newX.push_back(x[offset + chebyBands[i].extremas - 3u]);
-                //}
                 newX.push_back(x[offset + chebyBands[i].extremas - 2u]);
                 newX.push_back(x[offset + chebyBands[i].extremas - 1u]);
-                //newDistribution[i] += 2;
                 twoInt += 2;
             }
             else if(chebyBands[i].extremas == 2u)
@@ -112,16 +119,15 @@ void referenceScaling(std::vector<double>& newX, std::vector<Band>& newChebyBand
                     if(threeInt > 0)
                     {
                         newX.push_back(x[offset] + (x[offset + 1] - x[offset]) / 3);
-                        double test = x[offset] + (x[offset + 1] - x[offset]) / 3 +  (x[offset + 1] - x[offset]) / 3;
-                        newX.push_back(test);
-                        //newDistribution[i] += 2u;
+                        double secondValue = x[offset] + (x[offset + 1] - x[offset]) / 3
+                            + (x[offset + 1] - x[offset]) / 3;
+                        newX.push_back(secondValue);
                         threeInt--;
                         twoInt--;
                     }
                     else if (twoInt > 0)
                     {
                         newX.push_back((x[offset] + x[offset + 1]) / 2);
-                        //newDistribution[i] += 1u;
                         twoInt--;
                     }
                 }
@@ -134,17 +140,22 @@ void referenceScaling(std::vector<double>& newX, std::vector<Band>& newChebyBand
                 {
                     if(threeInt > 0)
                     {
-                        newX.push_back(x[offset + chebyBands[i].extremas - 2u] + (x[offset + chebyBands[i].extremas - 1u] - x[offset + chebyBands[i].extremas - 2u]) / 3);
-                        double test = x[offset + chebyBands[i].extremas - 2u] + (x[offset + chebyBands[i].extremas - 1u] - x[offset + chebyBands[i].extremas - 2u]) / 3 +  (x[offset + chebyBands[i].extremas - 1u] - x[offset + chebyBands[i].extremas - 2u]) / 3;
-                        newX.push_back(test);
-                        //newDistribution[i] += 2u;
+                        newX.push_back(x[offset + chebyBands[i].extremas - 2u] +
+                                (x[offset + chebyBands[i].extremas - 1u] -
+                                 x[offset + chebyBands[i].extremas - 2u]) / 3);
+                        double secondValue = x[offset + chebyBands[i].extremas - 2u] +
+                            (x[offset + chebyBands[i].extremas - 1u] -
+                             x[offset + chebyBands[i].extremas - 2u]) / 3 +
+                            (x[offset + chebyBands[i].extremas - 1u] -
+                             x[offset + chebyBands[i].extremas - 2u]) / 3;
+                        newX.push_back(secondValue);
                         threeInt--;
                         twoInt--;
                     }
                     else if (twoInt > 0)
                     {
-                        newX.push_back((x[offset + chebyBands[i].extremas - 2u] + x[offset + chebyBands[i].extremas - 1u]) / 2);
-                        //newDistribution[i] += 1u;
+                        newX.push_back((x[offset + chebyBands[i].extremas - 2u] +
+                                    x[offset + chebyBands[i].extremas - 1u]) / 2);
                         twoInt--;
                     }
                 }
@@ -155,16 +166,6 @@ void referenceScaling(std::vector<double>& newX, std::vector<Band>& newChebyBand
             std::cerr << "Failed to do reference scaling\n";
             exit(EXIT_FAILURE);
         }
-        //if (newX.size() > newXSize)
-        //{
-        //    std::size_t toRemove = newX.size() - newXSize;
-        //    for(std::size_t i = newXSize; i < newX.size(); ++i)
-        //    {
-        //        for(std::size_t j = 0u; j < chebyBands.size(); ++j)
-        //            if(newX[i] >= chebyBands[j].start && newX[i] <= chebyBands[j].stop)
-        //                newDistribution[j]--;
-        //    }
-        //}
         newX.resize(newXSize);
         std::sort(newX.begin(), newX.end());
         std::size_t total = 0u;
@@ -199,7 +200,7 @@ void splitInterval(std::vector<Interval>& subIntervals,
         std::vector<double> &x)
 {
     std::size_t bandOffset = 0u;
-    for(std::size_t i{0u}; i < chebyBands.size(); ++i)
+    for(std::size_t i = 0u; i < chebyBands.size(); ++i)
     {
         if(bandOffset < x.size())
         {
@@ -225,10 +226,7 @@ void splitInterval(std::vector<Interval>& subIntervals,
                 if(middleValA != chebyBands[i].stop)
                     subIntervals.push_back(
                         std::make_pair(middleValA, chebyBands[i].stop));
-            } //else {
-            //    subIntervals.push_back(
-            //            std::make_pair(middleValA, chebyBands[i].stop));
-            //}
+            }
             bandOffset += chebyBands[i].extremas;
         }
     }
@@ -282,7 +280,7 @@ void findEigenExtrema(double& convergenceOrder,
             chebyBands[0].start, extremaErrorValue));
 
 
-    for (std::size_t i{0u}; i < chebyBands.size() - 1; ++i)
+    for (std::size_t i = 0u; i < chebyBands.size() - 1; ++i)
     {
         computeError(extremaErrorValueLeft, chebyBands[i].stop,
                 delta, x, C, w, chebyBands);
@@ -328,7 +326,7 @@ void findEigenExtrema(double& convergenceOrder,
         // compute the Chebyshev interpolation function values on the
         // current subinterval
         std::vector<double> fx(Nmax + 1u);
-        for (std::size_t j{0u}; j < fx.size(); ++j)
+        for (std::size_t j = 0u; j < fx.size(); ++j)
         {
             computeError(fx[j], siCN[j], delta, x, C, w,
                     chebyBands);
@@ -345,7 +343,7 @@ void findEigenExtrema(double& convergenceOrder,
         // solve the corresponding eigenvalue problem and determine the
         // local extrema situated in the current subinterval
         MatrixXq Cm(Nmax - 1u, Nmax - 1u);
-        generateColleagueMatrix2ndKindWithBalancing(Cm, derivCoeffs);
+        generateColleagueMatrix2ndKind(Cm, derivCoeffs);
 
         std::vector<double> eigenRoots;
         VectorXcq roots;
@@ -358,6 +356,7 @@ void findEigenExtrema(double& convergenceOrder,
         pExs[i].push_back(subIntervals[i].first);
         pExs[i].push_back(subIntervals[i].second);
     }
+
     for(std::size_t i = 0u; i < pExs.size(); ++i)
         for(std::size_t j = 0u; j < pExs[i].size(); ++j)
             pEx.push_back(pExs[i][j]);
@@ -437,7 +436,7 @@ void findEigenExtrema(double& convergenceOrder,
                 std::size_t sIndex = 1u;
                 if(delta1 > delta2)
                     sIndex = 0u;
-                for(std::size_t i{sIndex}; i < alternatingExtrema.size() + sIndex - 1u; ++i)
+                for(std::size_t i = sIndex; i < alternatingExtrema.size() + sIndex - 1u; ++i)
                     bufferExtrema.push_back(alternatingExtrema[i]);
                 alternatingExtrema = bufferExtrema;
                 bufferExtrema.clear();
@@ -449,59 +448,13 @@ void findEigenExtrema(double& convergenceOrder,
                 std::size_t sIndex = 0u;
                 if (abs1 < abs2)
                     sIndex = 1u;
-                for(std::size_t i{sIndex}; i < alternatingExtrema.size() + sIndex - 1u; ++i)
+                for(std::size_t i = sIndex; i < alternatingExtrema.size() + sIndex - 1u; ++i)
                     bufferExtrema.push_back(alternatingExtrema[i]);
                 alternatingExtrema = bufferExtrema;
                 bufferExtrema.clear();
             }
         }
 
-
-        /*while (alternatingExtrema.size() > x.size())
-        {
-            std::size_t toRemoveIndex = 0u;
-            double minValToRemove = fmaxl(fabsl(alternatingExtrema[0].second),
-                                              fabsl(alternatingExtrema[1].second));
-            double maxAlternatingExtrema = minValToRemove;
-            double removeBuffer;
-            for (std::size_t i{1u}; i < alternatingExtrema.size() - 1; ++i)
-            {
-                removeBuffer = fmaxl(fabsl(alternatingExtrema[i].second),
-                                   fabsl(alternatingExtrema[i + 1].second));
-                if (removeBuffer < minValToRemove)
-                {
-                    minValToRemove = removeBuffer;
-                    toRemoveIndex  = i;
-                }
-                if(removeBuffer > maxAlternatingExtrema)
-                    maxAlternatingExtrema = removeBuffer;
-            }
-
-
-            if(maxAlternatingExtrema >= fmaxl(fabsl(alternatingExtrema[0].second),
-                                fabsl(alternatingExtrema[alternatingExtrema.size() - 1u].second)))
-            {
-                    for(std::size_t i{1u}; i < alternatingExtrema.size() - 1u; ++i)
-                        bufferExtrema.push_back(alternatingExtrema[i]);
-            }
-            else
-            {
-                if(toRemoveIndex < alternatingExtrema.size() - 1u)
-                {
-                    for (std::size_t i{0u}; i < toRemoveIndex; ++i)
-                        bufferExtrema.push_back(alternatingExtrema[i]);
-                    for (std::size_t i{toRemoveIndex + 2u}; i < alternatingExtrema.size(); ++i)
-                        bufferExtrema.push_back(alternatingExtrema[i]);
-                }
-                else
-                {
-                    for(std::size_t i{1u}; i < alternatingExtrema.size() - 1u; ++i)
-                        bufferExtrema.push_back(alternatingExtrema[i]);
-                }
-            }
-            alternatingExtrema = bufferExtrema;
-            bufferExtrema.clear();
-        }*/
 
         while (alternatingExtrema.size() > x.size())
         {
@@ -587,13 +540,10 @@ PMOutput exchange(std::vector<double>& x,
             });
     std::vector<double> startX{x};
     std::cout.precision(20);
-    //std::cout << "x" << " = ones(" << x.size() << ", " << "1);\n";
-    //for(std::size_t i{1u}; i <= x.size(); ++i)
-    //        std::cout << "x(" << i << ") = " << x[i - 1u] << ";\n";
-    //std::cout << "[LFun, Lambda] = lebesgue(x);\n";
 
     output.Q = 1;
     output.iter = 0u;
+    //double lastDelta = 1.0;
     do {
         ++output.iter;
         //std::cout << "*********ITERATION " << output.iter << " **********\n";
@@ -602,7 +552,9 @@ PMOutput exchange(std::vector<double>& x,
         startX = output.x;
         if(output.Q > 1.0)
             break;
-
+        //if(output.delta < lastDelta)
+        //    break;
+        //std::cout << "*********ITERATION " << output.iter << " **********\n";
     } while (output.Q > eps && output.iter <= 100u);
 
     if(isnan(output.delta) || isnan(output.Q))
@@ -686,7 +638,9 @@ PMOutput firpm(std::size_t n,
                     if (a[2u * i] != a[2u * i + 1u]) {
                         if(bSpace == BandSpace::CHEBY)
                             x = acos(x);
-                        return (((x - freqBands[i].start) * a[2u * i + 1u] - (x - freqBands[i].stop) * a[2u * i]) / (freqBands[i].stop - freqBands[i].start)) / cos(x / 2);
+                        return (((x - freqBands[i].start) * a[2u * i + 1u] -
+                                (x - freqBands[i].stop) * a[2u * i]) /
+                                (freqBands[i].stop - freqBands[i].start)) / cos(x / 2);
                     }
                     if(bSpace == BandSpace::FREQ)
                         return a[2u * i] / cos(x / 2);
@@ -709,9 +663,6 @@ PMOutput firpm(std::size_t n,
 
 
             PMOutput output = exchange(x, chebyBands, eps, Nmax);
-            //std::string folder = ".";
-            //std::string filename = "out";
-            //plotHelper(folder, filename, output.h);
 
             h.resize(n + 1u);
             h[0] = h[n] = output.h[degree] / 4;
@@ -738,7 +689,9 @@ PMOutput firpm(std::size_t n,
             if (a[2u * i] != a[2u * i + 1u]) {
                 if(bSpace == BandSpace::CHEBY)
                     x = acosl(x);
-                return ((x - freqBands[i].start) * a[2u * i + 1u] - (x - freqBands[i].stop) * a[2u * i]) / (freqBands[i].stop - freqBands[i].start);
+                return ((x - freqBands[i].start) * a[2u * i + 1u] -
+                        (x - freqBands[i].stop) * a[2u * i]) /
+                        (freqBands[i].stop - freqBands[i].start);
             }
             return a[2u * i];
         };
@@ -760,10 +713,6 @@ PMOutput firpm(std::size_t n,
     double convergenceOrder;
 
     PMOutput output = exchange(x, chebyBands, eps, Nmax);
-    //std::string folder = ".";
-    //std::string filename = "out";
-    //plotHelper(folder, filename, output.h);
-
 
     h.resize(n + 1u);
     h[degree] = output.h[0];
@@ -821,7 +770,9 @@ PMOutput firpmRS(std::size_t n,
                     if (a[2u * i] != a[2u * i + 1u]) {
                         if(bSpace == BandSpace::CHEBY)
                             x = acos(x);
-                        return (((x - freqBands[i].start) * a[2u * i + 1u] - (x - freqBands[i].stop) * a[2u * i]) / (freqBands[i].stop - freqBands[i].start)) / cos(x / 2);
+                        return (((x - freqBands[i].start) * a[2u * i + 1u] -
+                                (x - freqBands[i].stop) * a[2u * i]) /
+                                (freqBands[i].stop - freqBands[i].start)) / cos(x / 2);
                     }
                     if(bSpace == BandSpace::FREQ)
                         return a[2u * i] / cos(x / 2);
@@ -860,10 +811,6 @@ PMOutput firpmRS(std::size_t n,
                 output = exchange(x, chebyBands, eps, Nmax);
             }
 
-            //std::string folder = ".";
-            //std::string filename = "out";
-            //plotHelper(folder, filename, output.h);
-
             h.resize(n + 1u);
             h[0] = h[n] = output.h[degree] / 4;
             h[degree] = h[degree + 1] = (output.h[0] * 2 + output.h[1]) / 4;
@@ -889,7 +836,9 @@ PMOutput firpmRS(std::size_t n,
             if (a[2u * i] != a[2u * i + 1u]) {
                 if(bSpace == BandSpace::CHEBY)
                     x = acosl(x);
-                return ((x - freqBands[i].start) * a[2u * i + 1u] - (x - freqBands[i].stop) * a[2u * i]) / (freqBands[i].stop - freqBands[i].start);
+                return ((x - freqBands[i].start) * a[2u * i + 1u] -
+                        (x - freqBands[i].stop) * a[2u * i]) /
+                        (freqBands[i].stop - freqBands[i].start);
             }
             return a[2u * i];
         };
@@ -901,7 +850,7 @@ PMOutput firpmRS(std::size_t n,
 
     std::vector<std::size_t> scaledDegrees(depth + 1u);
     scaledDegrees[depth] = degree;
-    for(int i = depth - 1u; i >=0; --i)
+    for(int i = depth - 1u; i >= 0; --i)
     {
         scaledDegrees[i] = scaledDegrees[i + 1] / 2;
     }
@@ -922,10 +871,6 @@ PMOutput firpmRS(std::size_t n,
         output = exchange(x, chebyBands, eps, Nmax);
     }
 
-    //std::string folder = ".";
-    //std::string filename = "out";
-    //plotHelper(folder, filename, output.h);
-
 
     h.resize(n + 1u);
     h[degree] = output.h[0];
@@ -935,40 +880,6 @@ PMOutput firpmRS(std::size_t n,
     return output;
 
 }
-
-
-void plotData(std::string& folder, std::string& filename, std::vector<double>& a)
-{
-    std::stringstream fullFilename;
-    fullFilename << folder << "/" << filename << ".sollya";
-
-    std::ofstream output;
-    output.open(fullFilename.str().c_str());
-    output << "I=[0,pi];\n"
-        << "n=" << a.size() - 1 << ";\n"
-        << "a=[||];\n"
-        << "figureOut=\"" << filename << "\";\n"
-        << "//-----------------------------------\n";
-    output.precision(20);
-    for(std::size_t i{0u}; i < a.size(); ++i)
-        output << "a[" << i << "]=" << a[i] << ";\n";
-    output << "//-----------------------------------\n"
-        << "prec=500;\n"
-        << "points=5000;\n"
-        << "ChebyPolys=[|1,cos(x)|];\n"
-        << "for i from 1 to n do {\n"
-        << "ChebyPolys[i+1]=cos((i+1)*x);\n"
-        << "};\n"
-        << "P=a[0];\n"
-        << "for i from 1 to n do {\n"
-        << "P=P+a[i]*ChebyPolys[i];\n"
-        << "};\n"
-        << "P=sin(x)*P;"
-        << "plot(P, I, postscriptfile, figureOut);\n";
-    output.close();
-}
-
-
 
 // type III & IV filters
 PMOutput firpm(std::size_t n,
@@ -1055,7 +966,9 @@ PMOutput firpm(std::size_t n,
                             if (a[2u * i] != a[2u * i + 1u]) {
                                 if(bSpace == BandSpace::CHEBY)
                                     x = acos(x);
-                                return ((x - freqBands[i].start) * a[2u * i + 1u] - (x - freqBands[i].stop) * a[2u * i]) / (freqBands[i].stop - freqBands[i].start);
+                                return ((x - freqBands[i].start) * a[2u * i + 1u] -
+                                        (x - freqBands[i].stop) * a[2u * i]) /
+                                        (freqBands[i].stop - freqBands[i].start);
                             }
                             return a[2u * i];
 
@@ -1119,7 +1032,9 @@ PMOutput firpm(std::size_t n,
                             if (a[2u * i] != a[2u * i + 1u]) {
                                 if(bSpace == BandSpace::CHEBY)
                                     x = acos(x);
-                                return ((x - freqBands[i].start) * a[2u * i + 1u] - (x - freqBands[i].stop) * a[2u * i]) / (freqBands[i].stop - freqBands[i].start);
+                                return ((x - freqBands[i].start) * a[2u * i + 1u] -
+                                        (x - freqBands[i].stop) * a[2u * i]) /
+                                        (freqBands[i].stop - freqBands[i].start);
                             }
                             return a[2u * i];
 
@@ -1136,9 +1051,6 @@ PMOutput firpm(std::size_t n,
                 bandConversion(chebyBands, freqBands, ConversionDirection::FROMFREQ);
 
                 output = exchange(x, chebyBands, eps, Nmax);
-                //std::string folderName = ".";
-                //std::string fileName = "test";
-                //plotData(folderName, fileName, coeffs);
 
                 h.resize(n + 1u);
                 if(n % 2 == 0)
@@ -1207,7 +1119,9 @@ PMOutput firpm(std::size_t n,
                                 x = acosl(x);
 
                             if (a[2u * i] != a[2u * i + 1u]) {
-                                return (((x - freqBands[i].start) * a[2u * i + 1u] - (x - freqBands[i].stop) * a[2u * i]) / (freqBands[i].stop - freqBands[i].start)) / sinl(x);
+                                return (((x - freqBands[i].start) * a[2u * i + 1u] -
+                                        (x - freqBands[i].stop) * a[2u * i]) /
+                                        (freqBands[i].stop - freqBands[i].start)) / sinl(x);
                             }
                             return a[2u * i] / sin(x);
                         };
@@ -1238,7 +1152,9 @@ PMOutput firpm(std::size_t n,
                                 x = acos(x);
 
                             if (a[2u * i] != a[2u * i + 1u]) {
-                                return (((x - freqBands[i].start) * a[2u * i + 1u] - (x - freqBands[i].stop) * a[2u * i]) / (freqBands[i].stop - freqBands[i].start)) / sinl(x / 2);
+                                return (((x - freqBands[i].start) * a[2u * i + 1u] -
+                                        (x - freqBands[i].stop) * a[2u * i]) /
+                                        (freqBands[i].stop - freqBands[i].start)) / sinl(x / 2);
                             }
                             return a[2u * i] / sin(x / 2);
                         };
@@ -1261,9 +1177,6 @@ PMOutput firpm(std::size_t n,
                 bandConversion(chebyBands, freqBands, ConversionDirection::FROMFREQ);
 
                 output = exchange(x, chebyBands, eps, Nmax);
-                //std::string folderName = ".";
-                //std::string fileName = "test";
-                //plotData(folderName, fileName, coeffs);
 
                 h.resize(n + 1u);
                 if(n % 2 == 0)
@@ -1387,7 +1300,9 @@ PMOutput firpmRS(std::size_t n,
                             if (a[2u * i] != a[2u * i + 1u]) {
                                 if(bSpace == BandSpace::CHEBY)
                                     x = acos(x);
-                                return ((x - freqBands[i].start) * a[2u * i + 1u] - (x - freqBands[i].stop) * a[2u * i]) / (freqBands[i].stop - freqBands[i].start);
+                                return ((x - freqBands[i].start) * a[2u * i + 1u] -
+                                        (x - freqBands[i].stop) * a[2u * i]) /
+                                        (freqBands[i].stop - freqBands[i].start);
                             }
                             return a[2u * i];
 
@@ -1451,7 +1366,9 @@ PMOutput firpmRS(std::size_t n,
                             if (a[2u * i] != a[2u * i + 1u]) {
                                 if(bSpace == BandSpace::CHEBY)
                                     x = acos(x);
-                                return ((x - freqBands[i].start) * a[2u * i + 1u] - (x - freqBands[i].stop) * a[2u * i]) / (freqBands[i].stop - freqBands[i].start);
+                                return ((x - freqBands[i].start) * a[2u * i + 1u] -
+                                        (x - freqBands[i].stop) * a[2u * i]) /
+                                        (freqBands[i].stop - freqBands[i].start);
                             }
                             return a[2u * i];
 
@@ -1483,10 +1400,6 @@ PMOutput firpmRS(std::size_t n,
                         output.x, chebyBands, freqBands);
                 output = exchange(x, chebyBands, eps, Nmax);
             }
-
-                //std::string folderName = ".";
-                //std::string fileName = "test";
-                //plotData(folderName, fileName, coeffs);
 
                 h.resize(n + 1u);
                 if(n % 2 == 0)
@@ -1555,7 +1468,9 @@ PMOutput firpmRS(std::size_t n,
                                 x = acosl(x);
 
                             if (a[2u * i] != a[2u * i + 1u]) {
-                                return (((x - freqBands[i].start) * a[2u * i + 1u] - (x - freqBands[i].stop) * a[2u * i]) / (freqBands[i].stop - freqBands[i].start)) / sinl(x);
+                                return (((x - freqBands[i].start) * a[2u * i + 1u] -
+                                        (x - freqBands[i].stop) * a[2u * i]) /
+                                        (freqBands[i].stop - freqBands[i].start)) / sinl(x);
                             }
                             return a[2u * i] / sin(x);
                         };
@@ -1586,7 +1501,9 @@ PMOutput firpmRS(std::size_t n,
                                 x = acos(x);
 
                             if (a[2u * i] != a[2u * i + 1u]) {
-                                return (((x - freqBands[i].start) * a[2u * i + 1u] - (x - freqBands[i].stop) * a[2u * i]) / (freqBands[i].stop - freqBands[i].start)) / sinl(x / 2);
+                                return (((x - freqBands[i].start) * a[2u * i + 1u] -
+                                        (x - freqBands[i].stop) * a[2u * i]) /
+                                        (freqBands[i].stop - freqBands[i].start)) / sinl(x / 2);
                             }
                             return a[2u * i] / sin(x / 2);
                         };
@@ -1604,19 +1521,6 @@ PMOutput firpmRS(std::size_t n,
                 }
 
 
-/*                std::size_t halfDegree = degree / 2;
-                std::vector<double> halfOmega(halfDegree + 2u);
-                std::vector<double> halfX(halfDegree + 2u);
-                initUniformExtremas(halfOmega, freqBands);
-                applyCos(halfX, halfOmega);
-                bandConversion(chebyBands, freqBands, ConversionDirection::FROMFREQ);
-                output = exchange(halfX, chebyBands, Nmax);
-
-                std::vector<double> x;
-
-                referenceScaling(x, chebyBands, freqBands, degree + 2u,
-                        output.x, chebyBands, freqBands);
-                output = exchange(x, chebyBands, Nmax);*/
 
                 std::vector<std::size_t> scaledDegrees(depth + 1u);
                 scaledDegrees[depth] = degree;
@@ -1675,4 +1579,3 @@ PMOutput firpmRS(std::size_t n,
     output.h = h;
     return output;
 }
-

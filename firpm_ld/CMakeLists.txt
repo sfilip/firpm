@@ -27,7 +27,7 @@ find_package(Doxygen)
 # build configuration
 #----------------------------------------
 set(CMAKE_BUILD_TYPE Release)
-add_definitions(-std=c++11)
+add_definitions(-std=c++11 -Wall)
 
 #----------------------------------------
 # common include directories

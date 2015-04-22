@@ -1,10 +1,88 @@
+//    firpm_mp
+//    Copyright (C) 2015  S. Filip
+//
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+
+//    You should have received a copy of the GNU General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>
+
+
+
 #include "firpm/eigenvalue.h"
-#include "firpm/balancing.h"
 #include <algorithm>
+
+void balance(MatrixXq& A)
+{
+    std::size_t n = A.rows();
+
+    mpfr::mpreal rNorm;      // row norm
+    mpfr::mpreal cNorm;      // column norm
+    bool converged = false;
+    mpfr::mpreal one = mpfr::mpreal(1.0);
+
+    mpfr::mpreal g, f, s;
+    while(!converged)
+    {
+        converged = true;
+        for(std::size_t i = 0u; i < n; ++i)
+        {
+            rNorm = cNorm = 0.0;
+            for(std::size_t j = 0u; j < n; ++j)
+            {
+                if(i == j)
+                    continue;
+                cNorm += mpfr::fabs(A(j, i));
+                rNorm += mpfr::fabs(A(i, j));
+            }
+            if((cNorm == 0.0) || (rNorm == 0))
+                continue;
+
+            g = rNorm >> 1u;
+            f = 1.0;
+            s = cNorm + rNorm;
+
+
+            while(mpfr::isfinite(cNorm) && cNorm < g)
+            {
+                f <<= 1u;
+                cNorm <<= 2u;
+            }
+
+            g = rNorm << 1u;
+
+            while(mpfr::isfinite(cNorm) && cNorm > g)
+            {
+                f >>= 1u;
+                cNorm >>= 2u;
+            }
+
+            if((rNorm + cNorm) < s * f * 0.95)
+            {
+                converged = false;
+                g = one / f;
+                // multiply by D^{-1} on the left
+                A.row(i) *= g;
+                // multiply by D on the right
+                A.col(i) *= f;
+            }
+
+        }
+    }
+}
 
 
 void generateColleagueMatrix1stKind(MatrixXq& C,
-        std::vector<mpfr::mpreal>& a, mp_prec_t prec)
+        std::vector<mpfr::mpreal>& a,
+        bool withBalancing,
+        mp_prec_t prec)
 {
     using mpfr::mpreal;
     mpfr_prec_t prevPrec = mpreal::get_default_prec();
@@ -34,57 +112,12 @@ void generateColleagueMatrix1stKind(MatrixXq& C,
     {
         C(i, 0) = c[n - i - 1];
     }
+
+    if(withBalancing)
+        balance(C);
     mpreal::set_default_prec(prevPrec);
 
 }
-
-void generateColleagueMatrix1stKindWithBalancing(MatrixXq& C,
-        std::vector<mpfr::mpreal>& a, mp_prec_t prec)
-{
-    using mpfr::mpreal;
-    mpfr_prec_t prevPrec = mpreal::get_default_prec();
-    mpreal::set_default_prec(prec);
-    std::size_t n = a.size() - 1;
-
-
-    mpfr::mpreal* A = new mpfr::mpreal[n * n];
-
-    std::vector<mpfr::mpreal> c = a;
-
-    // construct the initial matrix
-
-    for (std::size_t i = 0u; i < n; ++i)
-        for (std::size_t j = 0u; j < n; ++j)
-            A[n * i + j] = 0;
-
-
-    mpreal denom = -1;
-    denom /= c[n];
-    denom >>= 1;
-    for(std::size_t i = 0u; i < a.size() - 1; ++i)
-        c[i] *= denom;
-    c[n - 2] += 0.5;
-
-    for (std::size_t i = 0u; i < n - 1; ++i)
-        A[n * i + i + 1] = A[(i + 1) * n + i] = 0.5;
-    A[n * (n - 1) - 1] = 1;
-
-    for(std::size_t i = 0u; i < n; ++i)
-    {
-        A[n * i] = c[n - i - 1];
-    }
-
-    balance(A, n);
-
-    for (std::size_t i = 0u; i < n; ++i)
-        for (std::size_t j = 0u; j < n; ++j)
-            C(i, j) = A[i * n + j];
-
-    delete[] A;
-    mpreal::set_default_prec(prevPrec);
-
-}
-
 
 void determineEigenvalues(VectorXcq &eigenvalues,
         MatrixXq &C)
@@ -117,7 +150,9 @@ void getRealValues(std::vector<mpfr::mpreal> &roots,
 
 
 void generateColleagueMatrix2ndKind(MatrixXq& C,
-        std::vector<mpfr::mpreal>& a, mp_prec_t prec)
+        std::vector<mpfr::mpreal>& a,
+        bool withBalancing,
+        mp_prec_t prec)
 {
     using mpfr::mpreal;
     mpfr_prec_t prevPrec = mpreal::get_default_prec();
@@ -147,54 +182,9 @@ void generateColleagueMatrix2ndKind(MatrixXq& C,
     {
         C(i, 0) = c[n - i - 1];
     }
+
+    if(withBalancing)
+        balance(C);
     mpreal::set_default_prec(prevPrec);
 
-}
-
-
-
-void generateColleagueMatrix2ndKindWithBalancing(MatrixXq& C,
-        std::vector<mpfr::mpreal>& a, mp_prec_t prec)
-{
-    using mpfr::mpreal;
-    mpfr_prec_t prevPrec = mpreal::get_default_prec();
-    mpreal::set_default_prec(prec);
-    std::size_t n = a.size() - 1;
-
-
-    mpfr::mpreal* A = new mpfr::mpreal[n * n];
-
-    std::vector<mpfr::mpreal> c = a;
-
-    // construct the initial matrix
-
-    for (std::size_t i = 0u; i < n; ++i)
-        for (std::size_t j = 0u; j < n; ++j)
-            A[n * i + j] = 0;
-
-
-    mpreal denom = -1;
-    denom /= c[n];
-    denom >>= 1;
-    for(std::size_t i = 0u; i < a.size() - 1; ++i)
-        c[i] *= denom;
-    c[n - 2] += 0.5;
-
-    for (std::size_t i = 0u; i < n - 1; ++i)
-        A[n * i + i + 1] = A[(i + 1) * n + i] = 0.5;
-    A[n * (n - 1) - 1] = 0.5;
-
-    for(std::size_t i = 0u; i < n; ++i)
-    {
-        A[n * i] = c[n - i - 1];
-    }
-
-    balance(A, n);
-
-    for (std::size_t i = 0u; i < n; ++i)
-        for (std::size_t j = 0u; j < n; ++j)
-            C(i, j) = A[i * n + j];
-
-    delete[] A;
-    mpreal::set_default_prec(prevPrec);
 }

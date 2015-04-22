@@ -30,7 +30,6 @@ TEST(firpm_scaling_test, lowpass100a)
 
     std::size_t degree = 50;
     std::vector<long double> a;
-    long double finalDelta;
     std::vector<Band> chebyBands;
     std::vector<long double> omega(degree + 2u);
     std::vector<long double> x(degree + 2u);
@@ -239,7 +238,8 @@ TEST(firpm_scaling_test, combfir)
 
 }
 
-TEST(firpm_scaling_test, hugefilter)
+// might take a lot of time to execute, depending on your system
+/*TEST(firpm_scaling_test, hugefilter)
 {
     std::vector<long double> f = {0.0, 1.0 / 8192, 3.0 / 8192, 1.0};
     std::vector<long double> a = {1.0, 1.0, 0.0, 0.0};
@@ -252,7 +252,7 @@ TEST(firpm_scaling_test, hugefilter)
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.Q, 0.1e-1);
-}
+}*/
 
 
 
