@@ -24,4 +24,4 @@ than the double and long double code, which the end user might not necessarily b
 
 ## Licensing
 
-The provided code is primarily GPLv3+ licenced.
+The provided code is primarily GPLv3+ licensed.
