@@ -22,6 +22,6 @@ We opted to provide the end user with the choice of which version to use. This i
 fact that the MPFR multiple precision version of the routines require more external dependencies (GMP and MPFR)
 than the double and long double code, which the end user might not necessarily be willing to use.
 
-## Licencing
+## Licensing
 
 The provided code is primarily GPLv3+ licenced.
