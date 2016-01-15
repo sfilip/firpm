@@ -1,5 +1,5 @@
 //    firpm_d
-//    Copyright (C) 2015  S. Filip
+//    Copyright (C) 2015-2016  S. Filip
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -19,6 +19,82 @@
 #include "firpm/barycentric.h"
 #include <set>
 #include <fstream>
+#include <sstream>
+
+typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixXq;
+typedef Eigen::Matrix<double, Eigen::Dynamic, 1> VectorXq;
+
+void generateVandermondeMatrix(MatrixXq& A, std::size_t degree, std::vector<double>& meshPoints,
+        std::function<double(double)>& weightFunction)
+{
+
+    A.resize(degree + 1u, meshPoints.size());
+    for(std::size_t i = 0u; i < meshPoints.size(); ++i)
+    {
+        double pointWeight = weightFunction(meshPoints[i]);
+        A(0u, i) = 1;
+        A(1u, i) = meshPoints[i];
+        for(std::size_t j = 2u; j <= degree; ++j)
+            A(j, i) = meshPoints[i] * A(j - 1u, i) * 2 - A(j - 2u, i);
+        for(std::size_t j = 0u; j <= degree; ++j)
+            A(j, i) *= pointWeight;
+    }
+}
+
+// approximate Fekete points
+void AFP(std::vector<double>& points, MatrixXq& A, std::vector<double>& meshPoints)
+{
+    VectorXq b = VectorXq::Ones(A.rows());
+    b(0) = 2;
+    VectorXq y = A.colPivHouseholderQr().solve(b);
+
+
+    for(std::size_t i = 0u; i < y.rows(); ++i)
+        if(y(i) != 0.0)
+            points.push_back(meshPoints[i]);
+    std::sort(points.begin(), points.end(),
+            [](const double& lhs,
+               const double& rhs) {
+                return lhs < rhs;
+            });
+
+}
+
+void bandCount(std::vector<Band>& chebyBands, std::vector<double>& x)
+{
+    for(auto& it : chebyBands)
+        it.extremas = 0u;
+    std::size_t bandIt = 0u;
+    for(std::size_t i = 0u; i < x.size(); ++i)
+    {
+        while(bandIt < chebyBands.size() && chebyBands[bandIt].stop < x[i])
+            bandIt++;
+        ++chebyBands[bandIt].extremas;
+    }
+}
+
+
+
+void generateWAM(std::vector<double>& wam, std::vector<Band>& chebyBands, std::size_t degree)
+{
+    std::vector<double> chebyNodes(degree + 2u);
+    generateEquidistantNodes(chebyNodes, degree + 1u);
+    applyCos(chebyNodes, chebyNodes);
+    for(std::size_t i = 0u; i < chebyBands.size(); ++i)
+    {
+        if(chebyBands[i].start != chebyBands[i].stop)
+        {
+            std::vector<double> bufferNodes(degree + 2u);
+            changeOfVariable(bufferNodes, chebyNodes,
+                    chebyBands[i].start, chebyBands[i].stop);
+            for(auto& it : bufferNodes)
+                wam.push_back(it);
+        }
+        else
+            wam.push_back(chebyBands[i].start);
+    }
+}
+
 
 void initUniformExtremas(std::vector<double>& omega,
         std::vector<Band>& B)
@@ -730,7 +806,8 @@ PMOutput firpmRS(std::size_t n,
         std::vector<double>const& w,
         double eps,
         std::size_t depth,
-        int Nmax)
+        int Nmax,
+        RootSolver root)
 {
     if (depth == 0u) return firpm(n, f, a, w, eps, Nmax);
     std::vector<double> h;
@@ -797,10 +874,31 @@ PMOutput firpmRS(std::size_t n,
 
             std::vector<double> omega(scaledDegrees[0] + 2u);
             std::vector<double> x(scaledDegrees[0] + 2u);
-            initUniformExtremas(omega, freqBands);
-            applyCos(x, omega);
-            bandConversion(chebyBands, freqBands, ConversionDirection::FROMFREQ);
-            PMOutput output = exchange(x, chebyBands, eps, Nmax);
+            PMOutput output;
+            if(root == RootSolver::UNIFORM) {
+                initUniformExtremas(omega, freqBands);
+                applyCos(x, omega);
+                bandConversion(chebyBands, freqBands, ConversionDirection::FROMFREQ);
+                output = exchange(x, chebyBands, eps, Nmax);
+
+            } else {
+                std::function<double(double)> weightFunction = [=](double x) -> double
+                {
+                    for(std::size_t i = 0u; i < chebyBands.size(); ++i)
+                        if(chebyBands[i].start <= x && x <= chebyBands[i].stop)
+                            return chebyBands[i].weight(BandSpace::CHEBY, x);
+                };
+                std::vector<double> wam;
+                generateWAM(wam, chebyBands, degree);
+                MatrixXq A;
+                generateVandermondeMatrix(A, degree + 1u, wam, weightFunction);
+                std::vector<double> afpX;
+                AFP(afpX, A, wam);
+                bandCount(chebyBands, afpX);
+
+                output = exchange(afpX, chebyBands, eps, Nmax);
+            }
+
 
 
             for(std::size_t i = 1u; i <= depth; ++i)
@@ -857,10 +955,30 @@ PMOutput firpmRS(std::size_t n,
 
     std::vector<double> omega(scaledDegrees[0] + 2u);
     std::vector<double> x(scaledDegrees[0] + 2u);
-    initUniformExtremas(omega, freqBands);
-    applyCos(x, omega);
-    bandConversion(chebyBands, freqBands, ConversionDirection::FROMFREQ);
-    PMOutput output = exchange(x, chebyBands, eps, Nmax);
+    PMOutput output;
+    if(root == RootSolver::UNIFORM) {
+        initUniformExtremas(omega, freqBands);
+        applyCos(x, omega);
+        bandConversion(chebyBands, freqBands, ConversionDirection::FROMFREQ);
+        output = exchange(x, chebyBands, eps, Nmax);
+
+    } else {
+        std::function<double(double)> weightFunction = [=](double x) -> double
+        {
+            for(std::size_t i = 0u; i < chebyBands.size(); ++i)
+                if(chebyBands[i].start <= x && x <= chebyBands[i].stop)
+                    return chebyBands[i].weight(BandSpace::CHEBY, x);
+        };
+        std::vector<double> wam;
+        generateWAM(wam, chebyBands, degree);
+        MatrixXq A;
+        generateVandermondeMatrix(A, degree + 1u, wam, weightFunction);
+        std::vector<double> afpX;
+        AFP(afpX, A, wam);
+        bandCount(chebyBands, afpX);
+
+        output = exchange(afpX, chebyBands, eps, Nmax);
+    }
 
 
     for(std::size_t i = 1u; i <= depth; ++i)
@@ -1221,7 +1339,8 @@ PMOutput firpmRS(std::size_t n,
         ftype type,
         double eps,
         std::size_t depth,
-        int Nmax)
+        int Nmax,
+        RootSolver root)
 {
     if (depth == 0u) return firpm(n, f, a, w, type, eps, Nmax);
     PMOutput output;
@@ -1387,10 +1506,30 @@ PMOutput firpmRS(std::size_t n,
 
             std::vector<double> omega(scaledDegrees[0] + 2u);
             std::vector<double> x(scaledDegrees[0] + 2u);
-            initUniformExtremas(omega, freqBands);
-            applyCos(x, omega);
-            bandConversion(chebyBands, freqBands, ConversionDirection::FROMFREQ);
-            output = exchange(x, chebyBands, eps, Nmax);
+            PMOutput output;
+            if(root == RootSolver::UNIFORM) {
+                initUniformExtremas(omega, freqBands);
+                applyCos(x, omega);
+                bandConversion(chebyBands, freqBands, ConversionDirection::FROMFREQ);
+                output = exchange(x, chebyBands, eps, Nmax);
+
+            } else {
+                std::function<double(double)> weightFunction = [=](double x) -> double
+                {
+                    for(std::size_t i = 0u; i < chebyBands.size(); ++i)
+                        if(chebyBands[i].start <= x && x <= chebyBands[i].stop)
+                            return chebyBands[i].weight(BandSpace::CHEBY, x);
+                };
+                std::vector<double> wam;
+                generateWAM(wam, chebyBands, degree);
+                MatrixXq A;
+                generateVandermondeMatrix(A, degree + 1u, wam, weightFunction);
+                std::vector<double> afpX;
+                AFP(afpX, A, wam);
+                bandCount(chebyBands, afpX);
+
+                output = exchange(afpX, chebyBands, eps, Nmax);
+            }
 
 
             for(std::size_t i = 1u; i <= depth; ++i)
@@ -1531,10 +1670,31 @@ PMOutput firpmRS(std::size_t n,
 
                 std::vector<double> omega(scaledDegrees[0] + 2u);
                 std::vector<double> x(scaledDegrees[0] + 2u);
-                initUniformExtremas(omega, freqBands);
-                applyCos(x, omega);
-                bandConversion(chebyBands, freqBands, ConversionDirection::FROMFREQ);
-                output = exchange(x, chebyBands, eps, Nmax);
+                PMOutput output;
+                if(root == RootSolver::UNIFORM) {
+                    initUniformExtremas(omega, freqBands);
+                    applyCos(x, omega);
+                    bandConversion(chebyBands, freqBands, ConversionDirection::FROMFREQ);
+                    output = exchange(x, chebyBands, eps, Nmax);
+
+                } else {
+                    std::function<double(double)> weightFunction = [=](double x) -> double
+                    {
+                        for(std::size_t i = 0u; i < chebyBands.size(); ++i)
+                            if(chebyBands[i].start <= x && x <= chebyBands[i].stop)
+                                return chebyBands[i].weight(BandSpace::CHEBY, x);
+                    };
+                    std::vector<double> wam;
+                    generateWAM(wam, chebyBands, degree);
+                    MatrixXq A;
+                    generateVandermondeMatrix(A, degree + 1u, wam, weightFunction);
+                    std::vector<double> afpX;
+                    AFP(afpX, A, wam);
+                    bandCount(chebyBands, afpX);
+
+                    output = exchange(afpX, chebyBands, eps, Nmax);
+                }
+
 
 
                 for(std::size_t i = 1u; i <= depth; ++i)
@@ -1544,6 +1704,510 @@ PMOutput firpmRS(std::size_t n,
                             output.x, chebyBands, freqBands);
                     output = exchange(x, chebyBands, eps, Nmax);
                 }
+
+                h.resize(n + 1u);
+                if(n % 2 == 0)
+                {
+                    h[degree + 1u] = 0;
+                    h[degree] = (output.h[0u] * 2.0l - output.h[2]) / 4u;
+                    h[degree + 2u] = -h[degree];
+                    h[1u] = output.h[degree - 1u] / 4;
+                    h[2u * degree + 1u] = -h[1u];
+                    h[0u] =  output.h[degree] / 4;
+                    h[2u * (degree + 1u)] = -h[0u];
+                    for(std::size_t i{2u}; i < degree; ++i)
+                    {
+                        h[degree + 1u - i] = (output.h[i - 1u] - output.h[i + 1u]) / 4;
+                        h[degree + 1u + i] = -h[degree + 1u - i];
+                    }
+                } else {
+                    ++degree;
+                    h[degree - 1u] = (output.h[0u] * 2.0l - output.h[1u]) / 4;
+                    h[degree] = -h[degree - 1u];
+                    h[0u] = output.h[degree - 1u] / 4;
+                    h[2u * degree - 1u] = -h[0u];
+                    for(std::size_t i{2u}; i < degree; ++i)
+                    {
+                        h[degree - i] = (output.h[i - 1u] - output.h[i]) / 4;
+                        h[degree + i - 1u] = -h[degree - i];
+                    }
+                }
+
+            }
+            break;
+    }
+    output.h = h;
+    return output;
+}
+
+
+
+// type I&II filters
+PMOutput firpmAFP(std::size_t n,
+        std::vector<double>const& f,
+        std::vector<double>const& a,
+        std::vector<double>const& w,
+        double eps,
+        int Nmax)
+{
+    std::vector<double> h;
+    if( n % 2 != 0)
+    {
+        if((f[f.size() - 1u] == 1) && (a[a.size() - 1u] != 0))
+        {
+            std::cout << "Warning: Gain at Nyquist frequency different from 0.\n"
+                << "Increasing the number of taps by 1 and passing to a "
+                << " type I filter\n" << std::endl;
+            ++n;
+        } else {
+            std::size_t degree = n / 2u;
+            // TODO: error checking code
+            std::vector<Band> freqBands(w.size());
+            std::vector<Band> chebyBands;
+            for(std::size_t i{0u}; i < freqBands.size(); ++i)
+            {
+                freqBands[i].start = M_PI * f[2u * i];
+                if(i < freqBands.size() - 1u)
+                    freqBands[i].stop  = M_PI * f[2u * i + 1u];
+                else
+                {
+                    if(f[2u * i + 1u] == 1.0)
+                    {
+                        if(f[2u * i] < 0.9999)
+                            freqBands[i].stop = M_PI * 0.9999;
+                        else
+                            freqBands[i].stop = M_PI * ((f[2u * i] + 1) / 2);
+                    }
+                    else
+                        freqBands[i].stop  = M_PI * f[2u * i + 1u];
+                }
+                freqBands[i].space = BandSpace::FREQ;
+                freqBands[i].amplitude = [=](BandSpace bSpace, double x) -> double
+                {
+                    if (a[2u * i] != a[2u * i + 1u]) {
+                        if(bSpace == BandSpace::CHEBY)
+                            x = acos(x);
+                        return (((x - freqBands[i].start) * a[2u * i + 1u] -
+                                (x - freqBands[i].stop) * a[2u * i]) /
+                                (freqBands[i].stop - freqBands[i].start)) / cos(x / 2);
+                    }
+                    if(bSpace == BandSpace::FREQ)
+                        return a[2u * i] / cos(x / 2);
+                    else
+                        return a[2u * i] / sqrt((x + 1) / 2);
+                };
+                freqBands[i].weight = [=](BandSpace bSpace, double x) -> double
+                {
+                    if (bSpace == BandSpace::FREQ)
+                        return cos(x / 2) * w[i];
+                    else
+                        return sqrt((x + 1) / 2) * w[i];
+                };
+            }
+            bandConversion(chebyBands, freqBands, ConversionDirection::FROMFREQ);
+            std::function<double(double)> weightFunction = [=](double x) -> double
+            {
+                for(std::size_t i = 0u; i < chebyBands.size(); ++i)
+                    if(chebyBands[i].start <= x && x <= chebyBands[i].stop)
+                        return chebyBands[i].weight(BandSpace::CHEBY, x);
+            };
+            std::vector<double> wam;
+            generateWAM(wam, chebyBands, degree);
+            MatrixXq A;
+            generateVandermondeMatrix(A, degree + 1u, wam, weightFunction);
+            std::vector<double> afpX;
+            AFP(afpX, A, wam);
+            bandCount(chebyBands, afpX);
+
+
+            PMOutput output = exchange(afpX, chebyBands, eps, Nmax);
+
+            h.resize(n + 1u);
+            h[0] = h[n] = output.h[degree] / 4;
+            h[degree] = h[degree + 1] = (output.h[0] * 2 + output.h[1]) / 4;
+            for(std::size_t i{2u}; i < degree + 1; ++i)
+                h[degree + 1 - i] = h[degree + i] = (output.h[i - 1] + output.h[i]) / 4u;
+            output.h = h;
+            return output;
+        }
+    }
+
+
+    std::size_t degree = n / 2u;
+    // TODO: error checking code
+    std::vector<Band> freqBands(w.size());
+    std::vector<Band> chebyBands;
+    for(std::size_t i{0u}; i < freqBands.size(); ++i)
+    {
+        freqBands[i].start = M_PI * f[2u * i];
+        freqBands[i].stop  = M_PI * f[2u * i + 1u];
+        freqBands[i].space = BandSpace::FREQ;
+        freqBands[i].amplitude = [=](BandSpace bSpace, double x) -> double
+        {
+            if (a[2u * i] != a[2u * i + 1u]) {
+                if(bSpace == BandSpace::CHEBY)
+                    x = acosl(x);
+                return ((x - freqBands[i].start) * a[2u * i + 1u] -
+                        (x - freqBands[i].stop) * a[2u * i]) /
+                        (freqBands[i].stop - freqBands[i].start);
+            }
+            return a[2u * i];
+        };
+        freqBands[i].weight = [=](BandSpace bSpace, double x) -> double
+        {
+            return w[i];
+        };
+    }
+
+    bandConversion(chebyBands, freqBands, ConversionDirection::FROMFREQ);
+    std::function<double(double)> weightFunction = [=](double x) -> double
+    {
+        for(std::size_t i = 0u; i < chebyBands.size(); ++i)
+            if(chebyBands[i].start <= x && x <= chebyBands[i].stop)
+                return chebyBands[i].weight(BandSpace::CHEBY, x);
+    };
+    std::vector<double> wam;
+    generateWAM(wam, chebyBands, degree);
+    MatrixXq A;
+    generateVandermondeMatrix(A, degree + 1u, wam, weightFunction);
+    std::vector<double> afpX;
+    AFP(afpX, A, wam);
+    bandCount(chebyBands, afpX);
+
+
+
+    double finalDelta;
+    std::vector<double> coeffs;
+    std::vector<double> finalExtrema;
+    double convergenceOrder;
+
+    PMOutput output = exchange(afpX, chebyBands, eps, Nmax);
+
+    h.resize(n + 1u);
+    h[degree] = output.h[0];
+    for(std::size_t i{0u}; i < degree; ++i)
+        h[i] = h[n - i] = output.h[degree - i] / 2u;
+    output.h = h;
+    return output;
+
+}
+
+// type III & IV filters
+PMOutput firpmAFP(std::size_t n,
+        std::vector<double>const& f,
+        std::vector<double>const& a,
+        std::vector<double>const& w,
+        ftype type,
+        double eps,
+        int Nmax)
+{
+    PMOutput output;
+    std::vector<double> h;
+    switch(type) {
+        case ftype::FIR_DIFFERENTIATOR :
+            {
+                std::size_t degree = n / 2u;
+                // TODO: error checking code
+                 std::vector<double> fn = f;
+
+                std::vector<Band> freqBands(w.size());
+                std::vector<Band> chebyBands;
+                double scaleFactor = a[1] / (f[1] * M_PI);
+                if(n % 2 == 0) // Type III
+                {
+                    if(f[0u] == 0.0l)
+                    {
+                        if(fn[1u] < 0.00001l)
+                            fn[0u] = fn[1] / 2;
+                        else
+                            fn[0u] = 0.00001l;
+                    }
+                    if(f[f.size() - 1u] == 1.0l)
+                    {
+                        if(f[f.size() - 2u] > 0.9999l)
+                            fn[f.size() - 1u] = (1.0 + f[f.size() - 2u]) / 2;
+                        else
+                            fn[f.size() - 1u] = 0.9999l;
+                    }
+                    --degree;
+                    freqBands[0].start = M_PI * fn[0u];
+                    freqBands[0].stop  = M_PI * fn[1u];
+                    freqBands[0].space = BandSpace::FREQ;
+                    freqBands[0].weight = [w](BandSpace bSpace, double x) -> double
+                    {
+                        if(bSpace == BandSpace::FREQ)
+                        {
+                            return (sin(x) / x) * w[0u];
+                        }
+                        else
+                        {
+                            return (sqrt(1.0l - x * x) / acos(x)) * w[0u];
+                        }
+                    };
+                    freqBands[0].amplitude = [scaleFactor](BandSpace bSpace, double x) -> double
+                    {
+                        if(bSpace == BandSpace::FREQ)
+                        {
+                            return (x / sin(x)) * scaleFactor;
+                        }
+                        else
+                        {
+                            return (acos(x) / sqrt(1.0l - x * x)) * scaleFactor;
+                        }
+                    };
+                    for(std::size_t i{1u}; i < freqBands.size(); ++i)
+                    {
+                        freqBands[i].start = M_PI * fn[2u * i];
+                        freqBands[i].stop  = M_PI * fn[2u * i + 1u];
+                        freqBands[i].space = BandSpace::FREQ;
+                        freqBands[i].weight = [w, i](BandSpace bSpace, double x) -> double
+                        {
+                            if(bSpace == BandSpace::FREQ)
+                            {
+                                return sin(x) * w[i];
+                            }
+                            else
+                            {
+                                return sqrt(1.0l - x * x) * w[i];
+                            }
+
+                        };
+                        freqBands[i].amplitude = [freqBands, a, i](BandSpace bSpace, double x) -> double
+                        {
+                            if (a[2u * i] != a[2u * i + 1u]) {
+                                if(bSpace == BandSpace::CHEBY)
+                                    x = acos(x);
+                                return ((x - freqBands[i].start) * a[2u * i + 1u] -
+                                        (x - freqBands[i].stop) * a[2u * i]) /
+                                        (freqBands[i].stop - freqBands[i].start);
+                            }
+                            return a[2u * i];
+
+                        };
+
+                    }
+
+                } else {       // Type IV
+                    if(f[0u] == 0.0l)
+                    {
+                        if(fn[1u] < 0.00001l)
+                            fn[0u] = fn[1] / 2;
+                        else
+                            fn[0u] = 0.00001l;
+                    }
+
+                    freqBands[0].start = M_PI * fn[0u];
+                    freqBands[0].stop  = M_PI * fn[1u];
+                    freqBands[0].space = BandSpace::FREQ;
+                    freqBands[0].weight = [w](BandSpace bSpace, double x) -> double
+                    {
+                        if(bSpace == BandSpace::FREQ)
+                        {
+                            return (sin(x / 2) / x) * w[0u];
+                        }
+                        else
+                        {
+                            return (sin(acos(x) / 2) / acos(x)) * w[0u];
+                        }
+                    };
+                    freqBands[0].amplitude = [scaleFactor](BandSpace bSpace, double x) -> double
+                    {
+                        if(bSpace == BandSpace::FREQ)
+                        {
+                            return (x / sin(x / 2)) * scaleFactor;
+                        }
+                        else
+                        {
+                            return (acos(x) / sin(acos(x) / 2)) * scaleFactor;
+                        }
+                    };
+                    for(std::size_t i{1u}; i < freqBands.size(); ++i)
+                    {
+                        freqBands[i].start = M_PI * fn[2u * i];
+                        freqBands[i].stop  = M_PI * fn[2u * i + 1u];
+                        freqBands[i].space = BandSpace::FREQ;
+                        freqBands[i].weight = [w,i](BandSpace bSpace, double x) -> double
+                        {
+                            if(bSpace == BandSpace::FREQ)
+                            {
+                                return sin(x / 2) * w[i];
+                            }
+                            else
+                            {
+                                return (sin(acos(x) / 2)) * w[i];
+                            }
+
+                        };
+                        freqBands[i].amplitude = [freqBands, a, i](BandSpace bSpace, double x) -> double
+                        {
+                            if (a[2u * i] != a[2u * i + 1u]) {
+                                if(bSpace == BandSpace::CHEBY)
+                                    x = acos(x);
+                                return ((x - freqBands[i].start) * a[2u * i + 1u] -
+                                        (x - freqBands[i].stop) * a[2u * i]) /
+                                        (freqBands[i].stop - freqBands[i].start);
+                            }
+                            return a[2u * i];
+
+                        };
+
+                    }
+
+                }
+
+                bandConversion(chebyBands, freqBands, ConversionDirection::FROMFREQ);
+                std::function<double(double)> weightFunction = [=](double x) -> double
+                {
+                    for(std::size_t i = 0u; i < chebyBands.size(); ++i)
+                        if(chebyBands[i].start <= x && x <= chebyBands[i].stop)
+                            return chebyBands[i].weight(BandSpace::CHEBY, x);
+                };
+                std::vector<double> wam;
+                generateWAM(wam, chebyBands, degree);
+                MatrixXq A;
+                generateVandermondeMatrix(A, degree + 1u, wam, weightFunction);
+                std::vector<double> afpX;
+                AFP(afpX, A, wam);
+                bandCount(chebyBands, afpX);
+
+
+                output = exchange(afpX, chebyBands, eps, Nmax);
+
+                h.resize(n + 1u);
+                if(n % 2 == 0)
+                {
+                    h[degree + 1u] = 0;
+                    h[degree] = (output.h[0u] * 2.0l - output.h[2]) / 4u;
+                    h[degree + 2u] = -h[degree];
+                    h[1u] = output.h[degree - 1u] / 4;
+                    h[2u * degree + 1u] = -h[1u];
+                    h[0u] =  output.h[degree] / 4;
+                    h[2u * (degree + 1u)] = -h[0u];
+                    for(std::size_t i{2u}; i < degree; ++i)
+                    {
+                        h[degree + 1u - i] = (output.h[i - 1u] - output.h[i + 1u]) / 4;
+                        h[degree + 1u + i] = -h[degree + 1u - i];
+                    }
+                } else {
+                    ++degree;
+                    h[degree - 1u] = (output.h[0u] * 2.0l - output.h[1u]) / 4;
+                    h[degree] = -h[degree - 1u];
+                    h[0u] = output.h[degree - 1u] / 4;
+                    h[2u * degree - 1u] = -h[0u];
+                    for(std::size_t i{2u}; i < degree; ++i)
+                    {
+                        h[degree - i] = (output.h[i - 1u] - output.h[i]) / 4;
+                        h[degree + i - 1u] = -h[degree - i];
+                    }
+                }
+
+
+            }
+            break;
+        default : // FIR_HILBERT
+            {
+                std::size_t degree = n / 2u;
+                std::vector<double> fn = f;
+                // TODO: error checking code
+                std::vector<Band> freqBands(w.size());
+                std::vector<Band> chebyBands;
+                if(n % 2 == 0) // Type III
+                {
+                    --degree;
+                    if(f[0u] == 0.0l)
+                    {
+                        if(fn[1u] < 0.00001l)
+                            fn[0u] = fn[1] / 2;
+                        else
+                            fn[0u] = 0.00001l;
+                    }
+                    if(f[f.size() - 1u] == 1.0l)
+                    {
+                        if(f[f.size() - 2u] > 0.9999l)
+                            fn[f.size() - 1u] = (1.0 + f[f.size() - 2u]) / 2;
+                        else
+                            fn[f.size() - 1u] = 0.9999l;
+                    }
+
+                    for(std::size_t i{0u}; i < freqBands.size(); ++i)
+                    {
+                        freqBands[i].start = M_PI * fn[2u * i];
+                        freqBands[i].stop  = M_PI * fn[2u * i + 1u];
+                        freqBands[i].space = BandSpace::FREQ;
+                        freqBands[i].amplitude = [=](BandSpace bSpace, double x) -> double
+                        {
+                            if(bSpace == BandSpace::CHEBY)
+                                x = acosl(x);
+
+                            if (a[2u * i] != a[2u * i + 1u]) {
+                                return (((x - freqBands[i].start) * a[2u * i + 1u] -
+                                        (x - freqBands[i].stop) * a[2u * i]) /
+                                        (freqBands[i].stop - freqBands[i].start)) / sinl(x);
+                            }
+                            return a[2u * i] / sin(x);
+                        };
+                        freqBands[i].weight = [=](BandSpace bSpace, double x) -> double
+                        {
+                            if(bSpace == BandSpace::FREQ)
+                                return w[i] * sin(x);
+                            else
+                                return w[i] * (sqrt(1.0l - x * x));
+                        };
+                    }
+                } else {       // Type IV
+                    if(f[0u] == 0.0l)
+                    {
+                        if(f[1u] < 0.00001l)
+                            fn[0u] = fn[1u] / 2;
+                        else
+                            fn[0u] = 0.00001l;
+                    }
+                    for(std::size_t i{0u}; i < freqBands.size(); ++i)
+                    {
+                        freqBands[i].start = M_PI * fn[2u * i];
+                        freqBands[i].stop  = M_PI * fn[2u * i + 1u];
+                        freqBands[i].space = BandSpace::FREQ;
+                        freqBands[i].amplitude = [=](BandSpace bSpace, double x) -> double
+                        {
+                            if(bSpace == BandSpace::CHEBY)
+                                x = acos(x);
+
+                            if (a[2u * i] != a[2u * i + 1u]) {
+                                return (((x - freqBands[i].start) * a[2u * i + 1u] -
+                                        (x - freqBands[i].stop) * a[2u * i]) /
+                                        (freqBands[i].stop - freqBands[i].start)) / sinl(x / 2);
+                            }
+                            return a[2u * i] / sin(x / 2);
+                        };
+                        freqBands[i].weight = [=](BandSpace bSpace, double x) -> double
+                        {
+                            if(bSpace == BandSpace::FREQ)
+                                return w[i] * sin(x / 2);
+                            else
+                            {
+                                x = acos(x);
+                                return w[i] * (sin(x / 2));
+                            }
+                        };
+                    }
+                }
+                bandConversion(chebyBands, freqBands, ConversionDirection::FROMFREQ);
+                std::function<double(double)> weightFunction = [=](double x) -> double
+                {
+                    for(std::size_t i = 0u; i < chebyBands.size(); ++i)
+                        if(chebyBands[i].start <= x && x <= chebyBands[i].stop)
+                            return chebyBands[i].weight(BandSpace::CHEBY, x);
+                };
+                std::vector<double> wam;
+                generateWAM(wam, chebyBands, degree);
+                MatrixXq A;
+                generateVandermondeMatrix(A, degree + 1u, wam, weightFunction);
+                std::vector<double> afpX;
+                AFP(afpX, A, wam);
+                bandCount(chebyBands, afpX);
+
+
+                output = exchange(afpX, chebyBands, eps, Nmax);
 
                 h.resize(n + 1u);
                 if(n % 2 == 0)
