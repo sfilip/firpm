@@ -633,7 +633,7 @@ PMOutput exchange(std::vector<double>& x,
         //std::cout << "*********ITERATION " << output.iter << " **********\n";
     } while (output.Q > eps && output.iter <= 100u);
 
-    if(isnan(output.delta) || isnan(output.Q))
+    if(std::isnan(output.delta) || std::isnan(output.Q))
         std::cerr << "The exchange algorithm did not converge.\n"
             << "TRIGGER: numerical instability\n"
             << "POSSIBLE CAUSES: poor starting reference and/or "
