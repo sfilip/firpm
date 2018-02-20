@@ -5,7 +5,7 @@ firpm library (double precision version)
 This code has been tested **only** on Linux installations. In order to compile and use it, a recent version of g++ with
 C++11 support is necessary (a version >= 4.8 should work nicely). Some external utilities and libraries must also be installed
 and available on your system search paths:
-* CMake version 2.8 or newer
+* CMake version 3.0 or newer
 * Eigen version 3 or newer
 * (optional) Google gtest framework for generating the test executables
 * (optional) doxygen version 1.8.3 or newer in order to generate the accompanying documentation
