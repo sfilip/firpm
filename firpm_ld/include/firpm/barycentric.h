@@ -37,7 +37,7 @@
  * @param[out] w the computed weights
  * @param[in] x the interpolation points
  */
-void barycentricWeights(std::vector<long double>& w,
+void FIRPM_EXPORT barycentricWeights(std::vector<long double>& w,
         std::vector<long double>& x);
 
 /*! Determines the current reference error according to the
@@ -47,7 +47,7 @@ void barycentricWeights(std::vector<long double>& w,
  * @param[in] bands information relating to the ideal frequency response of
  * the filter
  */
-void computeDelta(long double &delta, std::vector<long double>& x,
+void FIRPM_EXPORT computeDelta(long double &delta, std::vector<long double>& x,
         std::vector<Band> &bands);
 
 /*! Determines the current reference error according to the
@@ -60,7 +60,7 @@ void computeDelta(long double &delta, std::vector<long double>& x,
  * the filter
  */
 
-void computeDelta(long double &delta, std::vector<long double>& w,
+void FIRPM_EXPORT computeDelta(long double &delta, std::vector<long double>& w,
         std::vector<long double>& x, std::vector<Band> &bands);
 
 /*! Computes the filter response at the current reference set
@@ -69,7 +69,7 @@ void computeDelta(long double &delta, std::vector<long double>& w,
  * @param[in] x the current reference vector
  * @param[in] bands frequency band information for the ideal filter
  */
-void computeC(std::vector<long double> &C, long double &delta,
+void FIRPM_EXPORT computeC(std::vector<long double> &C, long double &delta,
         std::vector<long double> &x, std::vector<Band> &bands);
 
 /*! Computes the frequency response of the current filter
@@ -81,7 +81,7 @@ void computeC(std::vector<long double> &C, long double &delta,
  * @param[in] C the frequency responses at the current reference set
  * @param[in] w the current barycentric weights
  */
-void computeApprox(long double &Pc, const long double &xVal,
+void FIRPM_EXPORT computeApprox(long double &Pc, const long double &xVal,
         std::vector<long double> &x, std::vector<long double> &C,
         std::vector<long double> & w);
 
@@ -95,7 +95,7 @@ void computeApprox(long double &Pc, const long double &xVal,
  * @param[in] w the barycentric weights
  * @param[in] bands frequency band information for the ideal filter
  */
-void computeError(long double &error, const long double &xVal,
+void FIRPM_EXPORT computeError(long double &error, const long double &xVal,
         long double &delta, std::vector<long double> &x,
         std::vector<long double> &C, std::vector<long double> &w,
         std::vector<Band> &bands);
@@ -109,7 +109,7 @@ void computeError(long double &error, const long double &xVal,
  * @param[in] xVal the current frequency node where we do our computation
  * @param[in] bands frequency band information for the ideal filter
  */
-void computeIdealResponseAndWeight(long double &D, long double &W,
+void FIRPM_EXPORT computeIdealResponseAndWeight(long double &D, long double &W,
         const long double &xVal, std::vector<Band> &bands);
 
 

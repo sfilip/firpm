@@ -42,7 +42,7 @@ typedef Eigen::Matrix<std::complex<long double>, Eigen::Dynamic, 1> VectorXcq;
  * @param[in] a the coefficients of the Chebyshev interpolant
  * @param[in] withBalancing perform a balancing operation on the colleague matrix C
  */
-void generateColleagueMatrix1stKind(MatrixXq& C,
+void FIRPM_EXPORT generateColleagueMatrix1stKind(MatrixXq& C,
         std::vector<long double>& a, bool withBalancing = true);
 
 /*! Function that generates the colleague matrix for a Chebyshev interpolant
@@ -52,14 +52,14 @@ void generateColleagueMatrix1stKind(MatrixXq& C,
  * @param[in] a the coefficients of the Chebyshev interpolant
  * @param[in] withBalancing perform a balancing operation on the colleague matrix C
  */
-void generateColleagueMatrix2ndKind(MatrixXq& C,
+void FIRPM_EXPORT generateColleagueMatrix2ndKind(MatrixXq& C,
         std::vector<long double>& a, bool withBalancing = true);
 
 /*! Function that computes the eigenvalues of a given matrix
  * @param[out] eigenvalues the computed eigenvalues
  * @param[in] C the corresponding matrix
  */
-void determineEigenvalues(VectorXcq &eigenvalues,
+void FIRPM_EXPORT determineEigenvalues(VectorXcq &eigenvalues,
         MatrixXq &C);
 
 /*! Function that computes the real values located inside
@@ -69,7 +69,7 @@ void determineEigenvalues(VectorXcq &eigenvalues,
  * @param[in] a left side of the closed interval
  * @param[in] b right side of the closed interval
  */
-void getRealValues(std::vector<long double> &realValues,
+void FIRPM_EXPORT getRealValues(std::vector<long double> &realValues,
         VectorXcq &complexValues,
         long double &a, long double &b);
 

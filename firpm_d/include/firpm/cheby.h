@@ -1,5 +1,4 @@
 /**
- * @file cheby.h
  * @author Silviu Filip
  * @date 12 March 2015
  * @brief Useful functions for working with Chebyshev interpolants
@@ -32,7 +31,7 @@
  * @param[out] out the vector containing the cosines of the elements from the
  * vector in
  */
-void applyCos(std::vector<double>& out,
+void FIRPM_EXPORT applyCos(std::vector<double>& out,
         std::vector<double> const& in);
 
 /*! Does a change of variable from the interval \f$\left[-1, 1\right]\f$ to the
@@ -42,7 +41,7 @@ void applyCos(std::vector<double>& out,
  * @param[in] a left bound of the desired interval
  * @param[in] b right bound of the desired interval
  */
-void changeOfVariable(std::vector<double>& out,
+void FIRPM_EXPORT changeOfVariable(std::vector<double>& out,
         std::vector<double> const& in,
         double& a, double& b);
 
@@ -56,7 +55,7 @@ void changeOfVariable(std::vector<double>& out,
  *  @param[in] a left bound of the interval where the CI is considered
  *  @param[in] b right bound of the interval where the CI is considered
  */
-void evaluateClenshaw(double &result, std::vector<double> &p,
+void FIRPM_EXPORT evaluateClenshaw(double &result, std::vector<double> &p,
                         double &x, double &a, double &b);
 
 /*! The Clenshaw algorithm which evaluates the value of a CI implicitly
@@ -67,7 +66,7 @@ void evaluateClenshaw(double &result, std::vector<double> &p,
  *  @param[in] x the point at which we want to compute the value
  *  of the CI
  */
-void evaluateClenshaw(double &result, std::vector<double> &p,
+void FIRPM_EXPORT evaluateClenshaw(double &result, std::vector<double> &p,
                         double &x);
 
 /*! The Clenshaw algorithm which evaluates the value of a CI expressed
@@ -79,7 +78,7 @@ void evaluateClenshaw(double &result, std::vector<double> &p,
  *  @param[in] x the point at which we want to compute the value
  *  of the CI
  */
-void evaluateClenshaw2ndKind(double &result, std::vector<double> &p,
+void FIRPM_EXPORT evaluateClenshaw2ndKind(double &result, std::vector<double> &p,
                         double &x);
 
 
@@ -89,14 +88,14 @@ void evaluateClenshaw2ndKind(double &result, std::vector<double> &p,
  * @param[out] v the vector that will contain the equi-distributed points
  * @param[in] n the number of points - 1 which will be computed
  */
-void generateEquidistantNodes(std::vector<double>& v, std::size_t n);
+void FIRPM_EXPORT generateEquidistantNodes(std::vector<double>& v, std::size_t n);
 
 /*! Function that generates the Chebyshev nodes of the second kind
  * \f$\mu_k=\cos\left(\frac{k\pi}{n}\right), k=0,\ldots,n\f$.
  * @param[out] v the vector that will contain the Chebyshev nodes
  * @param[in] n the number of points - 1 which will be computed
  */
-void generateChebyshevPoints(std::vector<double>& v, std::size_t n);
+void FIRPM_EXPORT generateChebyshevPoints(std::vector<double>& v, std::size_t n);
 
 
 /*! This function computes the values of the coefficients of the CI when
@@ -107,7 +106,7 @@ void generateChebyshevPoints(std::vector<double>& v, std::size_t n);
  * appropriate interval (in our case it will be \f$\left[0,\pi\right]\f$)
  * @param[in] n degree of the CI
  */
-void generateChebyshevCoefficients(std::vector<double>& c,
+void FIRPM_EXPORT generateChebyshevCoefficients(std::vector<double>& c,
                 std::vector<double>& fv, std::size_t n);
 
 /*! Function that generates the coefficients of the derivative of a given CI
@@ -115,7 +114,7 @@ void generateChebyshevCoefficients(std::vector<double>& c,
  *  @param[in] c the vector of coefficients of the CI whose derivative we
  *  want to compute
  */
-void derivativeCoefficients1stKind(std::vector<double>& derivC,
+void FIRPM_EXPORT derivativeCoefficients1stKind(std::vector<double>& derivC,
                         std::vector<double>& c);
 
 /*! Function that generates the coefficients of the derivative of a given
@@ -125,7 +124,7 @@ void derivativeCoefficients1stKind(std::vector<double>& derivC,
  *  @param[in] c the vector of coefficients of the CI whose derivative we
  *  want to compute
  */
-void derivativeCoefficients2ndKind(std::vector<double>& derivC,
+void FIRPM_EXPORT derivativeCoefficients2ndKind(std::vector<double>& derivC,
         std::vector<double>& c);
 
 #endif /* CHEBY_H_ */

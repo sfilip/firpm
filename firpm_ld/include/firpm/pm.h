@@ -69,7 +69,7 @@ struct PMOutput
  * @param[in] B the frequency bands of interest (i.e. stopbands and passbands for example)
  */
 
-void initUniformExtremas(std::vector<long double>& omega,
+void FIRPM_EXPORT initUniformExtremas(std::vector<long double>& omega,
         std::vector<Band>& B);
 
 /*! An implementation of the reference scaling approach mentioned in section 4 of the article.
@@ -87,7 +87,7 @@ void initUniformExtremas(std::vector<long double>& omega,
  * @param[in] freqBands band information for the filter to which the x reference corresponds to.
  * The bands are given inside \f$[0,\pi]\f$ (i.e. the FREQ band space)
  */
-void referenceScaling(std::vector<long double>& newX, std::vector<Band>& newChebyBands,
+void FIRPM_EXPORT referenceScaling(std::vector<long double>& newX, std::vector<Band>& newChebyBands,
         std::vector<Band>& newFreqBands, std::size_t newXSize,
         std::vector<long double>& x, std::vector<Band>& chebyBands,
         std::vector<Band>& freqBands);
@@ -141,7 +141,7 @@ void referenceScaling(std::vector<long double>& newX, std::vector<Band>& newCheb
  * @endcode
  */
 
-PMOutput exchange(std::vector<long double>& x,
+PMOutput FIRPM_EXPORT exchange(std::vector<long double>& x,
         std::vector<Band>& chebyBands,
         long double epsT = 0.01,
         int Nmax = 4);
@@ -169,7 +169,7 @@ PMOutput exchange(std::vector<long double>& x,
  * @endcode
  */
 
-PMOutput firpm(std::size_t N,
+PMOutput FIRPM_EXPORT firpm(std::size_t N,
         std::vector<long double>const& f,
         std::vector<long double>const& a,
         std::vector<long double>const& w,
@@ -191,7 +191,7 @@ PMOutput firpm(std::size_t N,
  * output contains the coefficients corresponding to the transfer function of the final filter
  * (in this case, for types I and II, the values are symmetrical to the middle coefficient(s))*/
 
-PMOutput firpmRS(std::size_t N,
+PMOutput FIRPM_EXPORT firpmRS(std::size_t N,
         std::vector<long double>const& f,
         std::vector<long double>const& a,
         std::vector<long double>const& w,
@@ -214,7 +214,7 @@ PMOutput firpmRS(std::size_t N,
  * output contains the coefficients corresponding to the transfer function of the final filter
  * (in this case, for types III and IV, the values are antisymmetrical to the middle coefficient(s))*/
 
-PMOutput firpm(std::size_t N,
+PMOutput FIRPM_EXPORT firpm(std::size_t N,
         std::vector<long double>const& f,
         std::vector<long double>const& a,
         std::vector<long double>const& w,
@@ -236,7 +236,7 @@ PMOutput firpm(std::size_t N,
  * @return information pertaining to the polynomial computed at the last iteration. The h vector of the
  * output contains the coefficients corresponding to the transfer function of the final filter
  * (in this case, for types III and IV, the values are antisymmetrical to the middle coefficient(s))*/
-PMOutput firpmRS(std::size_t N,
+PMOutput FIRPM_EXPORT firpmRS(std::size_t N,
         std::vector<long double>const& f,
         std::vector<long double>const& a,
         std::vector<long double>const& w,

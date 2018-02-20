@@ -68,7 +68,7 @@ enum ConversionDirection {
  * @param[in]  direction the direction in which the change of variable is performed
  * @param[in]  prec the working precision used to perform the computations
  */
-void bandConversion(std::vector<Band> &out, std::vector<Band> &in,
+void FIRPM_EXPORT bandConversion(std::vector<Band> &out, std::vector<Band> &in,
         ConversionDirection direction, mp_prec_t prec = 165ul);
 
 #endif /* BAND_H_ */

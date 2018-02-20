@@ -37,7 +37,7 @@
  * @param[out] w the computed weights
  * @param[in] x the interpolation points
  */
-void barycentricWeights(std::vector<double>& w,
+void FIRPM_EXPORT barycentricWeights(std::vector<double>& w,
         std::vector<double>& x);
 
 /*! Determines the current reference error according to the
@@ -47,7 +47,7 @@ void barycentricWeights(std::vector<double>& w,
  * @param[in] bands information relating to the ideal frequency response of
  * the filter
  */
-void computeDelta(double &delta, std::vector<double>& x,
+void FIRPM_EXPORT computeDelta(double &delta, std::vector<double>& x,
         std::vector<Band> &bands);
 
 /*! Determines the current reference error according to the
@@ -60,7 +60,7 @@ void computeDelta(double &delta, std::vector<double>& x,
  * the filter
  */
 
-void computeDelta(double &delta, std::vector<double>& w,
+void FIRPM_EXPORT computeDelta(double &delta, std::vector<double>& w,
         std::vector<double>& x, std::vector<Band> &bands);
 
 /*! Computes the filter response at the current reference set
@@ -69,7 +69,7 @@ void computeDelta(double &delta, std::vector<double>& w,
  * @param[in] x the current reference vector
  * @param[in] bands frequency band information for the ideal filter
  */
-void computeC(std::vector<double> &C, double &delta,
+void FIRPM_EXPORT computeC(std::vector<double> &C, double &delta,
         std::vector<double> &x, std::vector<Band> &bands);
 
 /*! Computes the frequency response of the current filter
@@ -81,7 +81,7 @@ void computeC(std::vector<double> &C, double &delta,
  * @param[in] C the frequency responses at the current reference set
  * @param[in] w the current barycentric weights
  */
-void computeApprox(double &Pc, const double &xVal,
+void FIRPM_EXPORT computeApprox(double &Pc, const double &xVal,
         std::vector<double> &x, std::vector<double> &C,
         std::vector<double> & w);
 
@@ -95,7 +95,7 @@ void computeApprox(double &Pc, const double &xVal,
  * @param[in] w the barycentric weights
  * @param[in] bands frequency band information for the ideal filter
  */
-void computeError(double &error, const double &xVal,
+void FIRPM_EXPORT computeError(double &error, const double &xVal,
         double &delta, std::vector<double> &x,
         std::vector<double> &C, std::vector<double> &w,
         std::vector<Band> &bands);
@@ -109,7 +109,7 @@ void computeError(double &error, const double &xVal,
  * @param[in] xVal the current frequency node where we do our computation
  * @param[in] bands frequency band information for the ideal filter
  */
-void computeIdealResponseAndWeight(double &D, double &W,
+void FIRPM_EXPORT computeIdealResponseAndWeight(double &D, double &W,
         const double &xVal, std::vector<Band> &bands);
 
 

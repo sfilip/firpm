@@ -34,7 +34,7 @@
  * @param[out] out the vector containing the cosines of the elements from the
  * vector in
  */
-void applyCos(std::vector<mpfr::mpreal>& out,
+void FIRPM_EXPORT applyCos(std::vector<mpfr::mpreal>& out,
         std::vector<mpfr::mpreal> const& in);
 
 /*! Does a change of variable from the interval \f$\left[-1, 1\right]\f$ to the
@@ -44,7 +44,7 @@ void applyCos(std::vector<mpfr::mpreal>& out,
  * @param[in] a left bound of the desired interval
  * @param[in] b right bound of the desired interval
  */
-void changeOfVariable(std::vector<mpfr::mpreal>& out,
+void FIRPM_EXPORT changeOfVariable(std::vector<mpfr::mpreal>& out,
         std::vector<mpfr::mpreal> const& in,
         mpfr::mpreal& a, mpfr::mpreal& b);
 
@@ -59,7 +59,7 @@ void changeOfVariable(std::vector<mpfr::mpreal>& out,
  *  @param[in] b right bound of the interval where the CI is considered
  *  @param[in] prec the MPFR working precision used for the computations
  */
-void evaluateClenshaw(mpfr::mpreal &result, std::vector<mpfr::mpreal> &p,
+void FIRPM_EXPORT evaluateClenshaw(mpfr::mpreal &result, std::vector<mpfr::mpreal> &p,
                         mpfr::mpreal &x, mpfr::mpreal &a, mpfr::mpreal &b,
                         mp_prec_t prec = 165ul);
 
@@ -72,7 +72,7 @@ void evaluateClenshaw(mpfr::mpreal &result, std::vector<mpfr::mpreal> &p,
  *  of the CI
  *  @param[in] prec the MPFR working precision used for the computations
  */
-void evaluateClenshaw(mpfr::mpreal &result, std::vector<mpfr::mpreal> &p,
+void FIRPM_EXPORT evaluateClenshaw(mpfr::mpreal &result, std::vector<mpfr::mpreal> &p,
                         mpfr::mpreal &x,
                         mp_prec_t prec = 165ul);
 
@@ -86,7 +86,7 @@ void evaluateClenshaw(mpfr::mpreal &result, std::vector<mpfr::mpreal> &p,
  *  of the CI
  *  @param[in] prec the MPFR working precision used for the computations
  */
-void evaluateClenshaw2ndKind(mpfr::mpreal &result, std::vector<mpfr::mpreal> &p,
+void FIRPM_EXPORT evaluateClenshaw2ndKind(mpfr::mpreal &result, std::vector<mpfr::mpreal> &p,
                         mpfr::mpreal &x,
                         mp_prec_t prec = 165ul);
 
@@ -98,7 +98,7 @@ void evaluateClenshaw2ndKind(mpfr::mpreal &result, std::vector<mpfr::mpreal> &p,
  * @param[in] n the number of points - 1 which will be computed
  * @param[in] prec the MPFR working precision used for the computations
  */
-void generateEquidistantNodes(std::vector<mpfr::mpreal>& v, std::size_t n,
+void FIRPM_EXPORT generateEquidistantNodes(std::vector<mpfr::mpreal>& v, std::size_t n,
 						mp_prec_t prec = 165ul);
 
 /*! Function that generates the Chebyshev nodes of the second kind
@@ -107,7 +107,7 @@ void generateEquidistantNodes(std::vector<mpfr::mpreal>& v, std::size_t n,
  * @param[in] n the number of points - 1 which will be computed
  * @param[in] prec the MPFR working precision used for the computations
  */
-void generateChebyshevPoints(std::vector<mpfr::mpreal>& v, std::size_t n,
+void FIRPM_EXPORT generateChebyshevPoints(std::vector<mpfr::mpreal>& v, std::size_t n,
 						mp_prec_t prec = 165ul);
 
 
@@ -120,7 +120,7 @@ void generateChebyshevPoints(std::vector<mpfr::mpreal>& v, std::size_t n,
  * @param[in] n degree of the CI
  * @param[in] prec the MPFR working precision used for the computations
  */
-void generateChebyshevCoefficients(std::vector<mpfr::mpreal>& c,
+void FIRPM_EXPORT generateChebyshevCoefficients(std::vector<mpfr::mpreal>& c,
                 std::vector<mpfr::mpreal>& fv, std::size_t n,
                 mp_prec_t prec = 165ul);
 
@@ -129,7 +129,7 @@ void generateChebyshevCoefficients(std::vector<mpfr::mpreal>& c,
  *  @param[in] c the vector of coefficients of the CI whose derivative we
  *  want to compute
  */
-void derivativeCoefficients1stKind(std::vector<mpfr::mpreal>& derivC,
+void FIRPM_EXPORT derivativeCoefficients1stKind(std::vector<mpfr::mpreal>& derivC,
                         std::vector<mpfr::mpreal>& c);
 
 /*! Function that generates the coefficients of the derivative of a given
@@ -139,7 +139,7 @@ void derivativeCoefficients1stKind(std::vector<mpfr::mpreal>& derivC,
  *  @param[in] c the vector of coefficients of the CI whose derivative we
  *  want to compute
  */
-void derivativeCoefficients2ndKind(std::vector<mpfr::mpreal>& derivC,
+void FIRPM_EXPORT derivativeCoefficients2ndKind(std::vector<mpfr::mpreal>& derivC,
         std::vector<mpfr::mpreal>& c);
 
 #endif /* CHEBY_H_ */

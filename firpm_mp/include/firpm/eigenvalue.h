@@ -45,12 +45,12 @@ typedef Eigen::Matrix<std::complex<mpfr::mpreal>, Eigen::Dynamic, 1> VectorXcq;
  * @param[in] withBalancing perform a balancing operation on the colleague matrix C
  * @param[in] prec the working precision used for the computations
  */
-void generateColleagueMatrix1stKind(MatrixXq& C,
+void FIRPM_EXPORT generateColleagueMatrix1stKind(MatrixXq& C,
         std::vector<mpfr::mpreal>& a,
         bool withBalancing,
         mp_prec_t prec = 165ul);
 
-void generateColleagueMatrix2ndKind(MatrixXq& C,
+void FIRPM_EXPORT generateColleagueMatrix2ndKind(MatrixXq& C,
         std::vector<mpfr::mpreal>& a,
         bool withBalancing,
         mp_prec_t prec = 165ul);
@@ -64,7 +64,7 @@ void generateColleagueMatrix2ndKind(MatrixXq& C,
  * @param[in] withBalancing perform a balancing operation on the colleague matrix C
  * @param[in] prec the working precision used for the computations
  */
-void generateColleagueMatrix2ndKindWithBalancing(MatrixXq& C,
+void FIRPM_EXPORT generateColleagueMatrix2ndKindWithBalancing(MatrixXq& C,
         std::vector<mpfr::mpreal>& a,
         mp_prec_t prec = 165ul);
 
@@ -72,7 +72,7 @@ void generateColleagueMatrix2ndKindWithBalancing(MatrixXq& C,
  * @param[out] eigenvalues the computed eigenvalues
  * @param[in] C the corresponding matrix
  */
-void determineEigenvalues(VectorXcq &eigenvalues,
+void FIRPM_EXPORT determineEigenvalues(VectorXcq &eigenvalues,
         MatrixXq &C);
 
 /*! Function that computes the real values located inside
@@ -82,7 +82,7 @@ void determineEigenvalues(VectorXcq &eigenvalues,
  * @param[in] a left side of the closed interval
  * @param[in] b right side of the closed interval
  */
-void getRealValues(std::vector<mpfr::mpreal> &realValues,
+void FIRPM_EXPORT getRealValues(std::vector<mpfr::mpreal> &realValues,
         VectorXcq &complexValues,
         mpfr::mpreal &a, mpfr::mpreal &b);
 

@@ -72,7 +72,7 @@ struct PMOutput
  * @param prec MPFR working precision used to perform the computations
  */
 
-void initUniformExtremas(std::vector<mpfr::mpreal>& omega,
+void FIRPM_EXPORT initUniformExtremas(std::vector<mpfr::mpreal>& omega,
         std::vector<Band>& B, mp_prec_t prec = 165ul);
 
 /*! An implementation of the reference scaling approach mentioned in section 4 of the article.
@@ -91,7 +91,7 @@ void initUniformExtremas(std::vector<mpfr::mpreal>& omega,
  * The bands are given inside \f$[0,\pi]\f$ (i.e. the FREQ band space)
  * @param prec MPFR working precision used to perform the computations
  */
-void referenceScaling(std::vector<mpfr::mpreal>& newX, std::vector<Band>& newChebyBands,
+void FIRPM_EXPORT referenceScaling(std::vector<mpfr::mpreal>& newX, std::vector<Band>& newChebyBands,
         std::vector<Band>& newFreqBands, std::size_t newXSize,
         std::vector<mpfr::mpreal>& x, std::vector<Band>& chebyBands,
         std::vector<Band>& freqBands, mp_prec_t prec = 165ul);
@@ -146,7 +146,7 @@ void referenceScaling(std::vector<mpfr::mpreal>& newX, std::vector<Band>& newChe
  * @endcode
  */
 
-PMOutput exchange(std::vector<mpfr::mpreal>& x,
+PMOutput FIRPM_EXPORT exchange(std::vector<mpfr::mpreal>& x,
         std::vector<Band>& chebyBands,
         mpfr::mpreal epsT = 0.01,
         int Nmax = 4,
@@ -176,7 +176,7 @@ PMOutput exchange(std::vector<mpfr::mpreal>& x,
  * @endcode
  */
 
-PMOutput firpm(std::size_t N,
+PMOutput FIRPM_EXPORT firpm(std::size_t N,
         std::vector<mpfr::mpreal>const& f,
         std::vector<mpfr::mpreal>const& a,
         std::vector<mpfr::mpreal>const& w,
@@ -200,7 +200,7 @@ PMOutput firpm(std::size_t N,
  * output contains the coefficients corresponding to the transfer function of the final filter
  * (in this case, for types I and II, the values are symmetrical to the middle coefficient(s))*/
 
-PMOutput firpmRS(std::size_t N,
+PMOutput FIRPM_EXPORT firpmRS(std::size_t N,
         std::vector<mpfr::mpreal>const& f,
         std::vector<mpfr::mpreal>const& a,
         std::vector<mpfr::mpreal>const& w,
@@ -225,7 +225,7 @@ PMOutput firpmRS(std::size_t N,
  * output contains the coefficients corresponding to the transfer function of the final filter
  * (in this case, for types III and IV, the values are antisymmetrical to the middle coefficient(s))*/
 
-PMOutput firpm(std::size_t N,
+PMOutput FIRPM_EXPORT firpm(std::size_t N,
         std::vector<mpfr::mpreal>const& f,
         std::vector<mpfr::mpreal>const& a,
         std::vector<mpfr::mpreal>const& w,
@@ -249,7 +249,7 @@ PMOutput firpm(std::size_t N,
  * @return information pertaining to the polynomial computed at the last iteration. The h vector of the
  * output contains the coefficients corresponding to the transfer function of the final filter
  * (in this case, for types III and IV, the values are antisymmetrical to the middle coefficient(s))*/
-PMOutput firpmRS(std::size_t N,
+PMOutput FIRPM_EXPORT firpmRS(std::size_t N,
         std::vector<mpfr::mpreal>const& f,
         std::vector<mpfr::mpreal>const& a,
         std::vector<mpfr::mpreal>const& w,

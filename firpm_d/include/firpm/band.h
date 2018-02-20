@@ -65,7 +65,7 @@ enum ConversionDirection {
  * @param[in]  in input frequency bands
  * @param[in]  direction the direction in which the change of variable is performed
  */
-void bandConversion(std::vector<Band> &out, std::vector<Band> &in,
+void FIRPM_EXPORT bandConversion(std::vector<Band> &out, std::vector<Band> &in,
         ConversionDirection direction);
 
 #endif /* BAND_H_ */

@@ -42,5 +42,6 @@
 #include "../mpreal.h"
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Eigenvalues>
+#include "firpm_EXPORT.h"
 
 #endif /* UTIL_H_ */
