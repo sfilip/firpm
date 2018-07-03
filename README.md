@@ -4,7 +4,7 @@ firpm library
 ## Folder organization and installation instructions
 
 This directory contains three different folders corresponding to the
-three implementations that are mentioned in the submitted article:
+three implementations that are mentioned in [1] and [2, Ch. 3]:
 
 * firpm_d   : corresponds to the double (64-bit) precision version of the routines
 * firpm_ld  : corresponds to the long double (80-bit on x86 architectures) precision version
@@ -25,3 +25,11 @@ than the double and long double code, which the end user might not necessarily b
 ## Licensing
 
 The provided code is primarily GPLv3+ licensed.
+
+## References
+[1] S.-I. Filip, A robust and scalable implementation of the Parks-McClellan
+algorithm for designing FIR filters, ACM Trans. Math. Softw., vol. 43,
+no. 1, Aug. 2016, Art. no. 7.
+
+[2] S.-I. Filip, Robust tools for weighted Chebyshev approximation and
+applications to digital filter design, Ph.D. dissertation, ENS de Lyon, France, 2016.
