@@ -26,6 +26,11 @@ void initUniformExtremas(std::vector<long double>& omega,
 {
     long double avgDistance = 0;
 
+    if (omega.size() <= B.size()) {
+        std::cerr << "Omega sample size is too small!\n";
+        exit(EXIT_FAILURE);
+    } 
+
     std::vector<long double> bandwidths(B.size());
     std::vector<std::size_t> nonPointBands;
     for(std::size_t i = 0u; i < B.size(); ++i) {
@@ -49,17 +54,15 @@ void initUniformExtremas(std::vector<long double>& omega,
     B[nonPointBands[nonPointBands.size() - 1u]].extremas = omega.size() - (B.size() - nonPointBands.size());
     long double buffer;
     buffer = bandwidths[nonPointBands[0]] / avgDistance;
-    buffer += 0.5;
 
         if (nonPointBands.size() > 1) {
-            B[nonPointBands[0]].extremas = lrint(buffer) + 1;
+            B[nonPointBands[0]].extremas = lroundl(buffer) + 1;
             B[nonPointBands[nonPointBands.size() - 1u]].extremas -= B[nonPointBands[0]].extremas;
         }
 
         for(std::size_t i{1u}; i < nonPointBands.size() - 1; ++i) {
             buffer = bandwidths[nonPointBands[i]] / avgDistance;
-            buffer += 0.5;
-            B[nonPointBands[i]].extremas = lrint(buffer) + 1;
+            B[nonPointBands[i]].extremas = lroundl(buffer) + 1;
             B[nonPointBands[nonPointBands.size() - 1u]].extremas -= B[nonPointBands[i]].extremas;
         }
 
@@ -87,10 +90,17 @@ void referenceScaling(std::vector<long double>& newX, std::vector<Band>& newCheb
         std::size_t multipointBands = 0u;
         std::size_t offset = 0u;
         int twoInt = 0;
+
+        if (x.size() == 0)
+        {
+            std::cerr << "Failed to do reference scaling since x is empty!\n";
+            exit(EXIT_FAILURE);
+        }
+
         for(std::size_t i = 0u; i < chebyBands.size(); ++i)
         {
             newX.push_back(x[offset]);
-            if(chebyBands[i].extremas > 2u)
+            if (chebyBands[i].extremas > 2u)
             {
                 ++multipointBands;
                 for(std::size_t j = 1u; j < chebyBands[i].extremas - 2u; ++j)
@@ -629,7 +639,7 @@ PMOutput firpm(std::size_t n,
                         freqBands[i].stop  = M_PI * f[2u * i + 1u];
                 }
                 freqBands[i].space = BandSpace::FREQ;
-                freqBands[i].amplitude = [=](BandSpace bSpace, long double x) -> long double
+                freqBands[i].amplitude = [i, &a, &freqBands](BandSpace bSpace, long double x) -> long double
                 {
                     if (a[2u * i] != a[2u * i + 1u]) {
                         if(bSpace == BandSpace::CHEBY)
@@ -681,7 +691,7 @@ PMOutput firpm(std::size_t n,
         freqBands[i].start = M_PI * f[2u * i];
         freqBands[i].stop  = M_PI * f[2u * i + 1u];
         freqBands[i].space = BandSpace::FREQ;
-        freqBands[i].amplitude = [=](BandSpace bSpace, long double x) -> long double
+        freqBands[i].amplitude = [i, &a, &freqBands](BandSpace bSpace, long double x) -> long double
         {
             if (a[2u * i] != a[2u * i + 1u]) {
                 if(bSpace == BandSpace::CHEBY)
@@ -760,7 +770,7 @@ PMOutput firpmRS(std::size_t n,
                         freqBands[i].stop  = M_PI * f[2u * i + 1u];
                 }
                 freqBands[i].space = BandSpace::FREQ;
-                freqBands[i].amplitude = [=](BandSpace bSpace, long double x) -> long double
+                freqBands[i].amplitude = [i, &a, &freqBands](BandSpace bSpace, long double x) -> long double
                 {
                     if (a[2u * i] != a[2u * i + 1u]) {
                         if(bSpace == BandSpace::CHEBY)
@@ -827,7 +837,7 @@ PMOutput firpmRS(std::size_t n,
         freqBands[i].start = M_PI * f[2u * i];
         freqBands[i].stop  = M_PI * f[2u * i + 1u];
         freqBands[i].space = BandSpace::FREQ;
-        freqBands[i].amplitude = [=](BandSpace bSpace, long double x) -> long double
+        freqBands[i].amplitude = [i, &a, &freqBands](BandSpace bSpace, long double x) -> long double
         {
             if (a[2u * i] != a[2u * i + 1u]) {
                 if(bSpace == BandSpace::CHEBY)
@@ -958,7 +968,7 @@ PMOutput firpm(std::size_t n,
                             }
 
                         };
-                        freqBands[i].amplitude = [freqBands, a, i](BandSpace bSpace, long double x) -> long double
+                        freqBands[i].amplitude = [i, &a, &freqBands](BandSpace bSpace, long double x) -> long double
                         {
                             if (a[2u * i] != a[2u * i + 1u]) {
                                 if(bSpace == BandSpace::CHEBY)
@@ -1024,7 +1034,7 @@ PMOutput firpm(std::size_t n,
                             }
 
                         };
-                        freqBands[i].amplitude = [freqBands, a, i](BandSpace bSpace, long double x) -> long double
+                        freqBands[i].amplitude = [i, &a, &freqBands](BandSpace bSpace, long double x) -> long double
                         {
                             if (a[2u * i] != a[2u * i + 1u]) {
                                 if(bSpace == BandSpace::CHEBY)
@@ -1111,7 +1121,7 @@ PMOutput firpm(std::size_t n,
                         freqBands[i].start = M_PI * fn[2u * i];
                         freqBands[i].stop  = M_PI * fn[2u * i + 1u];
                         freqBands[i].space = BandSpace::FREQ;
-                        freqBands[i].amplitude = [=](BandSpace bSpace, long double x) -> long double
+                        freqBands[i].amplitude = [i, &a, &freqBands](BandSpace bSpace, long double x) -> long double
                         {
                             if(bSpace == BandSpace::CHEBY)
                                 x = acosl(x);
@@ -1144,7 +1154,7 @@ PMOutput firpm(std::size_t n,
                         freqBands[i].start = M_PI * fn[2u * i];
                         freqBands[i].stop  = M_PI * fn[2u * i + 1u];
                         freqBands[i].space = BandSpace::FREQ;
-                        freqBands[i].amplitude = [=](BandSpace bSpace, long double x) -> long double
+                        freqBands[i].amplitude = [i, &a, &freqBands](BandSpace bSpace, long double x) -> long double
                         {
                             if(bSpace == BandSpace::CHEBY)
                                 x = acos(x);
@@ -1293,7 +1303,7 @@ PMOutput firpmRS(std::size_t n,
                             }
 
                         };
-                        freqBands[i].amplitude = [freqBands, a, i](BandSpace bSpace, long double x) -> long double
+                        freqBands[i].amplitude = [i, &a, &freqBands](BandSpace bSpace, long double x) -> long double
                         {
                             if (a[2u * i] != a[2u * i + 1u]) {
                                 if(bSpace == BandSpace::CHEBY)
@@ -1359,7 +1369,7 @@ PMOutput firpmRS(std::size_t n,
                             }
 
                         };
-                        freqBands[i].amplitude = [freqBands, a, i](BandSpace bSpace, long double x) -> long double
+                        freqBands[i].amplitude = [i, &a, &freqBands](BandSpace bSpace, long double x) -> long double
                         {
                             if (a[2u * i] != a[2u * i + 1u]) {
                                 if(bSpace == BandSpace::CHEBY)
@@ -1461,7 +1471,7 @@ PMOutput firpmRS(std::size_t n,
                         freqBands[i].start = M_PI * fn[2u * i];
                         freqBands[i].stop  = M_PI * fn[2u * i + 1u];
                         freqBands[i].space = BandSpace::FREQ;
-                        freqBands[i].amplitude = [=](BandSpace bSpace, long double x) -> long double
+                        freqBands[i].amplitude = [i, &a, &freqBands](BandSpace bSpace, long double x) -> long double
                         {
                             if(bSpace == BandSpace::CHEBY)
                                 x = acosl(x);
@@ -1494,7 +1504,7 @@ PMOutput firpmRS(std::size_t n,
                         freqBands[i].start = M_PI * fn[2u * i];
                         freqBands[i].stop  = M_PI * fn[2u * i + 1u];
                         freqBands[i].space = BandSpace::FREQ;
-                        freqBands[i].amplitude = [=](BandSpace bSpace, long double x) -> long double
+                        freqBands[i].amplitude = [i, &a, &freqBands](BandSpace bSpace, long double x) -> long double
                         {
                             if(bSpace == BandSpace::CHEBY)
                                 x = acos(x);
