@@ -7,7 +7,7 @@
  */
 
 //    firpm_d
-//    Copyright (C) 2015  S. Filip
+//    Copyright (C) 2015 - 2019  S. Filip
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -27,12 +27,14 @@
 
 #include "util.h"
 
+enum chebkind_t {FIRST, SECOND};
+
 /*! Computes the cosines of the elements of a vector
  * @param[in] in the vector to process
  * @param[out] out the vector containing the cosines of the elements from the
  * vector in
  */
-void applyCos(std::vector<double>& out,
+void cos(std::vector<double>& out,
         std::vector<double> const& in);
 
 /*! Does a change of variable from the interval \f$\left[-1, 1\right]\f$ to the
@@ -42,61 +44,17 @@ void applyCos(std::vector<double>& out,
  * @param[in] a left bound of the desired interval
  * @param[in] b right bound of the desired interval
  */
-void changeOfVariable(std::vector<double>& out,
+void chgvar(std::vector<double>& out,
         std::vector<double> const& in,
         double& a, double& b);
 
-/*! The Clenshaw algorithm which evaluates the value of a Chebyshev interpolant
- *  (CI) at a certain point
- *  @param[out] result reference to the variable that will contain the
- *  evaluation of the CI at the specified point (parameter x)
- *  @param[in] p a vector containing the coefficients of the CI
- *  @param[in] x the point at which we want to compute the value
- *  of the CI
- *  @param[in] a left bound of the interval where the CI is considered
- *  @param[in] b right bound of the interval where the CI is considered
- */
-void evaluateClenshaw(double &result, std::vector<double> &p,
-                        double &x, double &a, double &b);
-
-/*! The Clenshaw algorithm which evaluates the value of a CI implicitly
- *  considered on the \f$\left[-1,1\right]\f$ interval
- *  @param[out] result reference to the variable that will contain the
- *  evaluation of the CI at the specified point (parameter x)
- *  @param[in] p a vector containing the coefficients of the CI
- *  @param[in] x the point at which we want to compute the value
- *  of the CI
- */
-void evaluateClenshaw(double &result, std::vector<double> &p,
-                        double &x);
-
-/*! The Clenshaw algorithm which evaluates the value of a CI expressed
- *  using a basis consisting of Chebyshev polynomials of the second kind.
- *  The working interval is considered to be \f$\left[-1,1\right]\f$.
- *  @param[out] result reference to the variable that will contain the
- *  evaluation of the CI at the specified point (parameter x)
- *  @param[in] p a vector containing the coefficients of the CI
- *  @param[in] x the point at which we want to compute the value
- *  of the CI
- */
-void evaluateClenshaw2ndKind(double &result, std::vector<double> &p,
-                        double &x);
-
-
 /*! Function that generates equidistant nodes inside the
  * \f$\left[0,\pi\right]\f$ interval, meaning values of the
- * form \f$\frac{i\pi}{n}\f$, where \f$0\leq i\leq n\f$
+ * form \f$\frac{i\pi}{n-1}\f$, where \f$0\leq i\leq n-1\f$
  * @param[out] v the vector that will contain the equi-distributed points
- * @param[in] n the number of points - 1 which will be computed
+ * @param[in] n the number of points which will be computed
  */
-void generateEquidistantNodes(std::vector<double>& v, std::size_t n);
-
-/*! Function that generates the Chebyshev nodes of the second kind
- * \f$\mu_k=\cos\left(\frac{k\pi}{n}\right), k=0,\ldots,n\f$.
- * @param[out] v the vector that will contain the Chebyshev nodes
- * @param[in] n the number of points - 1 which will be computed
- */
-void generateChebyshevPoints(std::vector<double>& v, std::size_t n);
+void equipts(std::vector<double>& v, std::size_t n);
 
 
 /*! This function computes the values of the coefficients of the CI when
@@ -105,27 +63,36 @@ void generateChebyshevPoints(std::vector<double>& v, std::size_t n);
  * @param[in] fv vector that holds the value of the current function to
  * approximate at the Chebyshev nodes of the second kind scaled to the
  * appropriate interval (in our case it will be \f$\left[0,\pi\right]\f$)
- * @param[in] n degree of the CI
  */
-void generateChebyshevCoefficients(std::vector<double>& c,
-                std::vector<double>& fv, std::size_t n);
+void chebcoeffs(std::vector<double>& c,
+                std::vector<double>& fv);
 
 /*! Function that generates the coefficients of the derivative of a given CI
- *  @param[out] derivC the vector of coefficients of the derivative of the CI
+ *  @param[out] dc the vector of coefficients of the derivative of the CI
  *  @param[in] c the vector of coefficients of the CI whose derivative we
  *  want to compute
+ *  @param[in] kind what kind of coefficient do we want to compute (for a
+ *  Chebyshev expansion of the first or second kind)
  */
-void derivativeCoefficients1stKind(std::vector<double>& derivC,
-                        std::vector<double>& c);
+void diffcoeffs(std::vector<double>& dc,
+                std::vector<double>& c,
+                chebkind_t kind = SECOND);
 
-/*! Function that generates the coefficients of the derivative of a given
- *  CI, but expressed in the orthogonal basis of Chebyshev polynomials of
- *  the second kind.
- *  @param[out] derivC the vector of coefficients of the derivative of the CI
- *  @param[in] c the vector of coefficients of the CI whose derivative we
- *  want to compute
- */
-void derivativeCoefficients2ndKind(std::vector<double>& derivC,
-        std::vector<double>& c);
+/*! Chebyshev proxy rootfinding method for a given CI
+* @param[out] r the vector of computed roots of the CI
+* @param[in] c the Chebyshev coeffients of the polynomial whose roots
+* we want to find
+* @param[in] dom the real domain where we are looking for the roots
+* @param[in] kind the type of Chebyshev expansion (first or second)
+* @param[in] balance flag signaling if we should use balancing (in 
+* the vein of [Parlett&Reinsch1969] "Balancing a Matrix for
+* Calculation of Eigenvalues and Eigenvectors") for the resulting 
+* Chebyshev companion matrix 
+*/
+void roots(std::vector<double>& r, std::vector<double>& c,
+           std::pair<double, double> const &dom,
+           chebkind_t kind = SECOND,
+           bool balance = true);
+
 
 #endif /* CHEBY_H_ */
