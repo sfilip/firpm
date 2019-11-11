@@ -8,7 +8,7 @@
  */
 
 //    firpm_d
-//    Copyright (C) 2015  S. Filip
+//    Copyright (C) 2015 - 2019  S. Filip
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@
  * @param[out] w the computed weights
  * @param[in] x the interpolation points
  */
-void barycentricWeights(std::vector<double>& w,
+void baryweights(std::vector<double>& w,
         std::vector<double>& x);
 
 /*! Determines the current reference error according to the
@@ -47,8 +47,8 @@ void barycentricWeights(std::vector<double>& w,
  * @param[in] bands information relating to the ideal frequency response of
  * the filter
  */
-void computeDelta(double &delta, std::vector<double>& x,
-        std::vector<Band> &bands);
+void computedelta(double &delta, std::vector<double>& x,
+        std::vector<band_t> &bands);
 
 /*! Determines the current reference error according to the
  * barycentric formula
@@ -60,8 +60,8 @@ void computeDelta(double &delta, std::vector<double>& x,
  * the filter
  */
 
-void computeDelta(double &delta, std::vector<double>& w,
-        std::vector<double>& x, std::vector<Band> &bands);
+void computedelta(double &delta, std::vector<double>& w,
+        std::vector<double>& x, std::vector<band_t> &bands);
 
 /*! Computes the filter response at the current reference set
  * @param[out] C the vector of frequency responses at the reference set
@@ -69,8 +69,8 @@ void computeDelta(double &delta, std::vector<double>& w,
  * @param[in] x the current reference vector
  * @param[in] bands frequency band information for the ideal filter
  */
-void computeC(std::vector<double> &C, double &delta,
-        std::vector<double> &x, std::vector<Band> &bands);
+void compc(std::vector<double> &C, double &delta,
+        std::vector<double> &x, std::vector<band_t> &bands);
 
 /*! Computes the frequency response of the current filter
  * @param[out] Pc the frequency response amplitude value at the current node
@@ -81,7 +81,7 @@ void computeC(std::vector<double> &C, double &delta,
  * @param[in] C the frequency responses at the current reference set
  * @param[in] w the current barycentric weights
  */
-void computeApprox(double &Pc, const double &xVal,
+void approx(double &Pc, const double &xVal,
         std::vector<double> &x, std::vector<double> &C,
         std::vector<double> & w);
 
@@ -95,10 +95,10 @@ void computeApprox(double &Pc, const double &xVal,
  * @param[in] w the barycentric weights
  * @param[in] bands frequency band information for the ideal filter
  */
-void computeError(double &error, const double &xVal,
+void comperror(double &error, const double &xVal,
         double &delta, std::vector<double> &x,
         std::vector<double> &C, std::vector<double> &w,
-        std::vector<Band> &bands);
+        std::vector<band_t> &bands);
 
 /*! The ideal frequency response and weight information at the given frequency
  * node (it can be in the \f$\left[-1,1\right]\f$ interval,
@@ -109,8 +109,8 @@ void computeError(double &error, const double &xVal,
  * @param[in] xVal the current frequency node where we do our computation
  * @param[in] bands frequency band information for the ideal filter
  */
-void computeIdealResponseAndWeight(double &D, double &W,
-        const double &xVal, std::vector<Band> &bands);
+void idealvals(double &D, double &W,
+        const double &xVal, std::vector<band_t> &bands);
 
 
 #endif // BARYCENTRIC_H
