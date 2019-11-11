@@ -69,7 +69,7 @@ void idealvals(double &D, double &W,
     }
 }
 
-void computedelta(double &delta, std::vector<double>& x,
+void compdelta(double &delta, std::vector<double>& x,
         std::vector<band_t> &bands)
 {
     std::vector<double> w(x.size());
@@ -91,7 +91,7 @@ void computedelta(double &delta, std::vector<double>& x,
     delta = num / denom;
 }
 
-void computedelta(double &delta, std::vector<double>& w,
+void compdelta(double &delta, std::vector<double>& w,
         std::vector<double>& x, std::vector<band_t> &bands)
 {
     double num, denom, D, W, buffer;

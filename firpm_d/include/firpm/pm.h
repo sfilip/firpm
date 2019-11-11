@@ -81,7 +81,7 @@ struct pmoutput_t
  */
 
 void uniform(std::vector<double>& omega,
-        std::vector<Band>& B, std::size_t n);
+        std::vector<band_t>& B, std::size_t n);
 
 /*! An implementation of the reference scaling approach mentioned 
  * in section 4 of the article.
@@ -102,10 +102,10 @@ void uniform(std::vector<double>& omega,
  * corresponds to. The bands are given inside \f$[0,\pi]\f$ (i.e., the FREQ 
  * band space)
  */
-void referenceScaling(std::vector<double>& nx, std::vector<Band>& ncbands,
-        std::vector<Band>& nfbands, std::size_t nxs,
-        std::vector<double>& x, std::vector<Band>& cbands,
-        std::vector<Band>& fbands);
+void referenceScaling(std::vector<double>& nx, std::vector<band_t>& ncbands,
+        std::vector<band_t>& nfbands, std::size_t nxs,
+        std::vector<double>& x, std::vector<band_t>& cbands,
+        std::vector<band_t>& fbands);
 
 /*! An internal routine which implements the exchange algorithm for designing 
  * FIR filters

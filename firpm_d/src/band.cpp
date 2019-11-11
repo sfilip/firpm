@@ -28,12 +28,12 @@ void bandconv(std::vector<band_t> &out, std::vector<band_t> &in,
         out[i].xs        = in[n - i].xs;
         if (direction == convdir_t::FROMFREQ)
         {
-            out[i].start = cos(in[n - i].stop);
-            out[i].stop  = cos(in[n - i].start);
+            out[i].start = cosl(in[n - i].stop);
+            out[i].stop  = cosl(in[n - i].start);
             out[i].space = space_t::CHEBY;
         } else {
-            out[i].start = acos(in[n - i].stop);
-            out[i].stop  = acos(in[n - i].start);
+            out[i].start = acosl(in[n - i].stop);
+            out[i].stop  = acosl(in[n - i].start);
             out[i].space = space_t::FREQ;
         }
     }

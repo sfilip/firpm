@@ -47,7 +47,7 @@ void baryweights(std::vector<double>& w,
  * @param[in] bands information relating to the ideal frequency response of
  * the filter
  */
-void computedelta(double &delta, std::vector<double>& x,
+void compdelta(double &delta, std::vector<double>& x,
         std::vector<band_t> &bands);
 
 /*! Determines the current reference error according to the
@@ -60,7 +60,7 @@ void computedelta(double &delta, std::vector<double>& x,
  * the filter
  */
 
-void computedelta(double &delta, std::vector<double>& w,
+void compdelta(double &delta, std::vector<double>& w,
         std::vector<double>& x, std::vector<band_t> &bands);
 
 /*! Computes the filter response at the current reference set

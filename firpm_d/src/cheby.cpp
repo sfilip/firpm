@@ -118,7 +118,7 @@ void cos(std::vector<double>& out,
 {
     out.resize(in.size());
     for(std::size_t i{0u}; i < in.size(); ++i)
-        out[i] = cos(in[i]);
+        out[i] = cosl(in[i]);
 }
 
 void chgvar(std::vector<double>& out,
@@ -213,7 +213,7 @@ void chebcoeffs(std::vector<double>& c,
     for(std::size_t i{0u}; i < n; ++i) {
         // compute the actual value at the Chebyshev
         // node cos(i * pi / n)
-        buffer = cos(v[i]);
+        buffer = cosl(v[i]);
         clenshaw(c[i], fv, buffer, FIRST);
 
         if(i == 0u || i == n-1u) {

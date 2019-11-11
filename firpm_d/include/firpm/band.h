@@ -47,11 +47,11 @@ enum space_t {
  */
 struct band_t {
     space_t space;          /**< the space in which we are working */
-    std::function<double(BandSpace, double)> amplitude;
+    std::function<double(space_t, double)> amplitude;
                             /**< the ideal amplitude for this band */
     double start;           /**< the left bound of the band */
     double stop;            /**< the right bound of the band */
-    std::function<double(BandSpace, double)> weight;
+    std::function<double(space_t, double)> weight;
                             /**< weight function value on the band */
     std::size_t xs;         /**< number of interpolation points taken in the band */
 };
@@ -70,7 +70,7 @@ enum convdir_t {
  * @param[in]  direction the direction in which the change of 
  * variable is performed
  */
-void bandconv(std::vector<Band> &out, std::vector<Band> &in,
+void bandconv(std::vector<band_t> &out, std::vector<band_t> &in,
         convdir_t direction);
 
 #endif /* BAND_H_ */
