@@ -715,7 +715,7 @@ pmoutput_t firpm(std::size_t n,
                 }
                 return a[2u*i];
             };
-            fbands[i].weight = [i, w](space_t, double x) -> double {
+            fbands[i].weight = [i, &w](space_t, double x) -> double {
                 return w[i];
             };
         }
@@ -733,7 +733,7 @@ pmoutput_t firpm(std::size_t n,
                 else
                     fbands[i].stop = M_PI * f[2u*i+1u];
             fbands[i].space = space_t::FREQ;
-            fbands[i].amplitude = [i, a, fbands](space_t space, double x) -> double {
+            fbands[i].amplitude = [i, &a, &fbands](space_t space, double x) -> double {
                 if(a[2u*i] != a[2u*i+1u]) {
                     if(space == space_t::CHEBY)
                         x = acosl(x);
@@ -746,7 +746,7 @@ pmoutput_t firpm(std::size_t n,
                 else
                     return a[2u*i] / sqrt((x+1)/2);
             };
-            fbands[i].weight = [i, w](space_t space, double x) -> double {
+            fbands[i].weight = [i, &w](space_t space, double x) -> double {
                 if(space == space_t::FREQ)
                     return cosl(x/2) * w[i];
                 else
@@ -758,7 +758,7 @@ pmoutput_t firpm(std::size_t n,
     pmoutput_t output;
     std::vector<double> x;
     bandconv(cbands, fbands, convdir_t::FROMFREQ);
-    std::function<double(double)> wf = [cbands](double x) -> double {
+    std::function<double(double)> wf = [&cbands](double x) -> double {
         for(std::size_t i{0u}; i < cbands.size(); ++i)
             if(cbands[i].start <= x && x <= cbands[i].stop)
                 return cbands[i].weight(space_t::CHEBY, x);

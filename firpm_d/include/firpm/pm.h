@@ -226,10 +226,11 @@ pmoutput_t firpm(std::size_t n,
  * significant digits of the minimax error that are accurate at the end of the 
  * final iteration)
  * @param[in] nmax the degree used by the CPR method on each subinterval
+ * @param[in] strategy the initialization strategy
  * @param[in] depth how many times should reference scaling be applied 
  * recursively (default value is 1)
- * @param[in] rstrategt  what initialization strategy to use at the lowest level 
- * (uniform or AFP-based)
+ * @param[in] rstrategy  what initialization strategy to use at the lowest level 
+ * (uniform or AFP-based) if strategy is reference scaling 
  * @return information pertaining to the polynomial computed at the last iteration. 
  * The h vector of the output contains the coefficients corresponding to the transfer 
  * function of the final filter (in this case, for types I and II, the values are 
@@ -270,20 +271,31 @@ pmoutput_t firpmAFP(std::size_t n,
             std::size_t nmax = 4u);
 
 
-/*! Parks-McClellan routine for implementing type III and IV FIR filters. This routine uses uniform
- * initialization.
- * @param[in] N \f$N+1\f$ denotes the number of coefficients of the final transfer function. For even n, the
- * filter will be type III, while for odd n the type is IV.
+/*! Parks-McClellan routine for implementing type III and IV FIR filters. 
+ * This routine is the most general and can be set to use any of the three
+ * proposed initialization types. If the default parameters are used, then
+ * it will use uniform initialization.
+ * @param[in] N \f$N+1\f$ denotes the number of coefficients of the final 
+ * transfer function. For even n, the filter will be type III, while for odd 
+ * n the type is IV.
  * @param[in] f vector denoting the frequency ranges of each band of interest
  * @param[in] a the ideal amplitude at each point of f
  * @param[in] w the wight function value on each band
- * @param[in] type denotes the type of filter we want to design: digital differentiator of Hilbert transformer
- * @param[in] epsT convergence parameter threshold (i.e quantizes the number of significant digits
- * of the minimax error that are accurate at the end of the final iteration)
- * @param[in] Nmax the degree used by the CPR method on each subinterval
- * @return information pertaining to the polynomial computed at the last iteration. The h vector of the
- * output contains the coefficients corresponding to the transfer function of the final filter
- * (in this case, for types III and IV, the values are antisymmetrical to the middle coefficient(s))*/
+ * @param[in] type denotes the type of filter we want to design: digital 
+ * differentiator of Hilbert transformer
+ * @param[in] eps convergence parameter threshold (i.e quantizes the number 
+ * of significant digits of the minimax error that are accurate at the end of 
+ * the final iteration)
+ * @param[in] nmax the degree used by the CPR method on each subinterval
+ * @param[in] strategy the initialization strategy
+ * @param[in] depth how many times should reference scaling be applied 
+ * recursively (default value is 1)
+ * @param[in] rstrategy  what initialization strategy to use at the lowest level 
+ * (uniform or AFP-based) if strategy is reference scaling 
+ * @return information pertaining to the polynomial computed at the last iteration. 
+ * The h vector of the output contains the coefficients corresponding to the 
+ * transfer function of the final filter (in this case, for types III and IV, 
+ * the values are antisymmetrical to the middle coefficient(s))*/
 
 /*pmoutput_t firpm(std::size_t N,
         std::vector<double>const& f,
