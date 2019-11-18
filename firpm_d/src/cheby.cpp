@@ -249,7 +249,7 @@ void diffcoeffs(std::vector<double>& dc,
         break;
         default: {
             int n = c.size() - 1;
-            for(int i{n}; i > 0u; --i)
+            for(int i{n}; i > 0; --i)
             dc[i - 1] = c[i] * i;
         }
         break;
@@ -271,7 +271,7 @@ void roots(std::vector<double>& r, std::vector<double>& c,
     VectorXcd eigs = es.eigenvalues();
 
     double threshold = 1e-20;
-    for(std::size_t i{0u}; i < eigs.size(); ++i) {
+    for(Eigen::Index i{0}; i < eigs.size(); ++i) {
         if(fabs(eigs(i).imag()) < threshold)
             if(dom.first < eigs(i).real() && 
                dom.second >= eigs(i).real()) {

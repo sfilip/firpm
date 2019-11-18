@@ -51,7 +51,7 @@ void afp(std::vector<double>& points, MatrixXd& A,
     VectorXd y = A.colPivHouseholderQr().solve(b);
     points.clear();
 
-    for(std::size_t i{0u}; i < y.rows(); ++i)
+    for(Eigen::Index i{0}; i < y.rows(); ++i)
         if(y(i) != 0.0)
             points.push_back(mesh[i]);
     std::sort(points.begin(), points.end(),
@@ -280,7 +280,7 @@ void split(std::vector<interval_t>& subIntervals,
     std::size_t bandOffset = 0u;
     for(std::size_t i{0u}; i < chebyBands.size(); ++i)
     {
-        double middleValA, middleValB;
+        double middleValA{0.0}, middleValB{0.0};
         if(chebyBands[i].xs == 0) {
             subIntervals.push_back(
                 std::make_pair(chebyBands[i].start, 
