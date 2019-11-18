@@ -209,7 +209,7 @@ pmoutput_t firpm(std::size_t n,
             std::vector<double>const &a,
             std::vector<double>const &w,
             double eps = 0.01,
-            std::size_t nmax = 4,
+            std::size_t nmax = 4u,
             init_t strategy = init_t::UNIFORM,
             std::size_t depth = 0u,
             init_t rstrategy = init_t::UNIFORM);
@@ -241,7 +241,7 @@ pmoutput_t firpmRS(std::size_t n,
             std::vector<double>const &a,
             std::vector<double>const &w,
             double eps = 0.01,
-            std::size_t nmax = 4,
+            std::size_t nmax = 4u,
             std::size_t depth = 1u,
             init_t rstrategy = init_t::UNIFORM);
 
@@ -267,9 +267,9 @@ pmoutput_t firpmAFP(std::size_t n,
             std::vector<double>const &a,
             std::vector<double>const &w,
             double eps = 0.01,
-            std::size_t nmax = 4);
+            std::size_t nmax = 4u);
 
-//TODO: refactor and testing pending
+
 /*! Parks-McClellan routine for implementing type III and IV FIR filters. This routine uses uniform
  * initialization.
  * @param[in] N \f$N+1\f$ denotes the number of coefficients of the final transfer function. For even n, the
@@ -285,13 +285,16 @@ pmoutput_t firpmAFP(std::size_t n,
  * output contains the coefficients corresponding to the transfer function of the final filter
  * (in this case, for types III and IV, the values are antisymmetrical to the middle coefficient(s))*/
 
-/*PMOutput firpm(std::size_t N,
+/*pmoutput_t firpm(std::size_t N,
         std::vector<double>const& f,
         std::vector<double>const& a,
         std::vector<double>const& w,
-        ftype type,
-        double epsT = 0.01,
-        int Nmax = 4);*/
+        filter_t type,
+        double eps = 0.01,
+        std::size_t nmax = 4,
+        init_t strategy = init_t::UNIFORM,
+        std::size_t depth = 0u,
+        init_t rstrategy = init_t::UNIFORM);*/
 
 /*! Parks-McClellan routine for implementing type III and IV FIR filters. This routine uses reference scaling.
  * @param[in] N \f$N+1\f$ denotes the number of coefficients of the final transfer function. For even n, the

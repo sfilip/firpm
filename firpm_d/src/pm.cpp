@@ -278,35 +278,50 @@ void split(std::vector<interval_t>& subIntervals,
         std::vector<double> &x)
 {
     std::size_t bandOffset = 0u;
-    for(std::size_t i = 0u; i < chebyBands.size(); ++i)
+    for(std::size_t i{0u}; i < chebyBands.size(); ++i)
     {
-        if(bandOffset < x.size())
-        {
-            double middleValA, middleValB;
-            if (x[bandOffset] > chebyBands[i].start
+        double middleValA, middleValB;
+        if(chebyBands[i].xs == 0) {
+            subIntervals.push_back(
+                std::make_pair(chebyBands[i].start, 
+                               chebyBands[i].stop));
+        } else {
+            if (bandOffset < x.size() 
+                && x[bandOffset] > chebyBands[i].start
                 && x[bandOffset] < chebyBands[i].stop)
             {
                 middleValA = x[bandOffset];
                 subIntervals.push_back(
-                        std::make_pair(chebyBands[i].start, middleValA));
+                    std::make_pair(chebyBands[i].start, middleValA));
+                if (chebyBands[i].xs == 1) {
+                    subIntervals.push_back(
+                        std::make_pair(middleValA, 
+                                       chebyBands[i].stop));
+                }
             } else {
                 middleValA = chebyBands[i].start;
-            }
-            if(chebyBands[i].xs > 1)
-            {
-                for(std::size_t j{bandOffset};
-                    j < bandOffset + chebyBands[i].xs - 1u; ++j)
-                {
-                    middleValB = x[j + 1];
-                    subIntervals.push_back(std::make_pair(middleValA, middleValB));
-                    middleValA = middleValB;
+                if(chebyBands[i].xs == 1) {
+                    subIntervals.push_back(std::make_pair(
+                        middleValA, chebyBands[i].stop
+                    ));
                 }
-                if(middleValA != chebyBands[i].stop)
-                    subIntervals.push_back(
-                        std::make_pair(middleValA, chebyBands[i].stop));
             }
-            bandOffset += chebyBands[i].xs;
         }
+        if(bandOffset < x.size() 
+           && chebyBands[i].xs > 1)
+        {
+            for(std::size_t j{bandOffset};
+                j < bandOffset + chebyBands[i].xs - 1u; ++j)
+            {
+                middleValB = x[j + 1];
+                subIntervals.push_back(std::make_pair(middleValA, middleValB));
+                middleValA = middleValB;
+            }
+            if(middleValA != chebyBands[i].stop)
+                subIntervals.push_back(
+                    std::make_pair(middleValA, chebyBands[i].stop));
+        }
+        bandOffset += chebyBands[i].xs;
     }
 }
 
@@ -323,8 +338,8 @@ void extremaSearch(double& convergenceOrder,
 
     split(subIntervals, chebyBands, x);
 
-    //std::cout << "Number of subintervals: "
-    //    << subIntervals.size() << std::endl;
+    std::cout << "Number of subintervals: "
+        << subIntervals.size() << std::endl;
 
     // 2.   Compute the barycentric variables (i.e. weights)
     //      needed for the current iteration
@@ -334,7 +349,7 @@ void extremaSearch(double& convergenceOrder,
 
 
     compdelta(delta, w, x, chebyBands);
-    //std::cout << "delta = " << delta << std::endl;
+    std::cout << "delta = " << delta << std::endl;
 
     std::vector<double> C(x.size());
     compc(C, delta, x, chebyBands);
@@ -468,12 +483,14 @@ void extremaSearch(double& convergenceOrder,
             if (fabs(maxErrorPoint.second) < fabs(potentialExtrema[extremaIt].second))
                 maxErrorPoint = potentialExtrema[extremaIt];
         }
-        alternatingExtrema.push_back(maxErrorPoint);
+        if (std::isfinite(maxErrorPoint.second)) {
+            alternatingExtrema.push_back(maxErrorPoint);
+        }
         ++extremaIt;
     }
     std::vector<std::pair<double, double>> bufferExtrema;
-    //std::cout << "Alternating extrema: " << x.size() << " | "
-    //    << alternatingExtrema.size() << std::endl;
+    std::cout << "Alternating extrema: " << x.size() << " | "
+        << alternatingExtrema.size() << std::endl;
 
     if(alternatingExtrema.size() < x.size())
     {
@@ -558,7 +575,7 @@ void extremaSearch(double& convergenceOrder,
         exit(EXIT_FAILURE);
     }
 
-    //std::cout << "After removal: " << alternatingExtrema.size() << std::endl;
+    std::cout << "After removal: " << alternatingExtrema.size() << std::endl;
     for (auto& it : alternatingExtrema)
     {
         eigenExtrema.push_back(it.first);
@@ -567,10 +584,10 @@ void extremaSearch(double& convergenceOrder,
         maxError = fmax(maxError, absError);
     }
 
-    //std::cout << "Min error = " << minError << std::endl;
-    //std::cout << "Max error = " << maxError << std::endl;
+    std::cout << "Min error = " << minError << std::endl;
+    std::cout << "Max error = " << maxError << std::endl;
     convergenceOrder = (maxError - minError) / maxError;
-    //std::cout << "Convergence order = " << convergenceOrder << std::endl;
+    std::cout << "Convergence order = " << convergenceOrder << std::endl;
     // update the extrema count in each frequency band
     std::size_t bIndex = 0u;
     for(std::size_t i = 0; i < chebyBands.size(); ++i)
@@ -616,7 +633,7 @@ pmoutput_t exchange(std::vector<double>& x,
     //double lastDelta = 1.0;
     do {
         ++output.iter;
-        //std::cout << "*********ITERATION " << output.iter << " **********\n";
+        std::cout << "*********ITERATION " << output.iter << " **********\n";
         extremaSearch(output.q, output.delta,
                 output.x, startX, chebyBands, Nmax);
         startX = output.x;
@@ -624,7 +641,7 @@ pmoutput_t exchange(std::vector<double>& x,
             break;
         //if(output.delta < lastDelta)
         //    break;
-        //std::cout << "*********ITERATION " << output.iter << " **********\n";
+        std::cout << "*********ITERATION " << output.iter << " **********\n";
     } while (output.q > eps && output.iter <= 100u);
 
     if(std::isnan(output.delta) || std::isnan(output.q))
@@ -740,13 +757,35 @@ pmoutput_t firpm(std::size_t n,
 
     pmoutput_t output;
     std::vector<double> x;
+    bandconv(cbands, fbands, convdir_t::FROMFREQ);
+    std::function<double(double)> wf = [cbands](double x) -> double {
+        for(std::size_t i{0u}; i < cbands.size(); ++i)
+            if(cbands[i].start <= x && x <= cbands[i].stop)
+                return cbands[i].weight(space_t::CHEBY, x);
+        // this should never execute
+        return 1.0;
+    };
+
+    if(fbands.size() > (deg + 2u) / 4)
+        strategy = init_t::AFP;
+
     switch(strategy) {
         case init_t::UNIFORM: 
         {
-            std::vector<double> omega;
-            uniform(omega, fbands, deg + 2u);
-            cos(x, omega);
-            bandconv(cbands, fbands, convdir_t::FROMFREQ);
+            if (fbands.size() <= (deg + 2u) / 4) { 
+                std::vector<double> omega;
+                uniform(omega, fbands, deg + 2u);
+                cos(x, omega);
+                bandconv(cbands, fbands, convdir_t::FROMFREQ);
+            } else {
+                // use AFP strategy for very small degrees (wrt nb of bands)
+                std::vector<double> mesh;
+                wam(mesh, cbands, deg);
+                MatrixXd A;
+                chebvand(A, deg+1u, mesh, wf);
+                afp(x, A, mesh);
+                countBand(cbands, x);
+            }
             output = exchange(x, cbands, eps, nmax);
         } break;
         case init_t::SCALING: 
@@ -757,20 +796,22 @@ pmoutput_t firpm(std::size_t n,
                 sdegs[i] = sdegs[i+1]/2;
 
             if(rstrategy == init_t::UNIFORM) {
-                std::vector<double> omega;
-                uniform(omega, fbands, sdegs[0]+2u);
-                cos(x, omega);
-                bandconv(cbands, fbands, convdir_t::FROMFREQ);
+                if (fbands.size() <= (sdegs[0] + 2u) / 4) {
+                    std::vector<double> omega;
+                    uniform(omega, fbands, sdegs[0]+2u);
+                    cos(x, omega);
+                    bandconv(cbands, fbands, convdir_t::FROMFREQ);
+                } else {
+                    // use AFP strategy for very small degrees (wrt nb of bands)
+                    std::vector<double> mesh;
+                    wam(mesh, cbands, sdegs[0]);
+                    MatrixXd A;
+                    chebvand(A, sdegs[0]+1u, mesh, wf);
+                    afp(x, A, mesh);
+                    countBand(cbands, x);                    
+                }
                 output = exchange(x, cbands, eps, nmax);
             } else { // AFP-based strategy
-                bandconv(cbands, fbands, convdir_t::FROMFREQ);
-                std::function<double(double)> wf = [cbands](double x) -> double {
-                    for(std::size_t i{0u}; i < cbands.size(); ++i)
-                        if(cbands[i].start <= x && x <= cbands[i].stop)
-                            return cbands[i].weight(space_t::CHEBY, x);
-                    // this should never execute
-                    return 1.0;
-                };
                 std::vector<double> mesh;
                 wam(mesh, cbands, sdegs[0]);
                 MatrixXd A;
@@ -779,7 +820,7 @@ pmoutput_t firpm(std::size_t n,
                 countBand(cbands, x);
                 output = exchange(x, cbands, eps, nmax);
             }
-            for(std::size_t i{1u}; i <= depth; ++i) {
+            for(std::size_t i{1u}; i <= depth && output.q <= eps; ++i) {
                 x.clear();
                 referenceScaling(x, cbands, fbands, sdegs[i]+2u, 
                                  output.x, cbands, fbands);
@@ -787,29 +828,13 @@ pmoutput_t firpm(std::size_t n,
             }
         } break;
         default: { // AFP-based initialization
-            bandconv(cbands, fbands, convdir_t::FROMFREQ);
-            std::function<double(double)> wf = [cbands](double x) -> double {
-                for(std::size_t i{0u}; i < cbands.size(); ++i)
-                    if(cbands[i].start <= x && x <= cbands[i].stop)
-                        return cbands[i].weight(space_t::CHEBY, x);
-                // this should never execute
-                exit(EXIT_FAILURE);
-                return 1.0;
-            };
+            // bandconv(cbands, fbands, convdir_t::FROMFREQ);
             std::vector<double> mesh;
             wam(mesh, cbands, deg);
-            //std::cout << "mesh = ";
-            //for(auto &it : mesh)
-            //    std::cout << it << std::endl;
             MatrixXd A;
             chebvand(A, deg+1u, mesh, wf);
-            //std::cout << A << std::endl;
             afp(x, A, mesh);
             countBand(cbands, x);
-            //std::cout << "x = ";
-            //for(auto &it : x) {
-            //    std::cout << it << std::endl;
-            //}
             output = exchange(x, cbands, eps, nmax);
         }
     }
