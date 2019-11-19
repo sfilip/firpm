@@ -30,9 +30,9 @@ add_definitions(-std=c++11 -Wall)
 set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/src)
-if(DOXYGEN_FOUND)
-    add_subdirectory(${PROJECT_SOURCE_DIR}/doc)
-endif()
+#if(DOXYGEN_FOUND)
+#    add_subdirectory(${PROJECT_SOURCE_DIR}/doc)
+#endif()
 
 #-----------------------------------------------------------------------
 # tests
@@ -70,15 +70,15 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
 # they can be run by calling *make test* after the initial *make*                 
 enable_testing()
 set(PROJECT_TEST_SCALING ${PROJECT_NAME_STR}_scaling_test)
-#set(PROJECT_TEST_EXTENSIVE ${PROJECT_NAME_STR}_extensive_test)
+set(PROJECT_TEST_EXTENSIVE ${PROJECT_NAME_STR}_extensive_test)
 set(CMAKE_CTEST_COMMAND ctest -V)
 include_directories(${GTEST_INCLUDE_DIR} ${COMMON_INCLUDES})
 
 set(TEST_SRC_SCALING ${PROJECT_SOURCE_DIR}/test/scaling_tests.cpp)
-#set(TEST_SRC_EXTENSIVE ${PROJECT_SOURCE_DIR}/test/extensive_tests.cpp)
+set(TEST_SRC_EXTENSIVE ${PROJECT_SOURCE_DIR}/test/extensive_tests.cpp)
 
 add_executable(${PROJECT_TEST_SCALING} ${TEST_SRC_SCALING})
-#add_executable(${PROJECT_TEST_EXTENSIVE} ${TEST_SRC_EXTENSIVE})
+add_executable(${PROJECT_TEST_EXTENSIVE} ${TEST_SRC_EXTENSIVE})
 
 target_link_libraries(${PROJECT_TEST_SCALING}
     gtest
@@ -87,12 +87,12 @@ target_link_libraries(${PROJECT_TEST_SCALING}
     firpm    
 )
 
-#target_link_libraries(${PROJECT_TEST_EXTENSIVE}
-#    gtest
-#    gtest_main
-#    pthread
-#    firpm
-#)
+target_link_libraries(${PROJECT_TEST_EXTENSIVE}
+    gtest
+    gtest_main
+    pthread
+    firpm
+)
 
 add_test(ScalingTests ${PROJECT_TEST_SCALING})
-#add_test(ExtensiveTests ${PROJECT_TEST_EXTENSIVE})
+add_test(ExtensiveTests ${PROJECT_TEST_EXTENSIVE})

@@ -338,8 +338,8 @@ void extremaSearch(double& convergenceOrder,
 
     split(subIntervals, chebyBands, x);
 
-    std::cout << "Number of subintervals: "
-        << subIntervals.size() << std::endl;
+    //std::cout << "Number of subintervals: "
+    //    << subIntervals.size() << std::endl;
 
     // 2.   Compute the barycentric variables (i.e. weights)
     //      needed for the current iteration
@@ -349,7 +349,7 @@ void extremaSearch(double& convergenceOrder,
 
 
     compdelta(delta, w, x, chebyBands);
-    std::cout << "delta = " << delta << std::endl;
+    //std::cout << "delta = " << delta << std::endl;
 
     std::vector<double> C(x.size());
     compc(C, delta, x, chebyBands);
@@ -489,8 +489,8 @@ void extremaSearch(double& convergenceOrder,
         ++extremaIt;
     }
     std::vector<std::pair<double, double>> bufferExtrema;
-    std::cout << "Alternating extrema: " << x.size() << " | "
-        << alternatingExtrema.size() << std::endl;
+    //std::cout << "Alternating extrema: " << x.size() << " | "
+    //    << alternatingExtrema.size() << std::endl;
 
     if(alternatingExtrema.size() < x.size())
     {
@@ -575,7 +575,7 @@ void extremaSearch(double& convergenceOrder,
         exit(EXIT_FAILURE);
     }
 
-    std::cout << "After removal: " << alternatingExtrema.size() << std::endl;
+    //std::cout << "After removal: " << alternatingExtrema.size() << std::endl;
     for (auto& it : alternatingExtrema)
     {
         eigenExtrema.push_back(it.first);
@@ -584,10 +584,10 @@ void extremaSearch(double& convergenceOrder,
         maxError = fmax(maxError, absError);
     }
 
-    std::cout << "Min error = " << minError << std::endl;
-    std::cout << "Max error = " << maxError << std::endl;
+    //std::cout << "Min error = " << minError << std::endl;
+    //std::cout << "Max error = " << maxError << std::endl;
     convergenceOrder = (maxError - minError) / maxError;
-    std::cout << "Convergence order = " << convergenceOrder << std::endl;
+    //std::cout << "Convergence order = " << convergenceOrder << std::endl;
     // update the extrema count in each frequency band
     std::size_t bIndex = 0u;
     for(std::size_t i = 0; i < chebyBands.size(); ++i)
@@ -633,7 +633,7 @@ pmoutput_t exchange(std::vector<double>& x,
     //double lastDelta = 1.0;
     do {
         ++output.iter;
-        std::cout << "*********ITERATION " << output.iter << " **********\n";
+        //std::cout << "*********ITERATION " << output.iter << " **********\n";
         extremaSearch(output.q, output.delta,
                 output.x, startX, chebyBands, Nmax);
         startX = output.x;
@@ -641,7 +641,7 @@ pmoutput_t exchange(std::vector<double>& x,
             break;
         //if(output.delta < lastDelta)
         //    break;
-        std::cout << "*********ITERATION " << output.iter << " **********\n";
+        //std::cout << "*********ITERATION " << output.iter << " **********\n";
     } while (output.q > eps && output.iter <= 100u);
 
     if(std::isnan(output.delta) || std::isnan(output.q))
@@ -873,4 +873,328 @@ pmoutput_t firpmAFP(std::size_t n,
             double eps, std::size_t nmax)
 {
     return firpm(n, f, a, w, eps, nmax, init_t::AFP);
+}
+
+
+pmoutput_t firpm(std::size_t n,
+        std::vector<double>const& f,
+        std::vector<double>const& a,
+        std::vector<double>const& w,
+        filter_t type, double eps,
+        std::size_t nmax, init_t strategy,
+        std::size_t depth, init_t rstrategy)
+{
+    std::vector<double> h;
+    std::vector<band_t> fbands(w.size());
+    std::vector<band_t> cbands;
+    std::vector<double> fn{f};
+    std::size_t deg = n / 2u;
+    double sFactor = a[1] / (f[1] * M_PI);
+
+    if(n % 2 == 0) { // TYPE III
+        if(f[0u] == 0.0) {
+            if(fn[1u] < 1e-5)
+                fn[0u] = fn[1u] / 2;
+            else
+                fn[0u] = 1e-5;                    
+        }
+        if(f[f.size() - 1u] == 1.0) {
+            if(f[f.size() - 2u] > 0.9999)
+                fn[f.size() - 1u] = (1.0 + f[f.size() - 2u]) / 2;
+            else
+                fn[f.size() - 1u] = 0.9999;
+        }
+        --deg;
+        fbands[0u].start = M_PI * fn[0u];
+        fbands[0u].stop  = M_PI * fn[1u];
+        fbands[0u].space = space_t::FREQ;
+        if(type == filter_t::FIR_DIFFERENTIATOR) {
+            fbands[0u].weight = [&w](space_t space, double x) -> double {
+                if(space == space_t::FREQ)
+                    return (sinl(x) / x) * w[0u];
+                else
+                    return (sqrtl(1.0l - x * x) / acosl(x)) * w[0u];                    
+            };
+            fbands[0u].amplitude = [sFactor](space_t space, double x) -> double {
+                if(space == space_t::FREQ)
+                    return (x / sinl(x)) * sFactor;
+                else 
+                    return (acosl(x) / sqrtl(1.0l - x * x)) * sFactor;
+            };
+        } else { // FIR_HILBERT
+            fbands[0u].weight = [&w](space_t space, double x) -> double {
+                if(space == space_t::FREQ)
+                    return sinl(x) * w[0u];
+                else
+                    return sqrtl(1.0l - x * x) * w[0u];                    
+            };
+            fbands[0u].amplitude = [&a, &fbands](space_t space, double x) -> double {
+                if(space == space_t::CHEBY)
+                    x = acosl(x);
+                if(a[0u] != a[1u]) 
+                    return (((x - fbands[0].start) * a[1u] -
+                            (x - fbands[0].stop) * a[0u]) /
+                            (fbands[0u].stop - fbands[0u].start)) / sinl(x);
+                return a[0u] / sinl(x);
+            };
+        }
+        for(std::size_t i{1u}; i < fbands.size(); ++i) {
+            fbands[i].start = M_PI * fn[2u * i];
+            fbands[i].stop  = M_PI * fn[2u * i + 1u];
+            fbands[i].space = space_t::FREQ;
+            if(type == filter_t::FIR_DIFFERENTIATOR) {
+                fbands[i].weight = [&w, i](space_t space, double x) -> double {
+                    if(space == space_t::FREQ)
+                        return sinl(x) * w[i];
+                    else
+                        return sqrtl(1.0l - x * x) * w[i];
+                };
+                fbands[i].amplitude = [&fbands, &a, i](space_t space, double x) -> double {
+                    if(a[2u * i] != a[2u * i + 1u]) {
+                        if(space == space_t::CHEBY) {
+                            x = acosl(x);
+                            return ((x - fbands[i].start) * a[2u * i + 1u] -
+                                    (x - fbands[i].stop) * a[2u * i]) /
+                                    (fbands[i].stop - fbands[i].start);
+                        }
+                    }
+                    return a[2u * i];
+                };
+            } else { // FIR_HILBERT
+                fbands[i].weight = [&w, i](space_t space, double x) -> double {
+                    if(space == space_t::FREQ)
+                        return sinl(x) * w[i];
+                    else
+                        return sqrtl(1.0l - x * x) * w[i];
+                };
+                fbands[i].amplitude = [&fbands, &a, i](space_t space, double x) -> double {
+                    if(space == space_t::CHEBY)
+                        x = acosl(x);
+                    if(a[2u * i] != a[2u * i + 1u])
+                        return (((x - fbands[i].start) * a[2u * i + 1u] -
+                                (x - fbands[i].stop) * a[2u * i]) / 
+                                (fbands[i].stop - fbands[i].start)) / sinl(x);
+                    return a[2u * i] / sinl(x);
+                };
+            }
+        }
+    } else { // TYPE IV
+        if(f[0u] == 0.0) {
+            if(fn[1u] < 1e-5)
+                fn[0u] = fn[1u] / 2;
+            else
+                fn[0u] = 1e-5;
+        }
+
+        fbands[0u].start = M_PI * fn[0u];
+        fbands[0u].stop  = M_PI * fn[1u];
+        fbands[0u].space = space_t::FREQ;
+        if(type == filter_t::FIR_DIFFERENTIATOR) {
+            fbands[0u].weight = [&w](space_t space, double x) -> double {
+                if(space == space_t::FREQ)
+                    return (sinl(x / 2) / x) * w[0u];
+                else
+                    return (sinl(acosl(x) / 2) / acosl(x)) * w[0u];
+            };
+            fbands[0u].amplitude = [sFactor](space_t space, double x) -> double {
+                if(space == space_t::FREQ) 
+                    return (x / sinl(x / 2)) * sFactor;
+                else 
+                    return (acosl(x) / sinl(acosl(x) / 2)) * sFactor;
+            };
+        } else { // FIR_HILBERT
+            fbands[0u].weight = [&w](space_t space, double x) -> double {
+                if(space == space_t::FREQ)
+                    return sinl(x / 2) * w[0u];
+                else
+                    return sinl(acosl(x) / 2) * w[0u];
+            };
+            fbands[0u].amplitude = [&fbands, &a](space_t space, double x) -> double {
+                if(space == space_t::CHEBY)
+                    x = acosl(x);
+                if(a[0u] != a[1u]) 
+                    return (((x - fbands[0].start) * a[1u] -
+                            (x - fbands[0].stop) * a[0u]) /
+                            (fbands[0].stop - fbands[0].start)) / sinl(x / 2);
+                return a[0u] / sinl(x / 2);
+            };
+        }
+        for(std::size_t i{1u}; i < fbands.size(); ++i) {
+            fbands[i].start = M_PI * fn[2u * i];
+            fbands[i].stop  = M_PI * fn[2u * i + 1u];
+            fbands[i].space = space_t::FREQ;
+            if(type == filter_t::FIR_DIFFERENTIATOR) {
+                fbands[i].weight = [&w, i](space_t space, double x) -> double {
+                    if(space == space_t::FREQ)
+                        return sinl(x / 2) * w[i];
+                    else
+                        return (sinl(acosl(x) / 2)) * w[i];
+                };
+                fbands[i].amplitude = [&fbands, &a, i](space_t space, double x) -> double {
+                    if(a[2u * i] != a[2u * i + 1u]) {
+                        if(space == space_t::CHEBY)
+                            x = acosl(x);
+                        return ((x - fbands[i].start) * a[2u * i + 1u] -
+                                (x - fbands[i].stop) * a[2u * i]) /
+                                (fbands[i].stop - fbands[i].start);
+                    }
+                    return a[2u * i];
+                };
+            } else { // FIR_HILBERT
+                fbands[i].weight = [&w, i](space_t space, double x) -> double {
+                    if(space == space_t::FREQ)
+                        return sinl(x / 2) * w[i];
+                    else
+                        return sinl(acosl(x) / 2) * w[i];
+                };
+                fbands[i].amplitude = [&fbands, &a, i](space_t space, double x) -> double {
+                    if(space == space_t::CHEBY)
+                        x = acosl(x);
+                    if(a[2u * i] != a[2u * i + 1u]) 
+                        return (((x - fbands[i].start) * a[2u * i + 1u] -
+                                (x - fbands[i].stop) * a[2u * i]) /
+                                (fbands[i].stop - fbands[i].start)) / sinl(x / 2);
+                    return a[2u * i] / sinl(x / 2);
+                };
+            }
+        }
+    }
+
+    pmoutput_t output;
+    std::vector<double> x;
+    bandconv(cbands, fbands, convdir_t::FROMFREQ);
+    std::function<double(double)> wf = [&cbands](double x) -> double {
+        for(std::size_t i{0u}; i < cbands.size(); ++i)
+            if(cbands[i].start <= x && x <= cbands[i].stop)
+                return cbands[i].weight(space_t::CHEBY, x);
+        // this should never execute
+        return 1.0;
+    };
+
+    if(fbands.size() > (deg + 2u) / 4)
+        strategy = init_t::AFP;
+
+    switch(strategy) {
+        case init_t::UNIFORM: 
+        {
+            if (fbands.size() <= (deg + 2u) / 4) { 
+                std::vector<double> omega;
+                uniform(omega, fbands, deg + 2u);
+                cos(x, omega);
+                bandconv(cbands, fbands, convdir_t::FROMFREQ);
+            } else {
+                // use AFP strategy for very small degrees (wrt nb of bands)
+                std::vector<double> mesh;
+                wam(mesh, cbands, deg);
+                MatrixXd A;
+                chebvand(A, deg+1u, mesh, wf);
+                afp(x, A, mesh);
+                countBand(cbands, x);
+            }
+            output = exchange(x, cbands, eps, nmax);
+        } break;
+        case init_t::SCALING: 
+        {
+            std::vector<std::size_t> sdegs(depth+1u);
+            sdegs[depth] = deg;
+            for(int i{(int)depth-1}; i >= 0; --i)
+                sdegs[i] = sdegs[i+1]/2;
+
+            if(rstrategy == init_t::UNIFORM) {
+                if (fbands.size() <= (sdegs[0] + 2u) / 4) {
+                    std::vector<double> omega;
+                    uniform(omega, fbands, sdegs[0]+2u);
+                    cos(x, omega);
+                    bandconv(cbands, fbands, convdir_t::FROMFREQ);
+                } else {
+                    // use AFP strategy for very small degrees (wrt nb of bands)
+                    std::vector<double> mesh;
+                    wam(mesh, cbands, sdegs[0]);
+                    MatrixXd A;
+                    chebvand(A, sdegs[0]+1u, mesh, wf);
+                    afp(x, A, mesh);
+                    countBand(cbands, x);                    
+                }
+                output = exchange(x, cbands, eps, nmax);
+            } else { // AFP-based strategy
+                std::vector<double> mesh;
+                wam(mesh, cbands, sdegs[0]);
+                MatrixXd A;
+                chebvand(A, sdegs[0]+1u, mesh, wf);
+                afp(x, A, mesh);
+                countBand(cbands, x);
+                output = exchange(x, cbands, eps, nmax);
+            }
+            for(std::size_t i{1u}; i <= depth && output.q <= eps; ++i) {
+                x.clear();
+                referenceScaling(x, cbands, fbands, sdegs[i]+2u, 
+                                 output.x, cbands, fbands);
+                output = exchange(x, cbands, eps, nmax);
+            }
+        } break;
+        default: { // AFP-based initialization
+            // bandconv(cbands, fbands, convdir_t::FROMFREQ);
+            std::vector<double> mesh;
+            wam(mesh, cbands, deg);
+            MatrixXd A;
+            chebvand(A, deg+1u, mesh, wf);
+            afp(x, A, mesh);
+            countBand(cbands, x);
+            output = exchange(x, cbands, eps, nmax);
+        }
+    }
+
+    h.resize(n + 1u);
+    if(n % 2 == 0)
+    {
+        h[deg + 1u] = 0;
+        h[deg] = (output.h[0u] * 2.0 - output.h[2]) / 4u;
+        h[deg + 2u] = -h[deg];
+        h[1u] = output.h[deg - 1u] / 4;
+        h[2u * deg + 1u] = -h[1u];
+        h[0u] =  output.h[deg] / 4;
+        h[2u * (deg + 1u)] = -h[0u];
+        for(std::size_t i{2u}; i < deg; ++i)
+        {
+            h[deg + 1u - i] = (output.h[i - 1u] - output.h[i + 1u]) / 4;
+            h[deg + 1u + i] = -h[deg + 1u - i];
+        }
+    } else {
+        ++deg;
+        h[deg - 1u] = (output.h[0u] * 2.0 - output.h[1u]) / 4;
+        h[deg] = -h[deg - 1u];
+        h[0u] = output.h[deg - 1u] / 4;
+        h[2u * deg - 1u] = -h[0u];
+        for(std::size_t i{2u}; i < deg; ++i)
+        {
+            h[deg - i] = (output.h[i - 1u] - output.h[i]) / 4;
+            h[deg + i - 1u] = -h[deg - i];
+        }
+    }
+
+    output.h = h;
+    return output;
+}
+
+pmoutput_t firpmRS(std::size_t n, 
+            std::vector<double>const &f,
+            std::vector<double>const &a,
+            std::vector<double>const &w,
+            filter_t type, double eps,
+            std::size_t nmax, std::size_t depth,
+            init_t rstrategy)
+{
+    return firpm(n, f, a, w, type, eps, nmax, 
+                 init_t::SCALING, depth, rstrategy);
+}
+
+pmoutput_t firpmAFP(std::size_t n, 
+            std::vector<double>const &f,
+            std::vector<double>const &a,
+            std::vector<double>const &w,
+            filter_t type, double eps,
+            std::size_t nmax)
+{
+    return firpm(n, f, a, w, type, eps, 
+                 nmax, init_t::AFP);
 }
