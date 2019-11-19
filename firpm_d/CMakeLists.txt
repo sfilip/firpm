@@ -30,9 +30,9 @@ add_definitions(-std=c++11 -Wall)
 set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/src)
-#if(DOXYGEN_FOUND)
-#    add_subdirectory(${PROJECT_SOURCE_DIR}/doc)
-#endif()
+if(DOXYGEN_FOUND)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/doc)
+endif()
 
 #-----------------------------------------------------------------------
 # tests

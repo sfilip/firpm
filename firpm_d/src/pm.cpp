@@ -119,7 +119,7 @@ void uniform(std::vector<double>& omega,
     }
     if(nonPointBands.empty())
     {
-        std::cerr << "All intervals are points!\n";
+        std::cerr << "ERROR: All intervals are points!\n";
         exit(EXIT_FAILURE);
     }
 
@@ -244,7 +244,7 @@ void referenceScaling(std::vector<double>& newX, std::vector<band_t>& newChebyBa
         }
         if(newXSize > newX.size())
         {
-            std::cerr << "Failed to do reference scaling\n";
+            std::cerr << "ERROR: Failed to do reference scaling\n";
             exit(EXIT_FAILURE);
         }
         newX.resize(newXSize);
@@ -261,7 +261,7 @@ void referenceScaling(std::vector<double>& newX, std::vector<band_t>& newChebyBa
         }
         if(total != newXSize)
         {
-            std::cout << "Failed to find distribution!\n";
+            std::cout << "ERROR: Failed to find reference scaling distribution!\n";
             exit(EXIT_FAILURE);
         }
 
@@ -338,8 +338,6 @@ void extremaSearch(double& convergenceOrder,
 
     split(subIntervals, chebyBands, x);
 
-    //std::cout << "Number of subintervals: "
-    //    << subIntervals.size() << std::endl;
 
     // 2.   Compute the barycentric variables (i.e. weights)
     //      needed for the current iteration
@@ -349,7 +347,6 @@ void extremaSearch(double& convergenceOrder,
 
 
     compdelta(delta, w, x, chebyBands);
-    //std::cout << "delta = " << delta << std::endl;
 
     std::vector<double> C(x.size());
     compc(C, delta, x, chebyBands);
@@ -489,12 +486,10 @@ void extremaSearch(double& convergenceOrder,
         ++extremaIt;
     }
     std::vector<std::pair<double, double>> bufferExtrema;
-    //std::cout << "Alternating extrema: " << x.size() << " | "
-    //    << alternatingExtrema.size() << std::endl;
 
     if(alternatingExtrema.size() < x.size())
     {
-        std::cerr << "The exchange algorithm did not converge.\n";
+        std::cerr << "WARNING: The exchange algorithm did not converge.\n";
         std::cerr << "TRIGGER: Not enough alternating extrema!\n"
             << "POSSIBLE CAUSE: Nmax too small\n";
         convergenceOrder = 2.0;
@@ -575,7 +570,6 @@ void extremaSearch(double& convergenceOrder,
         exit(EXIT_FAILURE);
     }
 
-    //std::cout << "After removal: " << alternatingExtrema.size() << std::endl;
     for (auto& it : alternatingExtrema)
     {
         eigenExtrema.push_back(it.first);
@@ -584,10 +578,8 @@ void extremaSearch(double& convergenceOrder,
         maxError = fmax(maxError, absError);
     }
 
-    //std::cout << "Min error = " << minError << std::endl;
-    //std::cout << "Max error = " << maxError << std::endl;
     convergenceOrder = (maxError - minError) / maxError;
-    //std::cout << "Convergence order = " << convergenceOrder << std::endl;
+
     // update the extrema count in each frequency band
     std::size_t bIndex = 0u;
     for(std::size_t i = 0; i < chebyBands.size(); ++i)
@@ -609,7 +601,7 @@ void extremaSearch(double& convergenceOrder,
 }
 
 
-// TODO: remember that this routine assumes that the information
+// REMARK: remember that this routine assumes that the information
 // pertaining to the reference x and the frequency bands (i.e. the
 // number of reference values inside each band) is given at the
 // beginning of the execution
@@ -633,25 +625,21 @@ pmoutput_t exchange(std::vector<double>& x,
     //double lastDelta = 1.0;
     do {
         ++output.iter;
-        //std::cout << "*********ITERATION " << output.iter << " **********\n";
         extremaSearch(output.q, output.delta,
                 output.x, startX, chebyBands, Nmax);
         startX = output.x;
         if(output.q > 1.0)
             break;
-        //if(output.delta < lastDelta)
-        //    break;
-        //std::cout << "*********ITERATION " << output.iter << " **********\n";
     } while (output.q > eps && output.iter <= 100u);
 
     if(std::isnan(output.delta) || std::isnan(output.q))
-        std::cerr << "The exchange algorithm did not converge.\n"
+        std::cerr << "WARNING: The exchange algorithm did not converge.\n"
             << "TRIGGER: numerical instability\n"
             << "POSSIBLE CAUSES: poor starting reference and/or "
             << "a too small value for Nmax.\n";
 
     if(output.iter >= 101u)
-        std::cerr << "The exchange algorithm did not converge.\n"
+        std::cerr << "WARNING: The exchange algorithm did not converge.\n"
             << "TRIGGER: exceeded iteration threshold of 100\n"
             << "POSSIBLE CAUSES: poor starting reference and/or "
             << "a too small value for Nmax.\n";
@@ -663,7 +651,7 @@ pmoutput_t exchange(std::vector<double>& x,
     baryweights(finalAlpha, output.x);
     double finalDelta = output.delta;
     output.delta = fabsl(output.delta);
-    //std::cout << "MINIMAX delta = " << output.delta << std::endl;
+
     compc(finalC, finalDelta, output.x, chebyBands);
     std::vector<double> finalChebyNodes(degree + 1);
     equipts(finalChebyNodes, degree + 1);
@@ -679,6 +667,53 @@ pmoutput_t exchange(std::vector<double>& x,
     return output;
 }
 
+void parseSpecification(std::vector<double> const &f,
+            std::vector<double> const &a,
+            std::vector<double> const &w)
+{
+    if(f.size() != a.size()) {
+        std::cerr << "ERROR: Frequency and amplitude vector sizes"
+            << " do not match!\n";
+        exit(EXIT_FAILURE);
+    }
+
+    if(f.size() % 2 != 0) {
+        std::cerr << "ERROR: Frequency band edges must come in pairs!\n";
+        exit(EXIT_FAILURE);
+    }
+
+    if(f.size() != w.size() * 2u) {
+        std::cerr << "ERROR: Weight vector size does not match the"
+            << " the number of frequency bands in the specification!\n";
+        exit(EXIT_FAILURE);
+    }
+
+    for(std::size_t i{0u}; i < f.size() - 1u; ++i) {
+        if(f[i] == f[i + 1u] && (a[i] != a[i + 1u])) {
+            std::cerr << "ERROR: Adjacent bands with discontinuities"
+                << " are not allowed!\n";
+            exit(EXIT_FAILURE);
+        }
+        if(f[i] > f[i + 1u]) {
+            std::cerr << "ERROR: Frequency vector entries must be in "
+                << "nondecreasing order!\n";
+            exit(EXIT_FAILURE);
+        }
+    }
+    for(std::size_t i{0u}; i < w.size(); ++i) {
+        if(w[i] <= 0.0) {
+            std::cerr << "ERROR: Band weights must be positive!\n";
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    if(f[0u] < 0.0 || f[f.size() - 1u] > 1.0) {
+        std::cerr << "ERROR: Normalized frequency band edges must be "
+            << "between 0 and 1!\n";
+        exit(EXIT_FAILURE);
+    }
+}
+
 pmoutput_t firpm(std::size_t n, 
             std::vector<double>const &f,
             std::vector<double>const &a,
@@ -688,6 +723,7 @@ pmoutput_t firpm(std::size_t n,
             std::size_t depth,
             init_t rstrategy)
 {
+    parseSpecification(f, a, w);
     std::vector<double> h;
     std::vector<band_t> fbands(w.size());
     std::vector<band_t> cbands;
@@ -828,7 +864,6 @@ pmoutput_t firpm(std::size_t n,
             }
         } break;
         default: { // AFP-based initialization
-            // bandconv(cbands, fbands, convdir_t::FROMFREQ);
             std::vector<double> mesh;
             wam(mesh, cbands, deg);
             MatrixXd A;
@@ -884,6 +919,7 @@ pmoutput_t firpm(std::size_t n,
         std::size_t nmax, init_t strategy,
         std::size_t depth, init_t rstrategy)
 {
+    parseSpecification(f, a, w);
     std::vector<double> h;
     std::vector<band_t> fbands(w.size());
     std::vector<band_t> cbands;
@@ -1133,7 +1169,6 @@ pmoutput_t firpm(std::size_t n,
             }
         } break;
         default: { // AFP-based initialization
-            // bandconv(cbands, fbands, convdir_t::FROMFREQ);
             std::vector<double> mesh;
             wam(mesh, cbands, deg);
             MatrixXd A;
