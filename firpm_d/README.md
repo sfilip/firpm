@@ -1,10 +1,10 @@
 firpm library (double precision version)
 =========================================
 
-## Installation instructions (double precision version)
-This code has been tested **only** on Linux installations. In order to compile and use it, a recent C++ compiler with
-C++11 support is necessary (recent g++ and clang compilers have been shown to work). An active internet connection and 
-some external utilities and libraries must also be installed and available on your system search paths:
+## Installation instructions
+This code has been tested on recent Mac OS X (>= 10.14) and Linux installations. In order to compile and use it, a recent 
+C++ compiler with C++11 support is necessary (recent g++ and clang compilers have been shown to work). An active internet 
+connection and some external utilities and libraries must also be installed and available on your system search paths:
 * CMake version 2.8 or newer
 * Eigen version 3 or newer
 * Google gtest framework for generating the test executables will be downloaded during CMake configuration
