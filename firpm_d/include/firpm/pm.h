@@ -164,7 +164,7 @@ void referenceScaling(std::vector<double>& nx, std::vector<band_t>& ncbands,
 pmoutput_t exchange(std::vector<double>& x,
         std::vector<band_t>& cbands,
         double eps = 0.01,
-        int nmax = 4);
+        std::size_t nmax = 4u);
 
 /*! Parks-McClellan routine for implementing type I and II FIR filters. 
  * This routine is the most general and can be set to use any of the three

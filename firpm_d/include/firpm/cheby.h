@@ -27,7 +27,13 @@
 
 #include "util.h"
 
-enum chebkind_t {FIRST, SECOND};
+/**
+ * Gives the type of Chebyshev polynomial expansion to compute
+ */
+enum chebkind_t {
+        FIRST,          /**< Chebyshev expansion of the first kind*/
+        SECOND          /**< Chebyshev expansion of the second kind*/
+};
 
 /*! Computes the cosines of the elements of a vector
  * @param[in] in the vector to process

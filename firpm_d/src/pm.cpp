@@ -108,7 +108,7 @@ void uniform(std::vector<double>& omega,
 
     std::vector<double> bandwidths(B.size());
     std::vector<std::size_t> nonPointBands;
-    for(std::size_t i = 0; i < B.size(); ++i) {
+    for(std::size_t i{0u}; i < B.size(); ++i) {
         bandwidths[i] = B[i].stop - B[i].start;
         if(bandwidths[i] > 0.0)
         {
@@ -167,13 +167,13 @@ void referenceScaling(std::vector<double>& newX, std::vector<band_t>& newChebyBa
         std::size_t multipointBands = 0u;
         std::size_t offset = 0u;
         int twoInt = 0;
-        for(std::size_t i = 0u; i < chebyBands.size(); ++i)
+        for(std::size_t i{0u}; i < chebyBands.size(); ++i)
         {
             newX.push_back(x[offset]);
             if(chebyBands[i].xs > 2u)
             {
                 ++multipointBands;
-                for(std::size_t j = 1u; j < chebyBands[i].xs - 2u; ++j)
+                for(std::size_t j{1u}; j < chebyBands[i].xs - 2u; ++j)
                 {
                     newX.push_back((x[offset + j] + x[offset + j + 1]) / 2);
                     newX.push_back(x[offset + j]);
@@ -193,7 +193,7 @@ void referenceScaling(std::vector<double>& newX, std::vector<band_t>& newChebyBa
         }
         int threeInt = newXSize - newX.size() - twoInt;
         offset = 0u;
-        for(std::size_t i = 0u; i < chebyBands.size(); ++i)
+        for(std::size_t i{0u}; i < chebyBands.size(); ++i)
         {
                 if(chebyBands[i].xs > 1u)
                 {
@@ -215,7 +215,7 @@ void referenceScaling(std::vector<double>& newX, std::vector<band_t>& newChebyBa
             offset += chebyBands[i].xs;
         }
         offset = 0;
-        for(std::size_t i = 0u; i < chebyBands.size(); ++i)
+        for(std::size_t i{0u}; i < chebyBands.size(); ++i)
         {
                 if(chebyBands[i].xs > 2u)
                 {
@@ -250,9 +250,9 @@ void referenceScaling(std::vector<double>& newX, std::vector<band_t>& newChebyBa
         newX.resize(newXSize);
         std::sort(newX.begin(), newX.end());
         std::size_t total = 0u;
-        for(std::size_t i = 0ul; i < newX.size(); ++i)
+        for(std::size_t i{0u}; i < newX.size(); ++i)
         {
-                for(std::size_t j = 0u; j < chebyBands.size(); ++j)
+                for(std::size_t j{0u}; j < chebyBands.size(); ++j)
                     if(newX[i] >= chebyBands[j].start && newX[i] <= chebyBands[j].stop)
                     {
                         newDistribution[j]++;
@@ -266,7 +266,7 @@ void referenceScaling(std::vector<double>& newX, std::vector<band_t>& newChebyBa
         }
 
 
-        for (std::size_t i = 0u; i < chebyBands.size(); ++i)
+        for (std::size_t i{0u}; i < chebyBands.size(); ++i)
         {
             newFreqBands[freqBands.size() - 1u - i].xs = newDistribution[i];
             newChebyBands[i].xs = newDistribution[i];
@@ -277,11 +277,11 @@ void split(std::vector<interval_t>& subIntervals,
         std::vector<band_t>& chebyBands,
         std::vector<double> &x)
 {
-    std::size_t bandOffset = 0u;
+    std::size_t bandOffset{0u};
     for(std::size_t i{0u}; i < chebyBands.size(); ++i)
     {
         double middleValA{0.0}, middleValB{0.0};
-        if(chebyBands[i].xs == 0) {
+        if(chebyBands[i].xs == 0u) {
             subIntervals.push_back(
                 std::make_pair(chebyBands[i].start, 
                                chebyBands[i].stop));
@@ -293,14 +293,14 @@ void split(std::vector<interval_t>& subIntervals,
                 middleValA = x[bandOffset];
                 subIntervals.push_back(
                     std::make_pair(chebyBands[i].start, middleValA));
-                if (chebyBands[i].xs == 1) {
+                if (chebyBands[i].xs == 1u) {
                     subIntervals.push_back(
                         std::make_pair(middleValA, 
                                        chebyBands[i].stop));
                 }
             } else {
                 middleValA = chebyBands[i].start;
-                if(chebyBands[i].xs == 1) {
+                if(chebyBands[i].xs == 1u) {
                     subIntervals.push_back(std::make_pair(
                         middleValA, chebyBands[i].stop
                     ));
@@ -328,7 +328,7 @@ void split(std::vector<interval_t>& subIntervals,
 void extremaSearch(double& convergenceOrder,
         double& delta, std::vector<double>& eigenExtrema,
         std::vector<double>& x, std::vector<band_t>& chebyBands,
-        int Nmax)
+        std::size_t Nmax)
 {
     // 1.   Split the initial [-1, 1] interval in subintervals
     //      in order that we can use a reasonable size matrix
@@ -368,7 +368,7 @@ void extremaSearch(double& convergenceOrder,
             chebyBands[0].start, extremaErrorValue));
 
 
-    for (std::size_t i = 0u; i < chebyBands.size() - 1; ++i)
+    for (std::size_t i{0u}; i < chebyBands.size() - 1u; ++i)
     {
         comperror(extremaErrorValueLeft, chebyBands[i].stop,
                 delta, x, C, w, chebyBands);
@@ -380,7 +380,7 @@ void extremaSearch(double& convergenceOrder,
             potentialExtrema.push_back(std::make_pair(
                     chebyBands[i].stop, extremaErrorValueLeft));
             potentialExtrema.push_back(std::make_pair(
-                    chebyBands[i + 1].start, extremaErrorValueRight));
+                    chebyBands[i + 1u].start, extremaErrorValueRight));
         } else {
             double abs1 = fabs(extremaErrorValueLeft);
             double abs2 = fabs(extremaErrorValueRight);
@@ -389,14 +389,14 @@ void extremaSearch(double& convergenceOrder,
                         chebyBands[i].stop, extremaErrorValueLeft));
             else
                 potentialExtrema.push_back(std::make_pair(
-                        chebyBands[i + 1].start, extremaErrorValueRight));
+                        chebyBands[i + 1u].start, extremaErrorValueRight));
         }
     }
     comperror(extremaErrorValue,
-            chebyBands[chebyBands.size() - 1].stop,
+            chebyBands[chebyBands.size() - 1u].stop,
             delta, x, C, w, chebyBands);
     potentialExtrema.push_back(std::make_pair(
-            chebyBands[chebyBands.size() - 1].stop,
+            chebyBands[chebyBands.size() - 1u].stop,
             extremaErrorValue));
 
 
@@ -414,7 +414,7 @@ void extremaSearch(double& convergenceOrder,
         // compute the Chebyshev interpolation function values on the
         // current subinterval
         std::vector<double> fx(Nmax + 1u);
-        for (std::size_t j = 0u; j < fx.size(); ++j)
+        for (std::size_t j{0u}; j < fx.size(); ++j)
         {
             comperror(fx[j], siCN[j], delta, x, C, w,
                     chebyBands);
@@ -433,14 +433,14 @@ void extremaSearch(double& convergenceOrder,
         roots(eigenRoots, dc, dom);
         chgvar(eigenRoots, eigenRoots,
                 subIntervals[i].first, subIntervals[i].second);
-        for (std::size_t j = 0u; j < eigenRoots.size(); ++j)
+        for (std::size_t j{0u}; j < eigenRoots.size(); ++j)
             pExs[i].push_back(eigenRoots[j]);
         pExs[i].push_back(subIntervals[i].first);
         pExs[i].push_back(subIntervals[i].second);
     }
 
-    for(std::size_t i = 0u; i < pExs.size(); ++i)
-        for(std::size_t j = 0u; j < pExs[i].size(); ++j)
+    for(std::size_t i{0u}; i < pExs.size(); ++i)
+        for(std::size_t j{0u}; j < pExs[i].size(); ++j)
             pEx.push_back(pExs[i][j]);
 
     std::size_t startingOffset = potentialExtrema.size();
@@ -462,7 +462,7 @@ void extremaSearch(double& convergenceOrder,
             });
 
     eigenExtrema.clear();
-    std::size_t extremaIt = 0u;
+    std::size_t extremaIt{0u};
     std::vector<std::pair<double, double>> alternatingExtrema;
     double minError = INT_MAX;
     double maxError = INT_MIN;
@@ -472,9 +472,9 @@ void extremaSearch(double& convergenceOrder,
     {
         std::pair<double, double> maxErrorPoint;
         maxErrorPoint = potentialExtrema[extremaIt];
-        while(extremaIt < potentialExtrema.size() - 1 &&
+        while(extremaIt < potentialExtrema.size() - 1u &&
             (std::signbit(maxErrorPoint.second) ==
-             std::signbit(potentialExtrema[extremaIt + 1].second)))
+             std::signbit(potentialExtrema[extremaIt + 1u].second)))
         {
             ++extremaIt;
             if (fabs(maxErrorPoint.second) < fabs(potentialExtrema[extremaIt].second))
@@ -504,7 +504,7 @@ void extremaSearch(double& convergenceOrder,
             {
                 std::vector<double> x1, x2;
                 x1.push_back(alternatingExtrema[0u].first);
-                for(std::size_t i{1u}; i < alternatingExtrema.size() - 1; ++i)
+                for(std::size_t i{1u}; i < alternatingExtrema.size() - 1u; ++i)
                 {
                     x1.push_back(alternatingExtrema[i].first);
                     x2.push_back(alternatingExtrema[i].first);
@@ -515,22 +515,22 @@ void extremaSearch(double& convergenceOrder,
                 compdelta(delta2, x2, chebyBands);
                 delta1 = fabsl(delta1);
                 delta2 = fabsl(delta2);
-                std::size_t sIndex = 1u;
+                std::size_t sIndex{1u};
                 if(delta1 > delta2)
                     sIndex = 0u;
-                for(std::size_t i = sIndex; i < alternatingExtrema.size() + sIndex - 1u; ++i)
+                for(std::size_t i{sIndex}; i < alternatingExtrema.size() + sIndex - 1u; ++i)
                     bufferExtrema.push_back(alternatingExtrema[i]);
                 alternatingExtrema = bufferExtrema;
                 bufferExtrema.clear();
             }
             else
             {
-                double abs1 = fabs(alternatingExtrema[0].second);
-                double abs2 = fabs(alternatingExtrema[alternatingExtrema.size() - 1].second);
+                double abs1 = fabs(alternatingExtrema[0u].second);
+                double abs2 = fabs(alternatingExtrema[alternatingExtrema.size() - 1u].second);
                 std::size_t sIndex = 0u;
                 if (abs1 < abs2)
                     sIndex = 1u;
-                for(std::size_t i = sIndex; i < alternatingExtrema.size() + sIndex - 1u; ++i)
+                for(std::size_t i{sIndex}; i < alternatingExtrema.size() + sIndex - 1u; ++i)
                     bufferExtrema.push_back(alternatingExtrema[i]);
                 alternatingExtrema = bufferExtrema;
                 bufferExtrema.clear();
@@ -540,14 +540,14 @@ void extremaSearch(double& convergenceOrder,
 
         while (alternatingExtrema.size() > x.size())
         {
-            std::size_t toRemoveIndex = 0u;
-            double minValToRemove = fminl(fabsl(alternatingExtrema[0].second),
-                                              fabsl(alternatingExtrema[1].second));
+            std::size_t toRemoveIndex{0u};
+            double minValToRemove = fminl(fabsl(alternatingExtrema[0u].second),
+                                              fabsl(alternatingExtrema[1u].second));
             double removeBuffer;
-            for (std::size_t i{1u}; i < alternatingExtrema.size() - 1; ++i)
+            for (std::size_t i{1u}; i < alternatingExtrema.size() - 1u; ++i)
             {
                 removeBuffer = fminl(fabsl(alternatingExtrema[i].second),
-                                   fabsl(alternatingExtrema[i + 1].second));
+                                   fabsl(alternatingExtrema[i + 1u].second));
                 if (removeBuffer < minValToRemove)
                 {
                     minValToRemove = removeBuffer;
@@ -579,12 +579,11 @@ void extremaSearch(double& convergenceOrder,
     }
 
     convergenceOrder = (maxError - minError) / maxError;
-
     // update the extrema count in each frequency band
-    std::size_t bIndex = 0u;
-    for(std::size_t i = 0; i < chebyBands.size(); ++i)
+    std::size_t bIndex{0u};
+    for(std::size_t i{0u}; i < chebyBands.size(); ++i)
     {
-        chebyBands[i].xs = 0;
+        chebyBands[i].xs = 0u;
     }
     for(auto &it : eigenExtrema)
     {
@@ -607,7 +606,7 @@ void extremaSearch(double& convergenceOrder,
 // beginning of the execution
 pmoutput_t exchange(std::vector<double>& x,
         std::vector<band_t>& chebyBands, double eps,
-        int Nmax)
+        std::size_t Nmax)
 {
     pmoutput_t output;
 
@@ -622,7 +621,6 @@ pmoutput_t exchange(std::vector<double>& x,
 
     output.q = 1;
     output.iter = 0u;
-    //double lastDelta = 1.0;
     do {
         ++output.iter;
         extremaSearch(output.q, output.delta,
@@ -651,7 +649,6 @@ pmoutput_t exchange(std::vector<double>& x,
     baryweights(finalAlpha, output.x);
     double finalDelta = output.delta;
     output.delta = fabsl(output.delta);
-
     compc(finalC, finalDelta, output.x, chebyBands);
     std::vector<double> finalChebyNodes(degree + 1);
     equipts(finalChebyNodes, degree + 1);
@@ -856,7 +853,7 @@ pmoutput_t firpm(std::size_t n,
                 countBand(cbands, x);
                 output = exchange(x, cbands, eps, nmax);
             }
-            for(std::size_t i{1u}; i <= depth && output.q <= eps; ++i) {
+            for(std::size_t i{1u}; i <= depth && output.q <= 0.5; ++i) {
                 x.clear();
                 referenceScaling(x, cbands, fbands, sdegs[i]+2u, 
                                  output.x, cbands, fbands);
@@ -1161,7 +1158,7 @@ pmoutput_t firpm(std::size_t n,
                 countBand(cbands, x);
                 output = exchange(x, cbands, eps, nmax);
             }
-            for(std::size_t i{1u}; i <= depth && output.q <= eps; ++i) {
+            for(std::size_t i{1u}; i <= depth && output.q <= 0.5; ++i) {
                 x.clear();
                 referenceScaling(x, cbands, fbands, sdegs[i]+2u, 
                                  output.x, cbands, fbands);

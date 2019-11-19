@@ -33,10 +33,10 @@ void balance(MatrixXd &A)
     while(!converged)
     {
         converged = true;
-        for(std::size_t i = 0u; i < n; ++i)
+        for(std::size_t i{0u}; i < n; ++i)
         {
             rNorm = cNorm = 0.0;
-            for(std::size_t j = 0u; j < n; ++j)
+            for(std::size_t j{0u}; j < n; ++j)
             {
                 if(i == j)
                     continue;
@@ -83,8 +83,8 @@ MatrixXd colleague(std::vector<double> const &c,
                    chebkind_t kind,
                    bool bal)
 {
-    std::vector<double> a = c;
-    std::size_t n = c.size() - 1;
+    std::vector<double> a{c};
+    std::size_t n = c.size() - 1u;
     MatrixXd C(n, n);
 
     for(std::size_t i{0u}; i < n; ++i)
@@ -98,14 +98,14 @@ MatrixXd colleague(std::vector<double> const &c,
         a[i] *= denom;
     a[n - 2u] += 0.5;
 
-    for (std::size_t i = 0u; i < n - 1; ++i)
+    for (std::size_t i{0u}; i < n - 1; ++i)
         C(i, i + 1) = C(i + 1, i) = 0.5;
     switch(kind) {
-        case FIRST: C(n - 2, n - 1) = 1;    break;
+        case FIRST: C(n - 2, n - 1) = 1.0;  break;
         default:    C(n - 2, n - 1) = 0.5;  break;
     }
     for(std::size_t i{0u}; i < n; ++i)
-        C(i, 0) = a[n - i - 1];
+        C(i, 0) = a[n - i - 1u];
 
     if(bal)
         balance(C);    

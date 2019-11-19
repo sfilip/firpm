@@ -536,6 +536,41 @@ TEST(firpm_lebesgue_test, bandpass100)
 
 }
 
+TEST(firpm_lebesgue_test, multiband50)
+{
+
+    std::vector<double> f = {0.0, 0.18, 0.2, 0.4, 0.42, 0.55, 0.57, 0.65, 0.67, 0.75, 0.77, 0.85, 0.87, 1.0};
+    std::vector<double> a = {0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
+    std::vector<double> w = {10.0, 1.0, 10.0, 1.0, 10.0, 1.0, 10.0};
+
+    std::size_t degree = 50;
+    std::cout << "START Parks-McClellan with uniform initialization\n";
+    pmoutput_t output1 = firpm(degree * 2u, f, a, w);
+    std::cout << "Final Delta     = " << output1.delta << std::endl;
+    std::cout << "Iteration count = " << output1.iter  << std::endl;
+    std::cout << "FINISH Parks-McClellan with uniform initialization\n";
+    ASSERT_LT(output1.q, 1e-2);
+
+    std::cout << "START Parks-McClellan with reference scaling\n";
+    pmoutput_t output2 = firpmRS(degree * 2u, f, a, w);
+    std::cout << "Final Delta     = " << output2.delta << std::endl;
+    std::cout << "Iteration count = " << output2.iter  << std::endl;
+    std::cout << "FINISH Parks-McClellan with reference scaling\n";
+    ASSERT_LT(output2.q, 1e-2);
+
+    std::cout << "START Parks-McClellan with AFP\n";
+    pmoutput_t output3 = firpmAFP(degree * 2u, f, a, w);
+
+    std::cout << "Final Delta     = " << output3.delta << std::endl;
+    std::cout << "Iteration count = " << output3.iter  << std::endl;
+    std::cout << "FINISH Parks-McClellan with AFP\n";
+    ASSERT_LT(output3.q, 1e-2);
+
+    std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
+    std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
+
+}
+
 TEST(firpm_lebesgue_test, multiband100)
 {
 
