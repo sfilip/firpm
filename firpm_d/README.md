@@ -32,17 +32,17 @@ With gtest downloaded in the build directory, the *make all* command should have
 The *make test* command will launch these two test executables on your system.
 
 
-The *make all* target also generates the documentation if Doxygen was found on your system when running cmake. It can also be
+The *make all* target also generates the documentation if Doxygen was found on your system when running CMake. It can also be
 generated individually by running the command
 
         make doc
 
-after cmake was called.
+after CMake was called.
 
 
 Executing these files will print out information regarding the final reference error (i.e. final delta value) obtained when
 executing the Parks-McClellan exchange algorithm, along with iteration count information. Depending on your machine, these tests
-can take a some time to finish. For example, on a core Intel Xeon(R) E5-1620, it took several minutes to finish running
+can take some time to finish. For example, on a core Intel Xeon(R) E5-1620, it took several minutes to finish running
 the firpmlib_extensive_test file.
 An example output for one test case from firpm_scaling_test looks like this:
 
