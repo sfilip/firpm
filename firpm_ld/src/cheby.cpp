@@ -137,8 +137,8 @@ void generateChebyshevCoefficients(std::vector<long double>& c,
     fv[n] /= 2;
 
     for(std::size_t i{0u}; i <= n; ++i) {
-        buffer = cos(v[i]);         // compute the actual value at the Chebyshev
-                                    // node cos(i * pi / n)
+        buffer = cosl(v[i]);        // compute the actual value at the Chebyshev
+                                    // node cosl(i * pi / n)
 
         evaluateClenshaw(c[i], fv, buffer);
 

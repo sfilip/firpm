@@ -30,7 +30,7 @@ void barycentricWeights(std::vector<long double>& w,
             for(std::size_t j = 0u; j < x.size(); ++j)
             {
                 if (j != i) {
-                    denom += log(((xi - x[j] > 0) ? (xi - x[j]) : (x[j] - xi)));
+                    denom += logl(((xi - x[j] > 0) ? (xi - x[j]) : (x[j] - xi)));
                     one *= ((xi - x[j] > 0) ? 1 : -1);
                 }
             }

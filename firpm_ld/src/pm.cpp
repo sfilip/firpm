@@ -303,8 +303,8 @@ void findEigenExtrema(long double& convergenceOrder,
             potentialExtrema.push_back(std::make_pair(
                     chebyBands[i + 1].start, extremaErrorValueRight));
         } else {
-            long double abs1 = fabs(extremaErrorValueLeft);
-            long double abs2 = fabs(extremaErrorValueRight);
+            long double abs1 = fabsl(extremaErrorValueLeft);
+            long double abs2 = fabsl(extremaErrorValueRight);
             if(abs1 > abs2)
                 potentialExtrema.push_back(std::make_pair(
                         chebyBands[i].stop, extremaErrorValueLeft));
@@ -407,7 +407,7 @@ void findEigenExtrema(long double& convergenceOrder,
              std::signbit(potentialExtrema[extremaIt + 1].second)))
         {
             ++extremaIt;
-            if (fabs(maxErrorPoint.second) < fabs(potentialExtrema[extremaIt].second))
+            if (fabsl(maxErrorPoint.second) < fabsl(potentialExtrema[extremaIt].second))
                 maxErrorPoint = potentialExtrema[extremaIt];
         }
         alternatingExtrema.push_back(maxErrorPoint);
@@ -453,8 +453,8 @@ void findEigenExtrema(long double& convergenceOrder,
             }
             else
             {
-                long double abs1 = fabs(alternatingExtrema[0].second);
-                long double abs2 = fabs(alternatingExtrema[alternatingExtrema.size() - 1].second);
+                long double abs1 = fabsl(alternatingExtrema[0].second);
+                long double abs2 = fabsl(alternatingExtrema[alternatingExtrema.size() - 1].second);
                 std::size_t sIndex = 0u;
                 if (abs1 < abs2)
                     sIndex = 1u;
@@ -502,9 +502,9 @@ void findEigenExtrema(long double& convergenceOrder,
     for (auto& it : alternatingExtrema)
     {
         eigenExtrema.push_back(it.first);
-        absError = fabs(it.second);
-        minError = fmin(minError, absError);
-        maxError = fmax(maxError, absError);
+        absError = fabsl(it.second);
+        minError = fminl(minError, absError);
+        maxError = fmaxl(maxError, absError);
     }
 
     //std::cout << "Min error = " << minError << std::endl;
@@ -643,22 +643,22 @@ PMOutput firpm(std::size_t n,
                 {
                     if (a[2u * i] != a[2u * i + 1u]) {
                         if(bSpace == BandSpace::CHEBY)
-                            x = acos(x);
+                            x = acosl(x);
                         return (((x - freqBands[i].start) * a[2u * i + 1u] -
                                 (x - freqBands[i].stop) * a[2u * i]) /
-                                (freqBands[i].stop - freqBands[i].start)) / cos(x / 2);
+                                (freqBands[i].stop - freqBands[i].start)) / cosl(x / 2);
                     }
                     if(bSpace == BandSpace::FREQ)
-                        return a[2u * i] / cos(x / 2);
+                        return a[2u * i] / cosl(x / 2);
                     else
-                        return a[2u * i] / sqrt((x + 1) / 2);
+                        return a[2u * i] / sqrtl((x + 1) / 2);
                 };
                 freqBands[i].weight = [=](BandSpace bSpace, long double x) -> long double
                 {
                     if (bSpace == BandSpace::FREQ)
-                        return cos(x / 2) * w[i];
+                        return cosl(x / 2) * w[i];
                     else
-                        return sqrt((x + 1) / 2) * w[i];
+                        return sqrtl((x + 1) / 2) * w[i];
                 };
             }
             std::vector<long double> omega(degree + 2u);
@@ -774,22 +774,22 @@ PMOutput firpmRS(std::size_t n,
                 {
                     if (a[2u * i] != a[2u * i + 1u]) {
                         if(bSpace == BandSpace::CHEBY)
-                            x = acos(x);
+                            x = acosl(x);
                         return (((x - freqBands[i].start) * a[2u * i + 1u] -
                                 (x - freqBands[i].stop) * a[2u * i]) /
-                                (freqBands[i].stop - freqBands[i].start)) / cos(x / 2);
+                                (freqBands[i].stop - freqBands[i].start)) / cosl(x / 2);
                     }
                     if(bSpace == BandSpace::FREQ)
-                        return a[2u * i] / cos(x / 2);
+                        return a[2u * i] / cosl(x / 2);
                     else
-                        return a[2u * i] / sqrt((x + 1) / 2);
+                        return a[2u * i] / sqrtl((x + 1) / 2);
                 };
                 freqBands[i].weight = [=](BandSpace bSpace, long double x) -> long double
                 {
                     if (bSpace == BandSpace::FREQ)
-                        return cos(x / 2) * w[i];
+                        return cosl(x / 2) * w[i];
                     else
-                        return sqrt((x + 1) / 2) * w[i];
+                        return sqrtl((x + 1) / 2) * w[i];
                 };
             }
 
@@ -933,22 +933,22 @@ PMOutput firpm(std::size_t n,
                     {
                         if(bSpace == BandSpace::FREQ)
                         {
-                            return (sin(x) / x) * w[0u];
+                            return (sinl(x) / x) * w[0u];
                         }
                         else
                         {
-                            return (sqrt(1.0l - x * x) / acos(x)) * w[0u];
+                            return (sqrtl(1.0l - x * x) / acosl(x)) * w[0u];
                         }
                     };
                     freqBands[0].amplitude = [scaleFactor](BandSpace bSpace, long double x) -> long double
                     {
                         if(bSpace == BandSpace::FREQ)
                         {
-                            return (x / sin(x)) * scaleFactor;
+                            return (x / sinl(x)) * scaleFactor;
                         }
                         else
                         {
-                            return (acos(x) / sqrt(1.0l - x * x)) * scaleFactor;
+                            return (acosl(x) / sqrtl(1.0l - x * x)) * scaleFactor;
                         }
                     };
                     for(std::size_t i{1u}; i < freqBands.size(); ++i)
@@ -960,11 +960,11 @@ PMOutput firpm(std::size_t n,
                         {
                             if(bSpace == BandSpace::FREQ)
                             {
-                                return sin(x) * w[i];
+                                return sinl(x) * w[i];
                             }
                             else
                             {
-                                return sqrt(1.0l - x * x) * w[i];
+                                return sqrtl(1.0l - x * x) * w[i];
                             }
 
                         };
@@ -972,7 +972,7 @@ PMOutput firpm(std::size_t n,
                         {
                             if (a[2u * i] != a[2u * i + 1u]) {
                                 if(bSpace == BandSpace::CHEBY)
-                                    x = acos(x);
+                                    x = acosl(x);
                                 return ((x - freqBands[i].start) * a[2u * i + 1u] -
                                         (x - freqBands[i].stop) * a[2u * i]) /
                                         (freqBands[i].stop - freqBands[i].start);
@@ -999,22 +999,22 @@ PMOutput firpm(std::size_t n,
                     {
                         if(bSpace == BandSpace::FREQ)
                         {
-                            return (sin(x / 2) / x) * w[0u];
+                            return (sinl(x / 2) / x) * w[0u];
                         }
                         else
                         {
-                            return (sin(acos(x) / 2) / acos(x)) * w[0u];
+                            return (sinl(acosl(x) / 2) / acosl(x)) * w[0u];
                         }
                     };
                     freqBands[0].amplitude = [scaleFactor](BandSpace bSpace, long double x) -> long double
                     {
                         if(bSpace == BandSpace::FREQ)
                         {
-                            return (x / sin(x / 2)) * scaleFactor;
+                            return (x / sinl(x / 2)) * scaleFactor;
                         }
                         else
                         {
-                            return (acos(x) / sin(acos(x) / 2)) * scaleFactor;
+                            return (acosl(x) / sinl(acosl(x) / 2)) * scaleFactor;
                         }
                     };
                     for(std::size_t i{1u}; i < freqBands.size(); ++i)
@@ -1026,11 +1026,11 @@ PMOutput firpm(std::size_t n,
                         {
                             if(bSpace == BandSpace::FREQ)
                             {
-                                return sin(x / 2) * w[i];
+                                return sinl(x / 2) * w[i];
                             }
                             else
                             {
-                                return (sin(acos(x) / 2)) * w[i];
+                                return (sinl(acosl(x) / 2)) * w[i];
                             }
 
                         };
@@ -1038,7 +1038,7 @@ PMOutput firpm(std::size_t n,
                         {
                             if (a[2u * i] != a[2u * i + 1u]) {
                                 if(bSpace == BandSpace::CHEBY)
-                                    x = acos(x);
+                                    x = acosl(x);
                                 return ((x - freqBands[i].start) * a[2u * i + 1u] -
                                         (x - freqBands[i].stop) * a[2u * i]) /
                                         (freqBands[i].stop - freqBands[i].start);
@@ -1131,14 +1131,14 @@ PMOutput firpm(std::size_t n,
                                         (x - freqBands[i].stop) * a[2u * i]) /
                                         (freqBands[i].stop - freqBands[i].start)) / sinl(x);
                             }
-                            return a[2u * i] / sin(x);
+                            return a[2u * i] / sinl(x);
                         };
                         freqBands[i].weight = [=](BandSpace bSpace, long double x) -> long double
                         {
                             if(bSpace == BandSpace::FREQ)
-                                return w[i] * sin(x);
+                                return w[i] * sinl(x);
                             else
-                                return w[i] * (sqrt(1.0l - x * x));
+                                return w[i] * (sqrtl(1.0l - x * x));
                         };
                     }
                 } else {       // Type IV
@@ -1157,23 +1157,23 @@ PMOutput firpm(std::size_t n,
                         freqBands[i].amplitude = [i, &a, &freqBands](BandSpace bSpace, long double x) -> long double
                         {
                             if(bSpace == BandSpace::CHEBY)
-                                x = acos(x);
+                                x = acosl(x);
 
                             if (a[2u * i] != a[2u * i + 1u]) {
                                 return (((x - freqBands[i].start) * a[2u * i + 1u] -
                                         (x - freqBands[i].stop) * a[2u * i]) /
                                         (freqBands[i].stop - freqBands[i].start)) / sinl(x / 2);
                             }
-                            return a[2u * i] / sin(x / 2);
+                            return a[2u * i] / sinl(x / 2);
                         };
                         freqBands[i].weight = [=](BandSpace bSpace, long double x) -> long double
                         {
                             if(bSpace == BandSpace::FREQ)
-                                return w[i] * sin(x / 2);
+                                return w[i] * sinl(x / 2);
                             else
                             {
-                                x = acos(x);
-                                return w[i] * (sin(x / 2));
+                                x = acosl(x);
+                                return w[i] * (sinl(x / 2));
                             }
                         };
                     }
@@ -1268,22 +1268,22 @@ PMOutput firpmRS(std::size_t n,
                     {
                         if(bSpace == BandSpace::FREQ)
                         {
-                            return (sin(x) / x) * w[0u];
+                            return (sinl(x) / x) * w[0u];
                         }
                         else
                         {
-                            return (sqrt(1.0l - x * x) / acos(x)) * w[0u];
+                            return (sqrtl(1.0l - x * x) / acosl(x)) * w[0u];
                         }
                     };
                     freqBands[0].amplitude = [scaleFactor](BandSpace bSpace, long double x) -> long double
                     {
                         if(bSpace == BandSpace::FREQ)
                         {
-                            return (x / sin(x)) * scaleFactor;
+                            return (x / sinl(x)) * scaleFactor;
                         }
                         else
                         {
-                            return (acos(x) / sqrt(1.0l - x * x)) * scaleFactor;
+                            return (acosl(x) / sqrtl(1.0l - x * x)) * scaleFactor;
                         }
                     };
                     for(std::size_t i{1u}; i < freqBands.size(); ++i)
@@ -1295,11 +1295,11 @@ PMOutput firpmRS(std::size_t n,
                         {
                             if(bSpace == BandSpace::FREQ)
                             {
-                                return sin(x) * w[i];
+                                return sinl(x) * w[i];
                             }
                             else
                             {
-                                return sqrt(1.0l - x * x) * w[i];
+                                return sqrtl(1.0l - x * x) * w[i];
                             }
 
                         };
@@ -1307,7 +1307,7 @@ PMOutput firpmRS(std::size_t n,
                         {
                             if (a[2u * i] != a[2u * i + 1u]) {
                                 if(bSpace == BandSpace::CHEBY)
-                                    x = acos(x);
+                                    x = acosl(x);
                                 return ((x - freqBands[i].start) * a[2u * i + 1u] -
                                         (x - freqBands[i].stop) * a[2u * i]) /
                                         (freqBands[i].stop - freqBands[i].start);
@@ -1334,22 +1334,22 @@ PMOutput firpmRS(std::size_t n,
                     {
                         if(bSpace == BandSpace::FREQ)
                         {
-                            return (sin(x / 2) / x) * w[0u];
+                            return (sinl(x / 2) / x) * w[0u];
                         }
                         else
                         {
-                            return (sin(acos(x) / 2) / acos(x)) * w[0u];
+                            return (sinl(acosl(x) / 2) / acosl(x)) * w[0u];
                         }
                     };
                     freqBands[0].amplitude = [scaleFactor](BandSpace bSpace, long double x) -> long double
                     {
                         if(bSpace == BandSpace::FREQ)
                         {
-                            return (x / sin(x / 2)) * scaleFactor;
+                            return (x / sinl(x / 2)) * scaleFactor;
                         }
                         else
                         {
-                            return (acos(x) / sin(acos(x) / 2)) * scaleFactor;
+                            return (acosl(x) / sinl(acosl(x) / 2)) * scaleFactor;
                         }
                     };
                     for(std::size_t i{1u}; i < freqBands.size(); ++i)
@@ -1361,11 +1361,11 @@ PMOutput firpmRS(std::size_t n,
                         {
                             if(bSpace == BandSpace::FREQ)
                             {
-                                return sin(x / 2) * w[i];
+                                return sinl(x / 2) * w[i];
                             }
                             else
                             {
-                                return (sin(acos(x) / 2)) * w[i];
+                                return (sinl(acosl(x) / 2)) * w[i];
                             }
 
                         };
@@ -1373,7 +1373,7 @@ PMOutput firpmRS(std::size_t n,
                         {
                             if (a[2u * i] != a[2u * i + 1u]) {
                                 if(bSpace == BandSpace::CHEBY)
-                                    x = acos(x);
+                                    x = acosl(x);
                                 return ((x - freqBands[i].start) * a[2u * i + 1u] -
                                         (x - freqBands[i].stop) * a[2u * i]) /
                                         (freqBands[i].stop - freqBands[i].start);
@@ -1481,14 +1481,14 @@ PMOutput firpmRS(std::size_t n,
                                         (x - freqBands[i].stop) * a[2u * i]) /
                                         (freqBands[i].stop - freqBands[i].start)) / sinl(x);
                             }
-                            return a[2u * i] / sin(x);
+                            return a[2u * i] / sinl(x);
                         };
                         freqBands[i].weight = [=](BandSpace bSpace, long double x) -> long double
                         {
                             if(bSpace == BandSpace::FREQ)
-                                return w[i] * sin(x);
+                                return w[i] * sinl(x);
                             else
-                                return w[i] * (sqrt(1.0l - x * x));
+                                return w[i] * (sqrtl(1.0l - x * x));
                         };
                     }
                 } else {       // Type IV
@@ -1507,23 +1507,23 @@ PMOutput firpmRS(std::size_t n,
                         freqBands[i].amplitude = [i, &a, &freqBands](BandSpace bSpace, long double x) -> long double
                         {
                             if(bSpace == BandSpace::CHEBY)
-                                x = acos(x);
+                                x = acosl(x);
 
                             if (a[2u * i] != a[2u * i + 1u]) {
                                 return (((x - freqBands[i].start) * a[2u * i + 1u] -
                                         (x - freqBands[i].stop) * a[2u * i]) /
                                         (freqBands[i].stop - freqBands[i].start)) / sinl(x / 2);
                             }
-                            return a[2u * i] / sin(x / 2);
+                            return a[2u * i] / sinl(x / 2);
                         };
                         freqBands[i].weight = [=](BandSpace bSpace, long double x) -> long double
                         {
                             if(bSpace == BandSpace::FREQ)
-                                return w[i] * sin(x / 2);
+                                return w[i] * sinl(x / 2);
                             else
                             {
-                                x = acos(x);
-                                return w[i] * (sin(x / 2));
+                                x = acosl(x);
+                                return w[i] * (sinl(x / 2));
                             }
                         };
                     }
