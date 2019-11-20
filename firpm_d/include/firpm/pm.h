@@ -31,9 +31,6 @@
 #include "cheby.h"
 #include "barycentric.h"
 
-/** utility type for storing interval endpoints */
-typedef std::pair<double, double> interval_t;
-
 /** @enum filter_t marker to distinguish
  * between the two categories of filters (digital
  * differentiators and Hilbert transformers) that

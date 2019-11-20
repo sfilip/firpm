@@ -21,6 +21,9 @@
 #include <fstream>
 #include <sstream>
 
+/** utility type for storing interval endpoints */
+typedef std::pair<double, double> interval_t;
+
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
 typedef Eigen::Matrix<double, Eigen::Dynamic, 1> VectorXd;
 
