@@ -61,10 +61,11 @@ enum class init_t {
  * Utility object which contains useful information about the filter computed by the
  * Parks-McClellan algorithm
  */
+template<typename T>
 struct pmoutput_t
 {
-    std::vector<double> h;    /**< the final filter coefficients*/
-    std::vector<double> x;    /**< the reference set used to generate the final 
+    std::vector<T> h;         /**< the final filter coefficients*/
+    std::vector<T> x;         /**< the reference set used to generate the final
                                 filter (values are in \f$[-1,1]\f$ and NOT \f$[0,\pi]\f$)*/
     std::size_t iter;         /**< number of iterations that were necessary to 
                                 achieve convergence*/
@@ -161,7 +162,7 @@ void referenceScaling(std::vector<double>& nx, std::vector<band_t>& ncbands,
  * @endcode
  */
 
-pmoutput_t exchange(std::vector<double>& x,
+pmoutput_t<double> exchange(std::vector<double>& x,
         std::vector<band_t>& cbands,
         double eps = 0.01,
         std::size_t nmax = 4u);
@@ -204,7 +205,8 @@ pmoutput_t exchange(std::vector<double>& x,
  * @endcode
  */
 
-pmoutput_t firpm(std::size_t n, 
+template<typename T>
+pmoutput_t<double> firpm(std::size_t n,
             std::vector<double>const &f,
             std::vector<double>const &a,
             std::vector<double>const &w,
@@ -213,7 +215,6 @@ pmoutput_t firpm(std::size_t n,
             init_t strategy = init_t::UNIFORM,
             std::size_t depth = 0u,
             init_t rstrategy = init_t::UNIFORM);
-
 
 /*! Parks-McClellan routine for implementing type I and II FIR filters. This routine uses 
  * reference scaling by default and is just a wrapper over the <tt>firpm</tt>.
@@ -237,7 +238,8 @@ pmoutput_t firpm(std::size_t n,
  * symmetrical to the middle coefficient(s))
  */
 
-pmoutput_t firpmRS(std::size_t n, 
+template<typename T>
+pmoutput_t<double> firpmRS(std::size_t n,
             std::vector<double>const &f,
             std::vector<double>const &a,
             std::vector<double>const &w,
@@ -263,13 +265,13 @@ pmoutput_t firpmRS(std::size_t n,
  * symmetrical to the middle coefficient(s))
  */
 
-pmoutput_t firpmAFP(std::size_t n, 
+template<typename T>
+pmoutput_t<double> firpmAFP(std::size_t n,
             std::vector<double>const &f,
             std::vector<double>const &a,
             std::vector<double>const &w,
             double eps = 0.01,
             std::size_t nmax = 4u);
-
 
 /*! Parks-McClellan routine for implementing type III and IV FIR filters. 
  * This routine is the most general and can be set to use any of the three
@@ -297,7 +299,8 @@ pmoutput_t firpmAFP(std::size_t n,
  * transfer function of the final filter (in this case, for types III and IV, 
  * the values are antisymmetrical to the middle coefficient(s))*/
 
-pmoutput_t firpm(std::size_t n,
+template<typename T>
+pmoutput_t<double> firpm(std::size_t n,
         std::vector<double>const& f,
         std::vector<double>const& a,
         std::vector<double>const& w,
@@ -330,7 +333,9 @@ pmoutput_t firpm(std::size_t n,
  * iteration. The h vector of the output contains the coefficients corresponding 
  * to the transfer function of the final filter (in this case, for types III and 
  * IV, the values are antisymmetrical to the middle coefficient(s))*/
-pmoutput_t firpmRS(std::size_t n, 
+
+template<typename T>
+pmoutput_t<double> firpmRS(std::size_t n,
             std::vector<double>const &f,
             std::vector<double>const &a,
             std::vector<double>const &w,
@@ -359,7 +364,8 @@ pmoutput_t firpmRS(std::size_t n,
  * to the transfer function of the final filter (in this case, for types III and 
  * IV, the values are antisymmetrical to the middle coefficient(s))*/
 
-pmoutput_t firpmAFP(std::size_t n, 
+template<typename T>
+pmoutput_t<double> firpmAFP(std::size_t n,
             std::vector<double>const &f,
             std::vector<double>const &a,
             std::vector<double>const &w,

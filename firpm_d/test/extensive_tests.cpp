@@ -6,7 +6,7 @@
 #include "firpm/cheby.h"
 #include "gtest/gtest.h"
 
-void printInfo(pmoutput_t& output, double eps)
+void printInfo(pmoutput_t<double>& output, double eps)
 {
 	if(output.q < eps)
 	{
@@ -20,7 +20,7 @@ void printInfo(pmoutput_t& output, double eps)
 }
 
 
-void compareInfoRS(pmoutput_t& output1, pmoutput_t& output2, double eps)
+void compareInfoRS(pmoutput_t<double>& output1, pmoutput_t<double>& output2, double eps)
 {
     if(output1.q < eps)
     {
@@ -28,7 +28,7 @@ void compareInfoRS(pmoutput_t& output1, pmoutput_t& output2, double eps)
     }
 }
 
-void compareInfoAFP(pmoutput_t& output1, pmoutput_t& output2, double eps)
+void compareInfoAFP(pmoutput_t<double>& output1, pmoutput_t<double>& output2, double eps)
 {
     if(output1.q < eps)
     {
@@ -44,16 +44,16 @@ void compareInfoAFP(pmoutput_t& output1, pmoutput_t& output2, double eps)
 TEST(firpm_extensive_test, extensive1)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(400, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output1 = firpm<double>(400, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(400, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output2 = firpmRS<double>(400, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(400, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output3 = firpmAFP<double>(400, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -66,16 +66,16 @@ TEST(firpm_extensive_test, extensive1)
 TEST(firpm_extensive_test, extensive2)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(402, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output1 = firpm<double>(402, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(402, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output2 = firpmRS<double>(402, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(402, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output3 = firpmAFP<double>(402, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -87,16 +87,16 @@ TEST(firpm_extensive_test, extensive2)
 TEST(firpm_extensive_test, extensive3)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(440, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output1 = firpm<double>(440, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(440, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output2 = firpmRS<double>(440, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(440, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output3 = firpmAFP<double>(440, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -108,17 +108,17 @@ TEST(firpm_extensive_test, extensive3)
 TEST(firpm_extensive_test, extensive4)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(442, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output1 = firpm<double>(442, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(442, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output2 = firpmRS<double>(442, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "Delta = " << output2.delta << std::endl;
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(442, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output3 = firpmAFP<double>(442, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -134,11 +134,11 @@ TEST(firpm_extensive_test, extensive4)
 TEST(firpm_extensive_test, extensive5)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(400, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output1 = firpm<double>(400, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(400, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output2 = firpmRS<double>(400, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
@@ -146,7 +146,7 @@ TEST(firpm_extensive_test, extensive5)
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "Delta = " << output2.delta << std::endl;
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(400, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output3 = firpmAFP<double>(400, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -158,16 +158,16 @@ TEST(firpm_extensive_test, extensive5)
 TEST(firpm_extensive_test, extensive6)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(401, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output1 = firpm<double>(401, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(401, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output2 = firpmRS<double>(401, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(401, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output3 = firpmAFP<double>(401, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -178,16 +178,16 @@ TEST(firpm_extensive_test, extensive6)
 TEST(firpm_extensive_test, extensive7)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(402, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output1 = firpm<double>(402, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(402, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output2 = firpmRS<double>(402, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(402, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output3 = firpmAFP<double>(402, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -199,16 +199,16 @@ TEST(firpm_extensive_test, extensive8)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(441, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output1 = firpm<double>(441, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(441, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output2 = firpmRS<double>(441, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(441, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output3 = firpmAFP<double>(441, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -219,16 +219,16 @@ TEST(firpm_extensive_test, extensive8)
 TEST(firpm_extensive_test, extensive9)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(442, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output1 = firpm<double>(442, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(442, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output2 = firpmRS<double>(442, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(442, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output3 = firpmAFP<double>(442, {0.0, 0.38, 0.45, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -246,16 +246,16 @@ TEST(firpm_extensive_test, extensive10)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(150, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output1 = firpm<double>(150, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(150, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output2 = firpmRS<double>(150, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(150, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output3 = firpmAFP<double>(150, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -267,16 +267,16 @@ TEST(firpm_extensive_test, extensive11)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(160, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output1 = firpm<double>(160, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(160, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output2 = firpmRS<double>(160, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(160, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output3 = firpmAFP<double>(160, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -289,16 +289,16 @@ TEST(firpm_extensive_test, extensive12)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(161, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output1 = firpm<double>(161, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(161, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output2 = firpmRS<double>(161, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(161, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output3 = firpmAFP<double>(161, {0.0, 0.2, 0.4, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -314,16 +314,16 @@ TEST(firpm_extensive_test, extensive13)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(1000, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output1 = firpm<double>(1000, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(1000, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output2 = firpmRS<double>(1000, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(1000, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output3 = firpmAFP<double>(1000, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -336,16 +336,16 @@ TEST(firpm_extensive_test, extensive14)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(2002, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output1 = firpm<double>(2002, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(2002, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output2 = firpmRS<double>(2002, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(2002, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output3 = firpmAFP<double>(2002, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -358,16 +358,16 @@ TEST(firpm_extensive_test, extensive15)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(2483, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output1 = firpm<double>(2483, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(2483, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0}, 1e-2, 4u, 2u);
+    auto output2 = firpmRS<double>(2483, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0}, 1e-2, 4u, 2u);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(2483, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output3 = firpmAFP<double>(2483, {0.0, 0.8, 0.81, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -383,16 +383,16 @@ TEST(firpm_extensive_test, extensive16)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(2002, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output1 = firpm<double>(2002, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output1, 0.0001);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(2002, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output2 = firpmRS<double>(2002, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(2002, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output3 = firpmAFP<double>(2002, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -404,16 +404,16 @@ TEST(firpm_extensive_test, extensive17)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(4422, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output1 = firpm<double>(4422, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(4422, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output2 = firpmRS<double>(4422, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(4422, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output3 = firpmAFP<double>(4422, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
@@ -426,16 +426,16 @@ TEST(firpm_extensive_test, extensive18)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(4560, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output1 = firpm<double>(4560, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(4560, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output2 = firpmRS<double>(4560, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(4560, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+    auto output3 = firpmAFP<double>(4560, {0.0, 0.1, 0.105, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -449,16 +449,16 @@ TEST(firpm_extensive_test, extensive19)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(1400, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
+    auto output1 = firpm<double>(1400, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(1400, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
+    auto output2 = firpmRS<double>(1400, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(1400, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
+    auto output3 = firpmAFP<double>(1400, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -471,16 +471,16 @@ TEST(firpm_extensive_test, extensive20)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(3002, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
+    auto output1 = firpm<double>(3002, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(3002, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
+    auto output2 = firpmRS<double>(3002, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(3002, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
+    auto output3 = firpmAFP<double>(3002, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -493,16 +493,16 @@ TEST(firpm_extensive_test, extensive21)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(4200, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
+    auto output1 = firpm<double>(4200, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(4200, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0}, 1e-2, 4u, 2u);
+    auto output2 = firpmRS<double>(4200, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0}, 1e-2, 4u, 2u);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(4200, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0}, 1e-2);
+    auto output3 = firpmAFP<double>(4200, {0.0, 0.1, 0.105, 0.6, 0.605, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0}, 1e-2);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -517,16 +517,16 @@ TEST(firpm_extensive_test, extensive22)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(3002, {0.0, 0.2, 0.205, 0.7, 0.705, 1.0}, {1.0, 1.0, 0.0, 0.0, 0.7, 0.7}, {1.0, 10.0, 1.0});
+    auto output1 = firpm<double>(3002, {0.0, 0.2, 0.205, 0.7, 0.705, 1.0}, {1.0, 1.0, 0.0, 0.0, 0.7, 0.7}, {1.0, 10.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(3002, {0.0, 0.2, 0.205, 0.7, 0.705, 1.0}, {1.0, 1.0, 0.0, 0.0, 0.7, 0.7}, {1.0, 10.0, 1.0});
+    auto output2 = firpmRS<double>(3002, {0.0, 0.2, 0.205, 0.7, 0.705, 1.0}, {1.0, 1.0, 0.0, 0.0, 0.7, 0.7}, {1.0, 10.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(3002, {0.0, 0.2, 0.205, 0.7, 0.705, 1.0}, {1.0, 1.0, 0.0, 0.0, 0.7, 0.7}, {1.0, 10.0, 1.0});
+    auto output3 = firpmAFP<double>(3002, {0.0, 0.2, 0.205, 0.7, 0.705, 1.0}, {1.0, 1.0, 0.0, 0.0, 0.7, 0.7}, {1.0, 10.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -539,16 +539,16 @@ TEST(firpm_extensive_test, extensive23)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(2256, {0.0, 0.2, 0.205, 0.7, 0.705, 1.0}, {1.0, 1.0, 0.0, 0.0, 0.7, 0.7}, {1.0, 10.0, 1.0});
+    auto output1 = firpm<double>(2256, {0.0, 0.2, 0.205, 0.7, 0.705, 1.0}, {1.0, 1.0, 0.0, 0.0, 0.7, 0.7}, {1.0, 10.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(2256, {0.0, 0.2, 0.205, 0.7, 0.705, 1.0}, {1.0, 1.0, 0.0, 0.0, 0.7, 0.7}, {1.0, 10.0, 1.0});
+    auto output2 = firpmRS<double>(2256, {0.0, 0.2, 0.205, 0.7, 0.705, 1.0}, {1.0, 1.0, 0.0, 0.0, 0.7, 0.7}, {1.0, 10.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(2256, {0.0, 0.2, 0.205, 0.7, 0.705, 1.0}, {1.0, 1.0, 0.0, 0.0, 0.7, 0.7}, {1.0, 10.0, 1.0});
+    auto output3 = firpmAFP<double>(2256, {0.0, 0.2, 0.205, 0.7, 0.705, 1.0}, {1.0, 1.0, 0.0, 0.0, 0.7, 0.7}, {1.0, 10.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -562,16 +562,16 @@ TEST(firpm_extensive_test, extensive24)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(600, {0.0, 0.3, 0.35, 0.7, 0.75, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
+    auto output1 = firpm<double>(600, {0.0, 0.3, 0.35, 0.7, 0.75, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(600, {0.0, 0.3, 0.35, 0.7, 0.75, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
+    auto output2 = firpmRS<double>(600, {0.0, 0.3, 0.35, 0.7, 0.75, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(600, {0.0, 0.3, 0.35, 0.7, 0.75, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
+    auto output3 = firpmAFP<double>(600, {0.0, 0.3, 0.35, 0.7, 0.75, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -584,16 +584,16 @@ TEST(firpm_extensive_test, extensive25)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(362, {0.0, 0.3, 0.35, 0.7, 0.75, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
+    auto output1 = firpm<double>(362, {0.0, 0.3, 0.35, 0.7, 0.75, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(362, {0.0, 0.3, 0.35, 0.7, 0.75, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
+    auto output2 = firpmRS<double>(362, {0.0, 0.3, 0.35, 0.7, 0.75, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(362, {0.0, 0.3, 0.35, 0.7, 0.75, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
+    auto output3 = firpmAFP<double>(362, {0.0, 0.3, 0.35, 0.7, 0.75, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -608,16 +608,16 @@ TEST(firpm_extensive_test, extensive26)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(200, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
+    auto output1 = firpm<double>(200, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(200, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
+    auto output2 = firpmRS<double>(200, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(200, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
+    auto output3 = firpmAFP<double>(200, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -631,16 +631,16 @@ TEST(firpm_extensive_test, extensive27)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(202, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
+    auto output1 = firpm<double>(202, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(202, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
+    auto output2 = firpmRS<double>(202, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(202, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
+    auto output3 = firpmAFP<double>(202, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -653,16 +653,16 @@ TEST(firpm_extensive_test, extensive28)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(250, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
+    auto output1 = firpm<double>(250, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(250, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
+    auto output2 = firpmRS<double>(250, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(250, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
+    auto output3 = firpmAFP<double>(250, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -677,20 +677,20 @@ TEST(firpm_extensive_test, extensive29)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(140, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
+    auto output1 = firpm<double>(140, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
             {0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(140, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
+    auto output2 = firpmRS<double>(140, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
             {0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(140, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
+    auto output3 = firpmAFP<double>(140, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
             {0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0});
     printInfo(output3, 1e-2);
@@ -705,20 +705,20 @@ TEST(firpm_extensive_test, extensive30)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(290, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
+    auto output1 = firpm<double>(290, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
             {0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(290, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
+    auto output2 = firpmRS<double>(290, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
             {0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0}, 1e-2, 8u, 1u);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(290, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
+    auto output3 = firpmAFP<double>(290, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
             {0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0}, 1e-2, 8);
     printInfo(output3, 1e-2);
@@ -734,20 +734,20 @@ TEST(firpm_extensive_test, extensive31)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(422, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
+    auto output1 = firpm<double>(422, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
             {0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(422, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
+    auto output2 = firpmRS<double>(422, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
             {0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(422, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
+    auto output3 = firpmAFP<double>(422, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
             {0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0});
     printInfo(output3, 1e-2);
@@ -763,20 +763,20 @@ TEST(firpm_extensive_test, extensive32)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(1600, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
+    auto output1 = firpm<double>(1600, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
             {1.0, 1.0, 0.0, 0.0, 0.7, 0.7, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(1600, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
+    auto output2 = firpmRS<double>(1600, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
             {1.0, 1.0, 0.0, 0.0, 0.7, 0.7, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(1600, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
+    auto output3 = firpmAFP<double>(1600, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
             {1.0, 1.0, 0.0, 0.0, 0.7, 0.7, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0});
     printInfo(output3, 1e-2);
@@ -791,20 +791,20 @@ TEST(firpm_extensive_test, extensive33)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(2300, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
+    auto output1 = firpm<double>(2300, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
             {1.0, 1.0, 0.0, 0.0, 0.7, 0.7, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0}, 1e-2, 8u);
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(2300, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
+    auto output2 = firpmRS<double>(2300, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
             {1.0, 1.0, 0.0, 0.0, 0.7, 0.7, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0}, 1e-2, 8u, 2u);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(2300, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
+    auto output3 = firpmAFP<double>(2300, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
             {1.0, 1.0, 0.0, 0.0, 0.7, 0.7, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0}, 1e-2, 8u);
     printInfo(output3, 1e-2);
@@ -820,20 +820,20 @@ TEST(firpm_extensive_test, extensive34)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(2414, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
+    auto output1 = firpm<double>(2414, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
             {1.0, 1.0, 0.0, 0.0, 0.7, 0.7, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0}, 1e-2, 8u);
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(2414, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
+    auto output2 = firpmRS<double>(2414, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
             {1.0, 1.0, 0.0, 0.0, 0.7, 0.7, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0}, 1e-2, 8u, 1u);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(2414, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
+    auto output3 = firpmAFP<double>(2414, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 1.0},
             {1.0, 1.0, 0.0, 0.0, 0.7, 0.7, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0}, 1e-2, 8u);
     printInfo(output3, 1e-2);
@@ -849,20 +849,20 @@ TEST(firpm_extensive_test, extensive35)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(2000, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
+    auto output1 = firpm<double>(2000, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
             {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0, 10.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(2000, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
+    auto output2 = firpmRS<double>(2000, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
             {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0, 10.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(2000, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
+    auto output3 = firpmAFP<double>(2000, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
             {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0, 10.0, 1.0});
     printInfo(output3, 1e-2);
@@ -877,20 +877,20 @@ TEST(firpm_extensive_test, extensive36)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(2800, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
+    auto output1 = firpm<double>(2800, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
             {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0, 10.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(2800, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
+    auto output2 = firpmRS<double>(2800, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
             {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0, 10.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(2800, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
+    auto output3 = firpmAFP<double>(2800, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
             {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0, 10.0, 1.0});
     printInfo(output3, 1e-2);
@@ -905,20 +905,20 @@ TEST(firpm_extensive_test, extensive37)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(3042, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
+    auto output1 = firpm<double>(3042, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
             {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0, 10.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(3042, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
+    auto output2 = firpmRS<double>(3042, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
             {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0, 10.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(3042, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
+    auto output3 = firpmAFP<double>(3042, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
             {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0, 10.0, 1.0});
     printInfo(output3, 1e-2);
@@ -933,20 +933,20 @@ TEST(firpm_extensive_test, extensive38)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(1200, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
+    auto output1 = firpm<double>(1200, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
             {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0, 10.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(1200, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
+    auto output2 = firpmRS<double>(1200, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
             {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0, 10.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(1200, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
+    auto output3 = firpmAFP<double>(1200, {0.0, 0.21, 0.215, 0.42, 0.425, 0.61, 0.615, 0.74, 0.745, 0.8, 0.805, 0.9, 0.905, 1.0},
             {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0},
             {1.0, 10.0, 1.0, 10.0, 1.0, 10.0, 1.0});
     printInfo(output3, 1e-2);
@@ -964,20 +964,20 @@ TEST(firpm_extensive_test, extensive39)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
 
-    pmoutput_t output1 = firpm(1200, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
+    auto output1 = firpm<double>(1200, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
             {0.0, 0.0, 0.6, 0.6, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0, 1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(1200, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
+    auto output2 = firpmRS<double>(1200, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
             {0.0, 0.0, 0.6, 0.6, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0, 1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(1200, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
+    auto output3 = firpmAFP<double>(1200, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
             {0.0, 0.0, 0.6, 0.6, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0, 1.0, 10.0});
     printInfo(output3, 1e-2);
@@ -991,20 +991,20 @@ TEST(firpm_extensive_test, extensive39)
 TEST(firpm_extensive_test, extensive40)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(1800, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
+    auto output1 = firpm<double>(1800, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
             {0.0, 0.0, 0.6, 0.6, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0, 1.0, 10.0}, 1e-2, 16u);
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(1800, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
+    auto output2 = firpmRS<double>(1800, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
             {0.0, 0.0, 0.6, 0.6, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0, 1.0, 10.0}, 1e-2, 8u, 1u);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(1800, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
+    auto output3 = firpmAFP<double>(1800, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
             {0.0, 0.0, 0.6, 0.6, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0, 1.0, 10.0}, 1e-2, 8u);
     printInfo(output3, 1e-2);
@@ -1018,20 +1018,20 @@ TEST(firpm_extensive_test, extensive40)
 TEST(firpm_extensive_test, extensive41)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(774, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
+    auto output1 = firpm<double>(774, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
             {0.0, 0.0, 0.6, 0.6, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0, 1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(774, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
+    auto output2 = firpmRS<double>(774, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
             {0.0, 0.0, 0.6, 0.6, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0, 1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(774, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
+    auto output3 = firpmAFP<double>(774, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
             {0.0, 0.0, 0.6, 0.6, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0, 1.0, 10.0, 1.0, 10.0});
     printInfo(output3, 1e-2);
@@ -1048,16 +1048,16 @@ TEST(firpm_extensive_test, extensive41)
 TEST(firpm_extensive_test, extensive42)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(161, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output1 = firpm<double>(161, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(161, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output2 = firpmRS<double>(161, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(161, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output3 = firpmAFP<double>(161, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1068,16 +1068,16 @@ TEST(firpm_extensive_test, extensive42)
 TEST(firpm_extensive_test, extensive43)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(201, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output1 = firpm<double>(201, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(201, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output2 = firpmRS<double>(201, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(201, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output3 = firpmAFP<double>(201, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1090,16 +1090,16 @@ TEST(firpm_extensive_test, extensive43)
 TEST(firpm_extensive_test, extensive44)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(223, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output1 = firpm<double>(223, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(223, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output2 = firpmRS<double>(223, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(223, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output3 = firpmAFP<double>(223, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1113,16 +1113,16 @@ TEST(firpm_extensive_test, extensive44)
 TEST(firpm_extensive_test, extensive45)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(401, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output1 = firpm<double>(401, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(401, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output2 = firpmRS<double>(401, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(401, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output3 = firpmAFP<double>(401, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1134,16 +1134,16 @@ TEST(firpm_extensive_test, extensive45)
 TEST(firpm_extensive_test, extensive46)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(801, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output1 = firpm<double>(801, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(801, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output2 = firpmRS<double>(801, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(801, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output3 = firpmAFP<double>(801, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1155,16 +1155,16 @@ TEST(firpm_extensive_test, extensive46)
 TEST(firpm_extensive_test, extensive47)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(1601, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output1 = firpm<double>(1601, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(1601, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output2 = firpmRS<double>(1601, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(1601, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output3 = firpmAFP<double>(1601, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1176,16 +1176,16 @@ TEST(firpm_extensive_test, extensive47)
 TEST(firpm_extensive_test, extensive48)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(1847, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output1 = firpm<double>(1847, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(1847, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output2 = firpmRS<double>(1847, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(1847, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
+    auto output3 = firpmAFP<double>(1847, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1198,20 +1198,20 @@ TEST(firpm_extensive_test, extensive48)
 TEST(firpm_extensive_test, extensive49)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(1801, {0.0, 0.29, 0.3, 0.8, 0.81, 1.0},
+    auto output1 = firpm<double>(1801, {0.0, 0.29, 0.3, 0.8, 0.81, 1.0},
             {0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(1801, {0.0, 0.29, 0.3, 0.8, 0.81, 1.0},
+    auto output2 = firpmRS<double>(1801, {0.0, 0.29, 0.3, 0.8, 0.81, 1.0},
             {0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(1801, {0.0, 0.29, 0.3, 0.8, 0.81, 1.0},
+    auto output3 = firpmAFP<double>(1801, {0.0, 0.29, 0.3, 0.8, 0.81, 1.0},
             {0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0});
     printInfo(output3, 1e-2);
@@ -1223,20 +1223,20 @@ TEST(firpm_extensive_test, extensive49)
 TEST(firpm_extensive_test, extensive50)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(2203, {0.0, 0.29, 0.3, 0.8, 0.81, 1.0},
+    auto output1 = firpm<double>(2203, {0.0, 0.29, 0.3, 0.8, 0.81, 1.0},
             {0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0});
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(2203, {0.0, 0.29, 0.3, 0.8, 0.81, 1.0},
+    auto output2 = firpmRS<double>(2203, {0.0, 0.29, 0.3, 0.8, 0.81, 1.0},
             {0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0});
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(2203, {0.0, 0.29, 0.3, 0.8, 0.81, 1.0},
+    auto output3 = firpmAFP<double>(2203, {0.0, 0.29, 0.3, 0.8, 0.81, 1.0},
             {0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
             {10.0, 1.0, 10.0});
     printInfo(output3, 1e-2);
@@ -1250,16 +1250,16 @@ TEST(firpm_extensive_test, extensive50)
 TEST(firpm_extensive_test, extensive51)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(4000, {0.001, 0.999}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
+    auto output1 = firpm<double>(4000, {0.001, 0.999}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(4000, {0.001, 0.999}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
+    auto output2 = firpmRS<double>(4000, {0.001, 0.999}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(4000, {0.001, 0.999}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
+    auto output3 = firpmAFP<double>(4000, {0.001, 0.999}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1272,16 +1272,16 @@ TEST(firpm_extensive_test, extensive51)
 TEST(firpm_extensive_test, extensive52)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(4001, {0.001, 0.999}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
+    auto output1 = firpm<double>(4001, {0.001, 0.999}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(4001, {0.001, 0.999}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
+    auto output2 = firpmRS<double>(4001, {0.001, 0.999}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(4001, {0.001, 0.999}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
+    auto output3 = firpmAFP<double>(4001, {0.001, 0.999}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1295,16 +1295,16 @@ TEST(firpm_extensive_test, extensive52)
 TEST(firpm_extensive_test, extensive53)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(100, {0.1, 0.9}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
+    auto output1 = firpm<double>(100, {0.1, 0.9}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(100, {0.1, 0.9}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
+    auto output2 = firpmRS<double>(100, {0.1, 0.9}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(100, {0.1, 0.9}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
+    auto output3 = firpmAFP<double>(100, {0.1, 0.9}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1316,16 +1316,16 @@ TEST(firpm_extensive_test, extensive53)
 TEST(firpm_extensive_test, extensive54)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(101, {0.1, 0.9}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
+    auto output1 = firpm<double>(101, {0.1, 0.9}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(101, {0.1, 0.9}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
+    auto output2 = firpmRS<double>(101, {0.1, 0.9}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(101, {0.1, 0.9}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
+    auto output3 = firpmAFP<double>(101, {0.1, 0.9}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1340,16 +1340,16 @@ TEST(firpm_extensive_test, extensive54)
 TEST(firpm_extensive_test, extensive55)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(100, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output1 = firpm<double>(100, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(100, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output2 = firpmRS<double>(100, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(100, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output3 = firpmAFP<double>(100, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1361,16 +1361,16 @@ TEST(firpm_extensive_test, extensive55)
 TEST(firpm_extensive_test, extensive56)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(101, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output1 = firpm<double>(101, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(101, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output2 = firpmRS<double>(101, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(101, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output3 = firpmAFP<double>(101, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1382,16 +1382,16 @@ TEST(firpm_extensive_test, extensive56)
 TEST(firpm_extensive_test, extensive57)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(200, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output1 = firpm<double>(200, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(200, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output2 = firpmRS<double>(200, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(200, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output3 = firpmAFP<double>(200, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1403,16 +1403,16 @@ TEST(firpm_extensive_test, extensive57)
 TEST(firpm_extensive_test, extensive58)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(201, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output1 = firpm<double>(201, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(201, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output2 = firpmRS<double>(201, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(201, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output3 = firpmAFP<double>(201, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1425,16 +1425,16 @@ TEST(firpm_extensive_test, extensive58)
 TEST(firpm_extensive_test, extensive59)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(600, {0, 0.7, 0.71, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output1 = firpm<double>(600, {0, 0.7, 0.71, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(600, {0, 0.7, 0.71, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output2 = firpmRS<double>(600, {0, 0.7, 0.71, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(600, {0, 0.7, 0.71, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output3 = firpmAFP<double>(600, {0, 0.7, 0.71, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
@@ -1446,16 +1446,16 @@ TEST(firpm_extensive_test, extensive59)
 TEST(firpm_extensive_test, extensive60)
 {
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    pmoutput_t output1 = firpm(601, {0, 0.7, 0.71, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output1 = firpm<double>(601, {0, 0.7, 0.71, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output1, 1e-2);
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
     std::cout << "START Parks-McClellan with reference scaling\n";
-    pmoutput_t output2 = firpmRS(601, {0, 0.7, 0.71, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output2 = firpmRS<double>(601, {0, 0.7, 0.71, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     std::cout << "START Parks-McClellan with AFP\n";
-    pmoutput_t output3 = firpmAFP(601, {0, 0.7, 0.71, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
+    auto output3 = firpmAFP<double>(601, {0, 0.7, 0.71, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);

@@ -604,11 +604,11 @@ void extremaSearch(double& convergenceOrder,
 // pertaining to the reference x and the frequency bands (i.e. the
 // number of reference values inside each band) is given at the
 // beginning of the execution
-pmoutput_t exchange(std::vector<double>& x,
+pmoutput_t<double> exchange(std::vector<double>& x,
         std::vector<band_t>& chebyBands, double eps,
         std::size_t Nmax)
 {
-    pmoutput_t output;
+    pmoutput_t<double> output;
 
     std::size_t degree = x.size() - 2u;
     std::sort(x.begin(), x.end(),
@@ -711,12 +711,14 @@ void parseSpecification(std::vector<double> const &f,
     }
 }
 
-pmoutput_t firpm(std::size_t n, 
+template<typename T>
+pmoutput_t<double> firpm(std::size_t n,
             std::vector<double>const &f,
             std::vector<double>const &a,
             std::vector<double>const &w,
-            double eps, std::size_t nmax,
-            init_t strategy, 
+            double eps,
+            std::size_t nmax,
+            init_t strategy,
             std::size_t depth,
             init_t rstrategy)
 {
@@ -788,7 +790,7 @@ pmoutput_t firpm(std::size_t n,
         }
     }
 
-    pmoutput_t output;
+    pmoutput_t<double> output;
     std::vector<double> x;
     bandconv(cbands, fbands, convdir_t::FROMFREQ);
     std::function<double(double)> wf = [&cbands](double x) -> double {
@@ -887,7 +889,8 @@ pmoutput_t firpm(std::size_t n,
     return output;
 }
 
-pmoutput_t firpmRS(std::size_t n, 
+template<typename T>
+pmoutput_t<double> firpmRS(std::size_t n,
             std::vector<double>const &f,
             std::vector<double>const &a,
             std::vector<double>const &w,
@@ -895,26 +898,30 @@ pmoutput_t firpmRS(std::size_t n,
             std::size_t depth, 
             init_t rstrategy)
 {
-    return firpm(n, f, a, w, eps, nmax, init_t::SCALING, depth, rstrategy);
+    return firpm<double>(n, f, a, w, eps, nmax, init_t::SCALING, depth, rstrategy);
 }
 
-pmoutput_t firpmAFP(std::size_t n, 
+template<typename T>
+pmoutput_t<double> firpmAFP(std::size_t n,
             std::vector<double>const &f,
             std::vector<double>const &a,
             std::vector<double>const &w,
             double eps, std::size_t nmax)
 {
-    return firpm(n, f, a, w, eps, nmax, init_t::AFP);
+    return firpm<double>(n, f, a, w, eps, nmax, init_t::AFP);
 }
 
-
-pmoutput_t firpm(std::size_t n,
-        std::vector<double>const& f,
-        std::vector<double>const& a,
-        std::vector<double>const& w,
-        filter_t type, double eps,
-        std::size_t nmax, init_t strategy,
-        std::size_t depth, init_t rstrategy)
+template<typename T>
+pmoutput_t<double> firpm(std::size_t n,
+            std::vector<double>const& f,
+            std::vector<double>const& a,
+            std::vector<double>const& w,
+            filter_t type,
+            double eps,
+            std::size_t nmax,
+            init_t strategy,
+            std::size_t depth,
+            init_t rstrategy)
 {
     parseSpecification(f, a, w);
     std::vector<double> h;
@@ -1093,7 +1100,7 @@ pmoutput_t firpm(std::size_t n,
         }
     }
 
-    pmoutput_t output;
+    pmoutput_t<double> output;
     std::vector<double> x;
     bandconv(cbands, fbands, convdir_t::FROMFREQ);
     std::function<double(double)> wf = [&cbands](double x) -> double {
@@ -1208,7 +1215,8 @@ pmoutput_t firpm(std::size_t n,
     return output;
 }
 
-pmoutput_t firpmRS(std::size_t n, 
+template<typename T>
+pmoutput_t<double> firpmRS(std::size_t n,
             std::vector<double>const &f,
             std::vector<double>const &a,
             std::vector<double>const &w,
@@ -1216,17 +1224,72 @@ pmoutput_t firpmRS(std::size_t n,
             std::size_t nmax, std::size_t depth,
             init_t rstrategy)
 {
-    return firpm(n, f, a, w, type, eps, nmax, 
+    return firpm<double>(n, f, a, w, type, eps, nmax,
                  init_t::SCALING, depth, rstrategy);
 }
 
-pmoutput_t firpmAFP(std::size_t n, 
+template<typename T>
+pmoutput_t<double> firpmAFP(std::size_t n,
             std::vector<double>const &f,
             std::vector<double>const &a,
             std::vector<double>const &w,
             filter_t type, double eps,
             std::size_t nmax)
 {
-    return firpm(n, f, a, w, type, eps, 
+    return firpm<double>(n, f, a, w, type, eps,
                  nmax, init_t::AFP);
 }
+
+/* Explicit instantiations, since template code is not in header */
+template pmoutput_t<double> firpm<double>(std::size_t n,
+            std::vector<double>const &f,
+            std::vector<double>const &a,
+            std::vector<double>const &w,
+            double eps,
+            std::size_t nmax,
+            init_t strategy,
+            std::size_t depth,
+            init_t rstrategy);
+
+template pmoutput_t<double> firpm<double>(std::size_t n,
+            std::vector<double>const& f,
+            std::vector<double>const& a,
+            std::vector<double>const& w,
+            filter_t type,
+            double eps,
+            std::size_t nmax,
+            init_t strategy,
+            std::size_t depth,
+            init_t rstrategy);
+
+template pmoutput_t<double> firpmRS<double>(std::size_t n,
+            std::vector<double>const &f,
+            std::vector<double>const &a,
+            std::vector<double>const &w,
+            double eps, std::size_t nmax,
+            std::size_t depth,
+            init_t rstrategy);
+
+template pmoutput_t<double> firpmRS<double>(std::size_t n,
+            std::vector<double>const &f,
+            std::vector<double>const &a,
+            std::vector<double>const &w,
+            filter_t type,
+            double eps,
+            std::size_t nmax,
+            std::size_t depth,
+            init_t rstrategy);
+
+template pmoutput_t<double> firpmAFP<double>(std::size_t n,
+            std::vector<double>const &f,
+            std::vector<double>const &a,
+            std::vector<double>const &w,
+            double eps, std::size_t nmax);
+
+template pmoutput_t<double> firpmAFP<double>(std::size_t n,
+            std::vector<double>const &f,
+            std::vector<double>const &a,
+            std::vector<double>const &w,
+            filter_t type,
+            double eps,
+            std::size_t nmax);
