@@ -1,5 +1,5 @@
 //    firpm_d
-//    Copyright (C) 2015  S. Filip
+//    Copyright (C) 2015 - 2019  S. Filip
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -17,37 +17,37 @@
 
 #include "firpm/barycentric.h"
 
-void barycentricWeights(std::vector<double>& w,
+void baryweights(std::vector<double>& w,
         std::vector<double>& x)
 {
     if(x.size() > 500u)
     {
-        for(std::size_t i = 0u; i < x.size(); ++i)
+        for(std::size_t i{0u}; i < x.size(); ++i)
         {
             double one = 1;
             double denom = 0.0;
             double xi = x[i];
-            for(std::size_t j = 0u; j < x.size(); ++j)
+            for(std::size_t j{0u}; j < x.size(); ++j)
             {
                 if (j != i) {
-                    denom += log(((xi - x[j] > 0) ? (xi - x[j]) : (x[j] - xi)));
+                    denom += logl(((xi - x[j] > 0) ? (xi - x[j]) : (x[j] - xi)));
                     one *= ((xi - x[j] > 0) ? 1 : -1);
                 }
             }
-            w[i] = one / exp(denom + log(2.0)* (x.size() - 1));
+            w[i] = one / expl(denom + logl(2.0)* (x.size() - 1));
         }
     }
     else
     {
         std::size_t step = (x.size() - 2) / 15 + 1;
         double one = 1u;
-        for(std::size_t i = 0u; i < x.size(); ++i)
+        for(std::size_t i{0u}; i < x.size(); ++i)
         {
             double denom = 1.0;
             double xi = x[i];
-            for(std::size_t j = 0u; j < step; ++j)
+            for(std::size_t j{0u}; j < step; ++j)
             {
-                for(std::size_t k = j; k < x.size(); k += step)
+                for(std::size_t k{j}; k < x.size(); k += step)
                     if (k != i)
                         denom *= ((xi - x[k]) * 2);
             }
@@ -57,29 +57,29 @@ void barycentricWeights(std::vector<double>& w,
 }
 
 
-void computeIdealResponseAndWeight(double &D, double &W,
-        const double &xVal, std::vector<Band> &bands)
+void idealvals(double &D, double &W,
+        const double &x, std::vector<band_t> &bands)
 {
     for (auto &it : bands) {
-        if (xVal >= it.start && xVal <= it.stop) {
-            D = it.amplitude(it.space, xVal);
-            W = it.weight(it.space, xVal);
+        if (x >= it.start && x <= it.stop) {
+            D = it.amplitude(it.space, x);
+            W = it.weight(it.space, x);
             return;
         }
     }
 }
 
-void computeDelta(double &delta, std::vector<double>& x,
-        std::vector<Band> &bands)
+void compdelta(double &delta, std::vector<double>& x,
+        std::vector<band_t> &bands)
 {
     std::vector<double> w(x.size());
-    barycentricWeights(w, x);
+    baryweights(w, x);
 
     double num, denom, D, W, buffer;
     num = denom = D = W = 0;
-    for (std::size_t i = 0u; i < w.size(); ++i)
+    for (std::size_t i{0u}; i < w.size(); ++i)
     {
-        computeIdealResponseAndWeight(D, W, x[i], bands);
+        idealvals(D, W, x[i], bands);
         buffer = w[i];
         num += buffer * D;
         buffer = w[i] / W;
@@ -91,14 +91,14 @@ void computeDelta(double &delta, std::vector<double>& x,
     delta = num / denom;
 }
 
-void computeDelta(double &delta, std::vector<double>& w,
-        std::vector<double>& x, std::vector<Band> &bands)
+void compdelta(double &delta, std::vector<double>& w,
+        std::vector<double>& x, std::vector<band_t> &bands)
 {
     double num, denom, D, W, buffer;
     num = denom = D = W = 0;
-    for (std::size_t i = 0u; i < w.size(); ++i)
+    for (std::size_t i{0u}; i < w.size(); ++i)
     {
-        computeIdealResponseAndWeight(D, W, x[i], bands);
+        idealvals(D, W, x[i], bands);
         buffer = w[i];
         num += buffer * D;
         buffer = w[i] / W;
@@ -110,21 +110,21 @@ void computeDelta(double &delta, std::vector<double>& w,
 }
 
 
-void computeC(std::vector<double> &C, double &delta,
-        std::vector<double> &omega, std::vector<Band> &bands)
+void compc(std::vector<double> &C, double &delta,
+        std::vector<double> &omega, std::vector<band_t> &bands)
 {
     double D, W;
     D = W = 0;
-    for (std::size_t i = 0u; i < omega.size(); ++i)
+    for (std::size_t i{0u}; i < omega.size(); ++i)
     {
-        computeIdealResponseAndWeight(D, W, omega[i], bands);
+        idealvals(D, W, omega[i], bands);
         if (i % 2 != 0)
             W = -W;
         C[i] = D + (delta / W);
     }
 }
 
-void computeApprox(double &Pc, const double &omega,
+void approx(double &Pc, const double &omega,
         std::vector<double> &x, std::vector<double> &C,
         std::vector<double> &w)
 {
@@ -134,7 +134,7 @@ void computeApprox(double &Pc, const double &omega,
 
     Pc = omega;
     std::size_t r = x.size();
-    for (std::size_t i = 0u; i < r; ++i)
+    for (std::size_t i{0u}; i < r; ++i)
     {
         if (Pc == x[i]) {
             Pc = C[i];
@@ -147,12 +147,12 @@ void computeApprox(double &Pc, const double &omega,
     Pc = num / denom;
 }
 
-void computeError(double &error, const double &xVal,
+void comperror(double &error, const double &xVal,
         double &delta, std::vector<double> &x,
         std::vector<double> &C, std::vector<double> &w,
-        std::vector<Band> &bands)
+        std::vector<band_t> &bands)
 {
-    for (std::size_t i = 0u; i < x.size(); ++i)
+    for (std::size_t i{0u}; i < x.size(); ++i)
     {
         if (xVal == x[i]) {
             if (i % 2 == 0)
@@ -165,8 +165,8 @@ void computeError(double &error, const double &xVal,
 
     double D, W;
     D = W = 0;
-    computeIdealResponseAndWeight(D, W, xVal, bands);
-    computeApprox(error, xVal, x, C, w);
+    idealvals(D, W, xVal, bands);
+    approx(error, xVal, x, C, w);
     error -= D;
     error *= W;
 }

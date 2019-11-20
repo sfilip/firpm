@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 3.12)
 set(PROJECT_NAME_STR firpmlib-build)
 project(${PROJECT_NAME_STR})
 
@@ -12,7 +12,7 @@ include_directories(${PROJECT_INCLUDE_DIR})
 add_library(firpm SHARED ${PROJECT_SRC_FILES})
 
 
-target_link_libraries(firpm gmp mpfr gomp)
+target_link_libraries(firpm PRIVATE gmp mpfr OpenMP::OpenMP_CXX)
 
 
 install(TARGETS firpm DESTINATION lib)
