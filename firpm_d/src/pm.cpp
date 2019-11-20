@@ -36,7 +36,7 @@ void chebvand(MatrixXd<T>& A, std::size_t degree,
     A.resize(degree + 1u, meshPoints.size());
     for(std::size_t i{0u}; i < meshPoints.size(); ++i)
     {
-        double pointWeight = weightFunction(meshPoints[i]);
+        T pointWeight = weightFunction(meshPoints[i]);
         A(0u, i) = 1;
         A(1u, i) = meshPoints[i];
         for(std::size_t j{2u}; j <= degree; ++j)
@@ -67,7 +67,7 @@ void afp(std::vector<T>& points, MatrixXd<T>& A,
 }
 
 template<typename T>
-void countBand(std::vector<band_t<T>>& cb, std::vector<double>& x)
+void countBand(std::vector<band_t<T>>& cb, std::vector<T>& x)
 {
     for(auto& it : cb)
         it.xs = 0u;
@@ -84,7 +84,7 @@ template<typename T>
 void wam(std::vector<T>& wam, std::vector<band_t<T>>& cb,
          std::size_t deg)
 {
-    std::vector<double> cp;
+    std::vector<T> cp;
     equipts(cp, deg + 2u);
     cos(cp, cp);
     std::sort(begin(cp), end(cp));
@@ -92,7 +92,7 @@ void wam(std::vector<T>& wam, std::vector<band_t<T>>& cb,
     {
         if(cb[i].start != cb[i].stop)
         {
-            std::vector<double> bufferNodes;
+            std::vector<T> bufferNodes;
             chgvar(bufferNodes, cp, cb[i].start, cb[i].stop);
             bufferNodes[0] = cb[i].start;
             bufferNodes[bufferNodes.size()-1u] = cb[i].stop;
@@ -206,7 +206,7 @@ void referenceScaling(std::vector<T>& newX, std::vector<band_t<T>>& newChebyBand
                     if(threeInt > 0)
                     {
                         newX.push_back(x[offset] + (x[offset + 1] - x[offset]) / 3);
-                        double secondValue = x[offset] + (x[offset + 1] - x[offset]) / 3
+                        T secondValue = x[offset] + (x[offset + 1] - x[offset]) / 3
                             + (x[offset + 1] - x[offset]) / 3;
                         newX.push_back(secondValue);
                         threeInt--;
@@ -230,7 +230,7 @@ void referenceScaling(std::vector<T>& newX, std::vector<band_t<T>>& newChebyBand
                         newX.push_back(x[offset + chebyBands[i].xs - 2u] +
                                 (x[offset + chebyBands[i].xs - 1u] -
                                  x[offset + chebyBands[i].xs - 2u]) / 3);
-                        double secondValue = x[offset + chebyBands[i].xs - 2u] +
+                        T secondValue = x[offset + chebyBands[i].xs - 2u] +
                             (x[offset + chebyBands[i].xs - 1u] -
                              x[offset + chebyBands[i].xs - 2u]) / 3 +
                             (x[offset + chebyBands[i].xs - 1u] -
@@ -282,12 +282,12 @@ void referenceScaling(std::vector<T>& newX, std::vector<band_t<T>>& newChebyBand
 template<typename T>
 void split(std::vector<std::pair<T, T>>& subIntervals,
         std::vector<band_t<T>>& chebyBands,
-        std::vector<double> &x)
+        std::vector<T> &x)
 {
     std::size_t bandOffset{0u};
     for(std::size_t i{0u}; i < chebyBands.size(); ++i)
     {
-        double middleValA{0.0}, middleValB{0.0};
+        T middleValA{0.0}, middleValB{0.0};
         if(chebyBands[i].xs == 0u) {
             subIntervals.push_back(
                 std::make_pair(chebyBands[i].start, 
@@ -333,8 +333,8 @@ void split(std::vector<std::pair<T, T>>& subIntervals,
 }
 
 template<typename T>
-void extremaSearch(double& convergenceOrder,
-        T& delta, std::vector<double>& eigenExtrema,
+void extremaSearch(T& convergenceOrder,
+        T& delta, std::vector<T>& eigenExtrema,
         std::vector<T>& x, std::vector<band_t<T>>& chebyBands,
         std::size_t Nmax)
 {
@@ -350,26 +350,26 @@ void extremaSearch(double& convergenceOrder,
     // 2.   Compute the barycentric variables (i.e. weights)
     //      needed for the current iteration
 
-    std::vector<double> w(x.size());
+    std::vector<T> w(x.size());
     baryweights(w, x);
 
 
     compdelta(delta, w, x, chebyBands);
 
-    std::vector<double> C(x.size());
+    std::vector<T> C(x.size());
     compc(C, delta, x, chebyBands);
 
     // 3.   Use an eigenvalue solver on each subinterval to find the
     //      local extrema that are located inside the frequency bands
-    std::vector<double> chebyNodes(Nmax + 1u);
+    std::vector<T> chebyNodes(Nmax + 1u);
     equipts(chebyNodes, Nmax + 1u);
     cos(chebyNodes, chebyNodes);
 
-    std::vector<std::pair<double, double>> potentialExtrema;
-    std::vector<double> pEx;
-    double extremaErrorValueLeft;
-    double extremaErrorValueRight;
-    double extremaErrorValue;
+    std::vector<std::pair<T, T>> potentialExtrema;
+    std::vector<T> pEx;
+    T extremaErrorValueLeft;
+    T extremaErrorValueRight;
+    T extremaErrorValue;
     comperror(extremaErrorValue, chebyBands[0].start,
             delta, x, C, w, chebyBands);
     potentialExtrema.push_back(std::make_pair(
@@ -390,8 +390,8 @@ void extremaSearch(double& convergenceOrder,
             potentialExtrema.push_back(std::make_pair(
                     chebyBands[i + 1u].start, extremaErrorValueRight));
         } else {
-            double abs1 = fabs(extremaErrorValueLeft);
-            double abs2 = fabs(extremaErrorValueRight);
+            T abs1 = fabs(extremaErrorValueLeft);
+            T abs2 = fabs(extremaErrorValueRight);
             if(abs1 > abs2)
                 potentialExtrema.push_back(std::make_pair(
                         chebyBands[i].stop, extremaErrorValueLeft));
@@ -408,20 +408,20 @@ void extremaSearch(double& convergenceOrder,
             extremaErrorValue));
 
 
-    std::vector<std::vector<double>> pExs(subIntervals.size());
+    std::vector<std::vector<T>> pExs(subIntervals.size());
 
     #pragma omp parallel for
     for (std::size_t i = 0u; i < subIntervals.size(); ++i)
     {
 
         // find the Chebyshev nodes scaled to the current subinterval
-        std::vector<double> siCN(Nmax + 1u);
+        std::vector<T> siCN(Nmax + 1u);
         chgvar(siCN, chebyNodes, subIntervals[i].first,
                 subIntervals[i].second);
 
         // compute the Chebyshev interpolation function values on the
         // current subinterval
-        std::vector<double> fx(Nmax + 1u);
+        std::vector<T> fx(Nmax + 1u);
         for (std::size_t j{0u}; j < fx.size(); ++j)
         {
             comperror(fx[j], siCN[j], delta, x, C, w,
@@ -430,14 +430,14 @@ void extremaSearch(double& convergenceOrder,
 
         // compute the values of the CI coefficients and those of its
         // derivative
-        std::vector<double> c(Nmax + 1u);
+        std::vector<T> c(Nmax + 1u);
         chebcoeffs(c, fx);
-        std::vector<double> dc(Nmax);
+        std::vector<T> dc(Nmax);
         diffcoeffs(dc, c);
 
         // solve the corresponding eigenvalue problem and determine the
         // local extrema situated in the current subinterval
-        std::vector<double> eigenRoots;
+        std::vector<T> eigenRoots;
         roots(eigenRoots, dc, dom);
         chgvar(eigenRoots, eigenRoots,
                 subIntervals[i].first, subIntervals[i].second);
@@ -456,7 +456,7 @@ void extremaSearch(double& convergenceOrder,
     #pragma omp parallel for
     for(std::size_t i = 0u; i < pEx.size(); ++i)
     {
-        double valBuffer;
+        T valBuffer;
         comperror(valBuffer, pEx[i],
                 delta, x, C, w, chebyBands);
         potentialExtrema[startingOffset + i] = std::make_pair(pEx[i], valBuffer);
@@ -464,21 +464,21 @@ void extremaSearch(double& convergenceOrder,
 
     // sort list of potential extrema in increasing order
     std::sort(potentialExtrema.begin(), potentialExtrema.end(),
-            [](const std::pair<double, double>& lhs,
-               const std::pair<double, double>& rhs) {
+            [](const std::pair<T, T>& lhs,
+               const std::pair<T, T>& rhs) {
                 return lhs.first < rhs.first;
             });
 
     eigenExtrema.clear();
     std::size_t extremaIt{0u};
-    std::vector<std::pair<double, double>> alternatingExtrema;
-    double minError = INT_MAX;
-    double maxError = INT_MIN;
-    double absError;
+    std::vector<std::pair<T, T>> alternatingExtrema;
+    T minError = INT_MAX;
+    T maxError = INT_MIN;
+    T absError;
 
     while (extremaIt < potentialExtrema.size())
     {
-        std::pair<double, double> maxErrorPoint;
+        std::pair<T, T> maxErrorPoint;
         maxErrorPoint = potentialExtrema[extremaIt];
         while(extremaIt < potentialExtrema.size() - 1u &&
             (std::signbit(maxErrorPoint.second) ==
@@ -493,7 +493,7 @@ void extremaSearch(double& convergenceOrder,
         }
         ++extremaIt;
     }
-    std::vector<std::pair<double, double>> bufferExtrema;
+    std::vector<std::pair<T, T>> bufferExtrema;
 
     if(alternatingExtrema.size() < x.size())
     {
@@ -510,7 +510,7 @@ void extremaSearch(double& convergenceOrder,
         {
             if(remSuperfluous == 1u)
             {
-                std::vector<double> x1, x2;
+                std::vector<T> x1, x2;
                 x1.push_back(alternatingExtrema[0u].first);
                 for(std::size_t i{1u}; i < alternatingExtrema.size() - 1u; ++i)
                 {
@@ -518,7 +518,7 @@ void extremaSearch(double& convergenceOrder,
                     x2.push_back(alternatingExtrema[i].first);
                 }
                 x2.push_back(alternatingExtrema[alternatingExtrema.size() - 1u].first);
-                double delta1, delta2;
+                T delta1, delta2;
                 compdelta(delta1, x1, chebyBands);
                 compdelta(delta2, x2, chebyBands);
                 delta1 = fabsl(delta1);
@@ -533,8 +533,8 @@ void extremaSearch(double& convergenceOrder,
             }
             else
             {
-                double abs1 = fabs(alternatingExtrema[0u].second);
-                double abs2 = fabs(alternatingExtrema[alternatingExtrema.size() - 1u].second);
+                T abs1 = fabs(alternatingExtrema[0u].second);
+                T abs2 = fabs(alternatingExtrema[alternatingExtrema.size() - 1u].second);
                 std::size_t sIndex = 0u;
                 if (abs1 < abs2)
                     sIndex = 1u;
@@ -549,9 +549,9 @@ void extremaSearch(double& convergenceOrder,
         while (alternatingExtrema.size() > x.size())
         {
             std::size_t toRemoveIndex{0u};
-            double minValToRemove = fminl(fabsl(alternatingExtrema[0u].second),
+            T minValToRemove = fminl(fabsl(alternatingExtrema[0u].second),
                                               fabsl(alternatingExtrema[1u].second));
-            double removeBuffer;
+            T removeBuffer;
             for (std::size_t i{1u}; i < alternatingExtrema.size() - 1u; ++i)
             {
                 removeBuffer = fminl(fabsl(alternatingExtrema[i].second),
@@ -653,16 +653,16 @@ pmoutput_t<T> exchange(std::vector<T>& x,
 
 
     output.h.resize(degree + 1u);
-    std::vector<double> finalC(output.x.size());
-    std::vector<double> finalAlpha(output.x.size());
+    std::vector<T> finalC(output.x.size());
+    std::vector<T> finalAlpha(output.x.size());
     baryweights(finalAlpha, output.x);
-    double finalDelta = output.delta;
+    T finalDelta = output.delta;
     output.delta = fabsl(output.delta);
     compc(finalC, finalDelta, output.x, chebyBands);
-    std::vector<double> finalChebyNodes(degree + 1);
+    std::vector<T> finalChebyNodes(degree + 1);
     equipts(finalChebyNodes, degree + 1);
     cos(finalChebyNodes, finalChebyNodes);
-    std::vector<double> fv(degree + 1);
+    std::vector<T> fv(degree + 1);
 
     for (std::size_t i{0u}; i < fv.size(); ++i)
         approx(fv[i], finalChebyNodes[i], output.x,
@@ -673,9 +673,10 @@ pmoutput_t<T> exchange(std::vector<T>& x,
     return output;
 }
 
-void parseSpecification(std::vector<double> const &f,
-            std::vector<double> const &a,
-            std::vector<double> const &w)
+template<typename T>
+void parseSpecification(std::vector<T> const &f,
+            std::vector<T> const &a,
+            std::vector<T> const &w)
 {
     if(f.size() != a.size()) {
         std::cerr << "ERROR: Frequency and amplitude vector sizes"
