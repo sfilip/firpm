@@ -678,20 +678,15 @@ PMOutput firpm(std::size_t n,
             for(std::size_t i = 0u; i < freqBands.size(); ++i)
             {
                 freqBands[i].start = pi * f[2u * i];
-                if(i < freqBands.size() - 1u)
-                    freqBands[i].stop  = pi * f[2u * i + 1u];
-                else
+                if(f[2u * i + 1u] == 1.0)
                 {
-                    if(f[2u * i + 1u] == 1.0)
-                    {
-                        if(f[2u * i] < 0.9999)
-                            freqBands[i].stop = pi * 0.9999;
-                        else
-                            freqBands[i].stop = pi * ((f[2u * i] + 1) / 2);
-                    }
+                    if(f[2u * i] < 0.9999)
+                        freqBands[i].stop = pi * 0.9999;
                     else
-                        freqBands[i].stop  = pi * f[2u * i + 1u];
+                        freqBands[i].stop = pi * ((f[2u * i] + 1) / 2);
                 }
+                else
+                    freqBands[i].stop  = pi * f[2u * i + 1u];
                 freqBands[i].space = BandSpace::FREQ;
                 freqBands[i].amplitude = [=](BandSpace bSpace, mpfr::mpreal x) -> mpfr::mpreal
                 {
@@ -821,20 +816,15 @@ PMOutput firpmRS(std::size_t n,
             for(std::size_t i = 0u; i < freqBands.size(); ++i)
             {
                 freqBands[i].start = pi * f[2u * i];
-                if(i < freqBands.size() - 1u)
-                    freqBands[i].stop  = pi * f[2u * i + 1u];
-                else
+                if(f[2u * i + 1u] == 1.0)
                 {
-                    if(f[2u * i + 1u] == 1.0)
-                    {
-                        if(f[2u * i] < 0.9999)
-                            freqBands[i].stop = pi * 0.9999;
-                        else
-                            freqBands[i].stop = pi * ((f[2u * i] + 1) / 2);
-                    }
+                    if(f[2u * i] < 0.9999)
+                        freqBands[i].stop = pi * 0.9999;
                     else
-                        freqBands[i].stop  = pi * f[2u * i + 1u];
+                        freqBands[i].stop = pi * ((f[2u * i] + 1) / 2);
                 }
+                else
+                    freqBands[i].stop  = pi * f[2u * i + 1u];
                 freqBands[i].space = BandSpace::FREQ;
                 freqBands[i].amplitude = [=](BandSpace bSpace, mpfr::mpreal x) -> mpfr::mpreal
                 {
