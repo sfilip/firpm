@@ -1254,6 +1254,8 @@ pmoutput_t<T> firpmAFP(std::size_t n,
 }
 
 /* Explicit instantiations, since template code is not in header */
+
+/* double precision */
 template pmoutput_t<double> firpm<double>(std::size_t n,
             std::vector<double>const &f,
             std::vector<double>const &a,
@@ -1303,6 +1305,60 @@ template pmoutput_t<double> firpmAFP<double>(std::size_t n,
             std::vector<double>const &f,
             std::vector<double>const &a,
             std::vector<double>const &w,
+            filter_t type,
+            double eps,
+            std::size_t nmax);
+
+/* long double precision */
+template pmoutput_t<long double> firpm<long double>(std::size_t n,
+            std::vector<long double>const &f,
+            std::vector<long double>const &a,
+            std::vector<long double>const &w,
+            double eps,
+            std::size_t nmax,
+            init_t strategy,
+            std::size_t depth,
+            init_t rstrategy);
+
+template pmoutput_t<long double> firpm<long double>(std::size_t n,
+            std::vector<long double>const& f,
+            std::vector<long double>const& a,
+            std::vector<long double>const& w,
+            filter_t type,
+            double eps,
+            std::size_t nmax,
+            init_t strategy,
+            std::size_t depth,
+            init_t rstrategy);
+
+template pmoutput_t<long double> firpmRS<long double>(std::size_t n,
+            std::vector<long double>const &f,
+            std::vector<long double>const &a,
+            std::vector<long double>const &w,
+            double eps, std::size_t nmax,
+            std::size_t depth,
+            init_t rstrategy);
+
+template pmoutput_t<long double> firpmRS<long double>(std::size_t n,
+            std::vector<long double>const &f,
+            std::vector<long double>const &a,
+            std::vector<long double>const &w,
+            filter_t type,
+            double eps,
+            std::size_t nmax,
+            std::size_t depth,
+            init_t rstrategy);
+
+template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
+            std::vector<long double>const &f,
+            std::vector<long double>const &a,
+            std::vector<long double>const &w,
+            double eps, std::size_t nmax);
+
+template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
+            std::vector<long double>const &f,
+            std::vector<long double>const &a,
+            std::vector<long double>const &w,
             filter_t type,
             double eps,
             std::size_t nmax);

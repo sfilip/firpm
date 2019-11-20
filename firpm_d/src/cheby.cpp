@@ -294,6 +294,9 @@ void roots(std::vector<T>& r, std::vector<T>& c,
 }
 
 /* Explicit instantiation */
+
+/* double precision */
+
 template void cos<double>(std::vector<double>& out,
         std::vector<double> const& in);
 
@@ -313,4 +316,27 @@ template void diffcoeffs<double>(std::vector<double>& dc,
 
 template void roots<double>(std::vector<double>& r, std::vector<double>& c,
            std::pair<double, double> const &dom,
+           chebkind_t kind, bool balance);
+
+/* long double precision */
+
+template void cos<long double>(std::vector<long double>& out,
+        std::vector<long double> const& in);
+
+template void chgvar<long double>(std::vector<long double>& out,
+        std::vector<long double> const& in,
+        long double& a, long double& b);
+
+template void equipts<long double>(std::vector<long double>& v, std::size_t n);
+
+
+template void chebcoeffs<long double>(std::vector<long double>& c,
+                std::vector<long double>& fv);
+
+template void diffcoeffs<long double>(std::vector<long double>& dc,
+                std::vector<long double>& c,
+                chebkind_t kind);
+
+template void roots<long double>(std::vector<long double>& r, std::vector<long double>& c,
+           std::pair<long double, long double> const &dom,
            chebkind_t kind, bool balance);

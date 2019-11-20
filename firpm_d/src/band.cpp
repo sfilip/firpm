@@ -45,3 +45,8 @@ template void bandconv<double>(
 	std::vector<band_t<double>> &out,
 	std::vector<band_t<double>> &in,
         convdir_t direction);
+
+template void bandconv<long double>(
+	std::vector<band_t<long double>> &out,
+	std::vector<band_t<long double>> &in,
+        convdir_t direction);

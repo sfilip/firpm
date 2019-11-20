@@ -179,6 +179,9 @@ void comperror(T &error, const T &xVal,
 }
 
 /* Template instantiations */
+
+/* double precision */
+
 template void baryweights<double>(std::vector<double>& w,
 		std::vector<double>& x);
 
@@ -201,3 +204,26 @@ template void comperror<double>(double &error, const double &xVal,
 		std::vector<double> &C, std::vector<double> &w,
 		std::vector<band_t<double>> &bands);
 
+/* long double precision */
+
+template void baryweights<long double>(std::vector<long double>& w,
+		std::vector<long double>& x);
+
+template void compdelta<long double>(long double &delta,
+		std::vector<long double>& x, std::vector<band_t<long double>> &bands);
+
+template void compdelta<long double>(long double &delta,
+		std::vector<long double>& w, std::vector<long double>& x,
+		std::vector<band_t<long double>> &bands);
+
+template void compc<long double>(std::vector<long double> &C, long double &delta,
+		std::vector<long double> &x, std::vector<band_t<long double>> &bands);
+
+template void approx<long double>(long double &Pc, const long double &xVal,
+		std::vector<long double> &x, std::vector<long double> &C,
+		std::vector<long double> & w);
+
+template void comperror<long double>(long double &error, const long double &xVal,
+		long double &delta, std::vector<long double> &x,
+		std::vector<long double> &C, std::vector<long double> &w,
+		std::vector<band_t<long double>> &bands);
