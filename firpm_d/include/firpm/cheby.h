@@ -40,8 +40,9 @@ enum chebkind_t {
  * @param[out] out the vector containing the cosines of the elements from the
  * vector in
  */
-void cos(std::vector<double>& out,
-        std::vector<double> const& in);
+template<typename T>
+void cos(std::vector<T>& out,
+        std::vector<T> const& in);
 
 /*! Does a change of variable from the interval \f$\left[-1, 1\right]\f$ to the
  * interval \f$\left[a, b\right]\f$ on the elements of a given input vector
@@ -50,9 +51,10 @@ void cos(std::vector<double>& out,
  * @param[in] a left bound of the desired interval
  * @param[in] b right bound of the desired interval
  */
-void chgvar(std::vector<double>& out,
-        std::vector<double> const& in,
-        double& a, double& b);
+template<typename T>
+void chgvar(std::vector<T>& out,
+        std::vector<T> const& in,
+        T& a, T& b);
 
 /*! Function that generates equidistant nodes inside the
  * \f$\left[0,\pi\right]\f$ interval, meaning values of the
@@ -60,7 +62,8 @@ void chgvar(std::vector<double>& out,
  * @param[out] v the vector that will contain the equi-distributed points
  * @param[in] n the number of points which will be computed
  */
-void equipts(std::vector<double>& v, std::size_t n);
+template<typename T>
+void equipts(std::vector<T>& v, std::size_t n);
 
 
 /*! This function computes the values of the coefficients of the CI when
@@ -70,8 +73,9 @@ void equipts(std::vector<double>& v, std::size_t n);
  * approximate at the Chebyshev nodes of the second kind scaled to the
  * appropriate interval (in our case it will be \f$\left[0,\pi\right]\f$)
  */
-void chebcoeffs(std::vector<double>& c,
-                std::vector<double>& fv);
+template<typename T>
+void chebcoeffs(std::vector<T>& c,
+                std::vector<T>& fv);
 
 /*! Function that generates the coefficients of the derivative of a given CI
  *  @param[out] dc the vector of coefficients of the derivative of the CI
@@ -80,8 +84,9 @@ void chebcoeffs(std::vector<double>& c,
  *  @param[in] kind what kind of coefficient do we want to compute (for a
  *  Chebyshev expansion of the first or second kind)
  */
-void diffcoeffs(std::vector<double>& dc,
-                std::vector<double>& c,
+template<typename T>
+void diffcoeffs(std::vector<T>& dc,
+                std::vector<T>& c,
                 chebkind_t kind = SECOND);
 
 /*! Chebyshev proxy rootfinding method for a given CI
@@ -95,10 +100,10 @@ void diffcoeffs(std::vector<double>& dc,
 * Calculation of Eigenvalues and Eigenvectors") for the resulting 
 * Chebyshev companion matrix 
 */
-void roots(std::vector<double>& r, std::vector<double>& c,
-           std::pair<double, double> const &dom,
+template<typename T>
+void roots(std::vector<T>& r, std::vector<T>& c,
+           std::pair<T, T> const &dom,
            chebkind_t kind = SECOND,
            bool balance = true);
-
 
 #endif /* CHEBY_H_ */

@@ -16,20 +16,22 @@
 
 #include "firpm/cheby.h"
 
-/** Eigen matrix container for double values */
-typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
-/** Eigen vector container for double values */
-typedef Eigen::Matrix<std::complex<double>, Eigen::Dynamic, 1> VectorXcd;
+template<typename T>
+using MatrixXd = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
-void balance(MatrixXd &A)
+template<typename T>
+using VectorXcd = Eigen::Matrix<std::complex<T>, Eigen::Dynamic, 1>;
+
+template<typename T>
+void balance(MatrixXd<T> &A)
 {
     std::size_t n = A.rows();
 
-    double rNorm;      // row norm
-    double cNorm;      // column norm
+    T rNorm;      // row norm
+    T cNorm;      // column norm
     bool converged = false;
 
-    double g, f, s;
+    T g, f, s;
     while(!converged)
     {
         converged = true;
@@ -79,19 +81,20 @@ void balance(MatrixXd &A)
     }
 }
 
-MatrixXd colleague(std::vector<double> const &c,
+template<typename T>
+MatrixXd<T> colleague(std::vector<T> const &c,
                    chebkind_t kind,
                    bool bal)
 {
-    std::vector<double> a{c};
+    std::vector<T> a{c};
     std::size_t n = c.size() - 1u;
-    MatrixXd C(n, n);
+    MatrixXd<T> C(n, n);
 
     for(std::size_t i{0u}; i < n; ++i)
         for(std::size_t j{0u}; j < n; ++j)
             C(i, j) = 0;
 
-    double denom = -1;
+    T denom = -1;
     denom /= a[n];
     denom /= 2;
     for(std::size_t i{0u}; i < c.size() - 1u; ++i)
@@ -113,28 +116,31 @@ MatrixXd colleague(std::vector<double> const &c,
     return C;
 }
 
-void cos(std::vector<double>& out,
-        std::vector<double> const& in)
+template<typename T>
+void cos(std::vector<T>& out,
+        std::vector<T> const& in)
 {
     out.resize(in.size());
     for(std::size_t i{0u}; i < in.size(); ++i)
         out[i] = cosl(in[i]);
 }
 
-void chgvar(std::vector<double>& out,
-        std::vector<double> const& in,
-        double& a, double& b)
+template<typename T>
+void chgvar(std::vector<T>& out,
+        std::vector<T> const& in,
+        T& a, T& b)
 {
     out.resize(in.size());
     for(std::size_t i{0u}; i < in.size(); ++i)
         out[i] = (b + a) / 2 + in[i] * (b - a) / 2;
 }
 
-void clenshaw(double &result, const std::vector<double> &p,
-        const double &x, const double &a, const double &b)
+template<typename T>
+void clenshaw(T &result, const std::vector<T> &p,
+        const T &x, const T &a, const T &b)
 {
-    double bn1, bn2, bn;
-    double buffer;
+    T bn1, bn2, bn;
+    T buffer;
 
     bn1 = 0;
     bn2 = 0;
@@ -157,12 +163,13 @@ void clenshaw(double &result, const std::vector<double> &p,
     result = bn1 - buffer * bn2;
 }
 
-void clenshaw(double &result, 
-              const std::vector<double> &p,
-              const double &x,
+template<typename T>
+void clenshaw(T &result,
+              const std::vector<T> &p,
+              const T &x,
               chebkind_t kind)
 {
-    double bn1, bn2, bn;
+    T bn1, bn2, bn;
 
     int n = (int)p.size() - 1;
     bn2 = 0;
@@ -181,7 +188,8 @@ void clenshaw(double &result,
         result = (x * 2) * bn1 - bn2 + p[0];
 }
 
-void equipts(std::vector<double>& v, std::size_t n)
+template<typename T>
+void equipts(std::vector<T>& v, std::size_t n)
 {
     v.resize(n);
     // store the points in the vector v as 
@@ -195,18 +203,19 @@ void equipts(std::vector<double>& v, std::size_t n)
 
 // this function computes the values of the coefficients of 
 // the CI when Chebyshev nodes of the second kind are used
-void chebcoeffs(std::vector<double>& c,
-        std::vector<double>& fv)
+template<typename T>
+void chebcoeffs(std::vector<T>& c,
+        std::vector<T>& fv)
 {
     std::size_t n = fv.size();
-    std::vector<double> v(n);
+    std::vector<T> v(n);
     equipts(v, n);
 
-    double buffer;
+    T buffer;
 
     // halve the first and last coefficients
-    double oldValue1 = fv[0];
-    double oldValue2 = fv[n-1u];
+    T oldValue1 = fv[0];
+    T oldValue2 = fv[n-1u];
     fv[0] /= 2;
     fv[n-1u] /= 2;
 
@@ -230,8 +239,9 @@ void chebcoeffs(std::vector<double>& c,
 
 // function that generates the coefficients of the 
 // derivative of a given CI
-void diffcoeffs(std::vector<double>& dc,
-                std::vector<double>& c,
+template<typename T>
+void diffcoeffs(std::vector<T>& dc,
+                std::vector<T>& c,
                 chebkind_t kind)
 {
     dc.resize(c.size()-1);
@@ -256,8 +266,9 @@ void diffcoeffs(std::vector<double>& dc,
     }
 }
 
-void roots(std::vector<double>& r, std::vector<double>& c,
-           std::pair<double, double> const &dom,
+template<typename T>
+void roots(std::vector<T>& r, std::vector<T>& c,
+           std::pair<T, T> const &dom,
            chebkind_t kind,
            bool balance)
 {
@@ -266,11 +277,11 @@ void roots(std::vector<double>& r, std::vector<double>& c,
         if(!std::isfinite(it))
             return;
 
-    MatrixXd C = colleague(c, kind, balance);
-    Eigen::EigenSolver<MatrixXd> es(C);
-    VectorXcd eigs = es.eigenvalues();
+    MatrixXd<T> C = colleague(c, kind, balance);
+    Eigen::EigenSolver<MatrixXd<T>> es(C);
+    VectorXcd<T> eigs = es.eigenvalues();
 
-    double threshold = 1e-20;
+    T threshold = 1e-20;
     for(Eigen::Index i{0}; i < eigs.size(); ++i) {
         if(fabs(eigs(i).imag()) < threshold)
             if(dom.first < eigs(i).real() && 
@@ -281,3 +292,25 @@ void roots(std::vector<double>& r, std::vector<double>& c,
 
     std::sort(begin(r), end(r));
 }
+
+/* Explicit instantiation */
+template void cos<double>(std::vector<double>& out,
+        std::vector<double> const& in);
+
+template void chgvar<double>(std::vector<double>& out,
+        std::vector<double> const& in,
+        double& a, double& b);
+
+template void equipts<double>(std::vector<double>& v, std::size_t n);
+
+
+template void chebcoeffs<double>(std::vector<double>& c,
+                std::vector<double>& fv);
+
+template void diffcoeffs<double>(std::vector<double>& dc,
+                std::vector<double>& c,
+                chebkind_t kind);
+
+template void roots<double>(std::vector<double>& r, std::vector<double>& c,
+           std::pair<double, double> const &dom,
+           chebkind_t kind, bool balance);
