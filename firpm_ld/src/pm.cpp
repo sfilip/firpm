@@ -574,9 +574,9 @@ void extremaSearch(long double& convergenceOrder,
     for (auto& it : alternatingExtrema)
     {
         eigenExtrema.push_back(it.first);
-        absError = fabs(it.second);
-        minError = fmin(minError, absError);
-        maxError = fmax(maxError, absError);
+        absError = fabsl(it.second);
+        minError = fminl(minError, absError);
+        maxError = fmaxl(maxError, absError);
     }
 
     convergenceOrder = (maxError - minError) / maxError;
@@ -757,16 +757,14 @@ pmoutput_t firpm(std::size_t n,
     } else {                    // type II filter
         for(std::size_t i{0u}; i < fbands.size(); ++i) {
             fbands[i].start = M_PI * f[2u*i];
-            if(i < fbands.size()-1u)
-                fbands[i].stop = M_PI * f[2u*i+1u];
-            else
-                if(f[2u*i+1u] == 1.0l)
-                    if(f[2u*i] < 0.9999l)
-                        fbands[i].stop = M_PI * 0.9999l;
-                    else
-                        fbands[i].stop = M_PI * ((f[2u*i]+1) / 2);
+            if(f[2u*i + 1u] == 1.0l) {
+                if(f[2u*i] < 0.9999l)
+                    fbands[i].stop = M_PI * 0.9999l;
                 else
-                    fbands[i].stop = M_PI * f[2u*i+1u];
+                    fbands[i].stop = M_PI * ((f[2u*i] + 1) / 2);
+            } 
+            else 
+                fbands[i].stop = M_PI * f[2u*i+1u];
             fbands[i].space = space_t::FREQ;
             fbands[i].amplitude = [i, &a, &fbands](space_t space, long double x) -> long double {
                 if(a[2u*i] != a[2u*i+1u]) {

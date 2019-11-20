@@ -30,11 +30,11 @@ void baryweights(std::vector<double>& w,
             for(std::size_t j{0u}; j < x.size(); ++j)
             {
                 if (j != i) {
-                    denom += log(((xi - x[j] > 0) ? (xi - x[j]) : (x[j] - xi)));
+                    denom += logl(((xi - x[j] > 0) ? (xi - x[j]) : (x[j] - xi)));
                     one *= ((xi - x[j] > 0) ? 1 : -1);
                 }
             }
-            w[i] = one / exp(denom + log(2.0)* (x.size() - 1));
+            w[i] = one / expl(denom + logl(2.0)* (x.size() - 1));
         }
     }
     else
