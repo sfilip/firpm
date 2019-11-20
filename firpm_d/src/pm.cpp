@@ -21,15 +21,16 @@
 #include <fstream>
 #include <sstream>
 
-/** utility type for storing interval endpoints */
-typedef std::pair<double, double> interval_t;
+template<typename T>
+using MatrixXd = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
-typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
-typedef Eigen::Matrix<double, Eigen::Dynamic, 1> VectorXd;
+template<typename T>
+using VectorXd = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 
-void chebvand(MatrixXd& A, std::size_t degree, 
-        std::vector<double>& meshPoints,
-        std::function<double(double)>& weightFunction)
+template<typename T>
+void chebvand(MatrixXd<T>& A, std::size_t degree,
+        std::vector<T>& meshPoints,
+        std::function<T(T)>& weightFunction)
 {
 
     A.resize(degree + 1u, meshPoints.size());
@@ -46,23 +47,23 @@ void chebvand(MatrixXd& A, std::size_t degree,
 }
 
 // approximate Fekete points
-void afp(std::vector<double>& points, MatrixXd& A, 
-         std::vector<double>& mesh)
+template<typename T>
+void afp(std::vector<T>& points, MatrixXd<T>& A,
+         std::vector<T>& mesh)
 {
-    VectorXd b = VectorXd::Ones(A.rows());
+    VectorXd<T> b = VectorXd<T>::Ones(A.rows());
     b(0) = 2;
-    VectorXd y = A.colPivHouseholderQr().solve(b);
+    VectorXd<T> y = A.colPivHouseholderQr().solve(b);
     points.clear();
 
     for(Eigen::Index i{0}; i < y.rows(); ++i)
         if(y(i) != 0.0)
             points.push_back(mesh[i]);
     std::sort(points.begin(), points.end(),
-            [](const double& lhs,
-               const double& rhs) {
+            [](const T& lhs,
+               const T& rhs) {
                 return lhs < rhs;
             });
-
 }
 
 template<typename T>
@@ -279,7 +280,7 @@ void referenceScaling(std::vector<T>& newX, std::vector<band_t<T>>& newChebyBand
 }
 
 template<typename T>
-void split(std::vector<interval_t>& subIntervals,
+void split(std::vector<std::pair<T, T>>& subIntervals,
         std::vector<band_t<T>>& chebyBands,
         std::vector<double> &x)
 {
@@ -340,8 +341,8 @@ void extremaSearch(double& convergenceOrder,
     // 1.   Split the initial [-1, 1] interval in subintervals
     //      in order that we can use a reasonable size matrix
     //      eigenvalue solver on the subintervals
-    std::vector<interval_t> subIntervals;
-    interval_t dom{std::make_pair(-1.0, 1.0)};
+    std::vector<std::pair<T, T>> subIntervals;
+    std::pair<T, T> dom{std::make_pair(-1.0, 1.0)};
 
     split(subIntervals, chebyBands, x);
 
@@ -824,7 +825,7 @@ pmoutput_t<T> firpm(std::size_t n,
                 // use AFP strategy for very small degrees (wrt nb of bands)
                 std::vector<T> mesh;
                 wam(mesh, cbands, deg);
-                MatrixXd A;
+                MatrixXd<T> A;
                 chebvand(A, deg+1u, mesh, wf);
                 afp(x, A, mesh);
                 countBand(cbands, x);
@@ -848,7 +849,7 @@ pmoutput_t<T> firpm(std::size_t n,
                     // use AFP strategy for very small degrees (wrt nb of bands)
                     std::vector<T> mesh;
                     wam(mesh, cbands, sdegs[0]);
-                    MatrixXd A;
+                    MatrixXd<T> A;
                     chebvand(A, sdegs[0]+1u, mesh, wf);
                     afp(x, A, mesh);
                     countBand(cbands, x);                    
@@ -857,7 +858,7 @@ pmoutput_t<T> firpm(std::size_t n,
             } else { // AFP-based strategy
                 std::vector<T> mesh;
                 wam(mesh, cbands, sdegs[0]);
-                MatrixXd A;
+                MatrixXd<T> A;
                 chebvand(A, sdegs[0]+1u, mesh, wf);
                 afp(x, A, mesh);
                 countBand(cbands, x);
@@ -873,7 +874,7 @@ pmoutput_t<T> firpm(std::size_t n,
         default: { // AFP-based initialization
             std::vector<T> mesh;
             wam(mesh, cbands, deg);
-            MatrixXd A;
+            MatrixXd<T> A;
             chebvand(A, deg+1u, mesh, wf);
             afp(x, A, mesh);
             countBand(cbands, x);
@@ -1135,7 +1136,7 @@ pmoutput_t<T> firpm(std::size_t n,
                 // use AFP strategy for very small degrees (wrt nb of bands)
                 std::vector<T> mesh;
                 wam(mesh, cbands, deg);
-                MatrixXd A;
+                MatrixXd<T> A;
                 chebvand(A, deg+1u, mesh, wf);
                 afp(x, A, mesh);
                 countBand(cbands, x);
@@ -1159,7 +1160,7 @@ pmoutput_t<T> firpm(std::size_t n,
                     // use AFP strategy for very small degrees (wrt nb of bands)
                     std::vector<T> mesh;
                     wam(mesh, cbands, sdegs[0]);
-                    MatrixXd A;
+                    MatrixXd<T> A;
                     chebvand(A, sdegs[0]+1u, mesh, wf);
                     afp(x, A, mesh);
                     countBand(cbands, x);                    
@@ -1168,7 +1169,7 @@ pmoutput_t<T> firpm(std::size_t n,
             } else { // AFP-based strategy
                 std::vector<T> mesh;
                 wam(mesh, cbands, sdegs[0]);
-                MatrixXd A;
+                MatrixXd<T> A;
                 chebvand(A, sdegs[0]+1u, mesh, wf);
                 afp(x, A, mesh);
                 countBand(cbands, x);
@@ -1184,7 +1185,7 @@ pmoutput_t<T> firpm(std::size_t n,
         default: { // AFP-based initialization
             std::vector<T> mesh;
             wam(mesh, cbands, deg);
-            MatrixXd A;
+            MatrixXd<T> A;
             chebvand(A, deg+1u, mesh, wf);
             afp(x, A, mesh);
             countBand(cbands, x);
