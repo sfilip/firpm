@@ -773,7 +773,7 @@ TEST(firpm_minimal_test, smallfir1) {
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
 
-        std::cout << "START Parks-McClellan with AFP\n";
+    std::cout << "START Parks-McClellan with AFP\n";
     pmoutput_t output3 = firpmAFP(degree * 2u, {0.0, 0.4, 0.6, 0.64, 0.69, 0.74, 0.79, 0.83, 0.88, 1.0}, 
             {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, 
             {1.0, 1.0, 1.0, 1.0, 1.0});

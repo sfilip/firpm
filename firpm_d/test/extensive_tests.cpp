@@ -1218,6 +1218,7 @@ TEST(firpm_extensive_test, extensive49)
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
     compareInfoRS(output1, output2, 1e-2);
+    compareInfoAFP(output1, output3, 1e-2);
 }
 
 TEST(firpm_extensive_test, extensive50)
@@ -1243,6 +1244,7 @@ TEST(firpm_extensive_test, extensive50)
     std::cout << "FINISH Parks-McClellan with AFP\n";
 
     compareInfoRS(output1, output2, 1e-2);
+    compareInfoAFP(output1, output3, 1e-2);
 }
 
 // Type 3 & 4 Hilbert transformers

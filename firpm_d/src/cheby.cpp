@@ -250,7 +250,7 @@ void diffcoeffs(std::vector<double>& dc,
         default: {
             int n = c.size() - 1;
             for(int i{n}; i > 0; --i)
-            dc[i - 1] = c[i] * i;
+                dc[i - 1] = c[i] * i;
         }
         break;
     }
