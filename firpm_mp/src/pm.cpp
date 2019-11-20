@@ -697,7 +697,7 @@ PMOutput firpm(std::size_t n,
                 {
                     if (a[2u * i] != a[2u * i + 1u]) {
                         if(bSpace == BandSpace::CHEBY)
-                            x = acos(x);
+                            x = mpfr::acos(x);
                         return (((x - freqBands[i].start) * a[2u * i + 1u] -
                                 (x - freqBands[i].stop) * a[2u * i]) /
                                 (freqBands[i].stop - freqBands[i].start)) / mpfr::cos(x / 2);
