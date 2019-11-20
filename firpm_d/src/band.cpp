@@ -16,7 +16,8 @@
 
 #include "firpm/band.h"
 
-void bandconv(std::vector<band_t> &out, std::vector<band_t> &in,
+template<typename T>
+void bandconv(std::vector<band_t<T>> &out, std::vector<band_t<T>> &in,
         convdir_t direction)
 {
     out.resize(in.size());
@@ -38,3 +39,9 @@ void bandconv(std::vector<band_t> &out, std::vector<band_t> &in,
         }
     }
 }
+
+/* Template instantiation */
+template void bandconv<double>(
+	std::vector<band_t<double>> &out,
+	std::vector<band_t<double>> &in,
+        convdir_t direction);

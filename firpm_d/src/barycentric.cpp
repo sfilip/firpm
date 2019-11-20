@@ -17,16 +17,17 @@
 
 #include "firpm/barycentric.h"
 
-void baryweights(std::vector<double>& w,
-        std::vector<double>& x)
+template<typename T>
+void baryweights(std::vector<T>& w,
+        std::vector<T>& x)
 {
     if(x.size() > 500u)
     {
         for(std::size_t i{0u}; i < x.size(); ++i)
         {
-            double one = 1;
-            double denom = 0.0;
-            double xi = x[i];
+            T one = 1;
+            T denom = 0.0;
+            T xi = x[i];
             for(std::size_t j{0u}; j < x.size(); ++j)
             {
                 if (j != i) {
@@ -40,11 +41,11 @@ void baryweights(std::vector<double>& w,
     else
     {
         std::size_t step = (x.size() - 2) / 15 + 1;
-        double one = 1u;
+        T one = 1u;
         for(std::size_t i{0u}; i < x.size(); ++i)
         {
-            double denom = 1.0;
-            double xi = x[i];
+            T denom = 1.0;
+            T xi = x[i];
             for(std::size_t j{0u}; j < step; ++j)
             {
                 for(std::size_t k{j}; k < x.size(); k += step)
@@ -57,8 +58,9 @@ void baryweights(std::vector<double>& w,
 }
 
 
-void idealvals(double &D, double &W,
-        const double &x, std::vector<band_t> &bands)
+template<typename T>
+void idealvals(T &D, T &W,
+        const T &x, std::vector<band_t<T>> &bands)
 {
     for (auto &it : bands) {
         if (x >= it.start && x <= it.stop) {
@@ -69,13 +71,14 @@ void idealvals(double &D, double &W,
     }
 }
 
-void compdelta(double &delta, std::vector<double>& x,
-        std::vector<band_t> &bands)
+template<typename T>
+void compdelta(T &delta, std::vector<T>& x,
+        std::vector<band_t<T>> &bands)
 {
-    std::vector<double> w(x.size());
+    std::vector<T> w(x.size());
     baryweights(w, x);
 
-    double num, denom, D, W, buffer;
+    T num, denom, D, W, buffer;
     num = denom = D = W = 0;
     for (std::size_t i{0u}; i < w.size(); ++i)
     {
@@ -91,10 +94,11 @@ void compdelta(double &delta, std::vector<double>& x,
     delta = num / denom;
 }
 
-void compdelta(double &delta, std::vector<double>& w,
-        std::vector<double>& x, std::vector<band_t> &bands)
+template<typename T>
+void compdelta(T &delta, std::vector<T>& w,
+        std::vector<T>& x, std::vector<band_t<T>> &bands)
 {
-    double num, denom, D, W, buffer;
+    T num, denom, D, W, buffer;
     num = denom = D = W = 0;
     for (std::size_t i{0u}; i < w.size(); ++i)
     {
@@ -110,10 +114,11 @@ void compdelta(double &delta, std::vector<double>& w,
 }
 
 
-void compc(std::vector<double> &C, double &delta,
-        std::vector<double> &omega, std::vector<band_t> &bands)
+template<typename T>
+void compc(std::vector<T> &C, T &delta,
+        std::vector<T> &omega, std::vector<band_t<T>> &bands)
 {
-    double D, W;
+    T D, W;
     D = W = 0;
     for (std::size_t i{0u}; i < omega.size(); ++i)
     {
@@ -124,12 +129,13 @@ void compc(std::vector<double> &C, double &delta,
     }
 }
 
-void approx(double &Pc, const double &omega,
-        std::vector<double> &x, std::vector<double> &C,
-        std::vector<double> &w)
+template<typename T>
+void approx(T &Pc, const T &omega,
+        std::vector<T> &x, std::vector<T> &C,
+        std::vector<T> &w)
 {
-    double num, denom;
-    double buff;
+    T num, denom;
+    T buff;
     num = denom = 0;
 
     Pc = omega;
@@ -147,10 +153,11 @@ void approx(double &Pc, const double &omega,
     Pc = num / denom;
 }
 
-void comperror(double &error, const double &xVal,
-        double &delta, std::vector<double> &x,
-        std::vector<double> &C, std::vector<double> &w,
-        std::vector<band_t> &bands)
+template<typename T>
+void comperror(T &error, const T &xVal,
+        T &delta, std::vector<T> &x,
+        std::vector<T> &C, std::vector<T> &w,
+        std::vector<band_t<T>> &bands)
 {
     for (std::size_t i{0u}; i < x.size(); ++i)
     {
@@ -163,10 +170,34 @@ void comperror(double &error, const double &xVal,
         }
     }
 
-    double D, W;
+    T D, W;
     D = W = 0;
     idealvals(D, W, xVal, bands);
     approx(error, xVal, x, C, w);
     error -= D;
     error *= W;
 }
+
+/* Template instantiations */
+template void baryweights<double>(std::vector<double>& w,
+		std::vector<double>& x);
+
+template void compdelta<double>(double &delta,
+		std::vector<double>& x, std::vector<band_t<double>> &bands);
+
+template void compdelta<double>(double &delta,
+		std::vector<double>& w, std::vector<double>& x,
+		std::vector<band_t<double>> &bands);
+
+template void compc<double>(std::vector<double> &C, double &delta,
+		std::vector<double> &x, std::vector<band_t<double>> &bands);
+
+template void approx<double>(double &Pc, const double &xVal,
+		std::vector<double> &x, std::vector<double> &C,
+		std::vector<double> & w);
+
+template void comperror<double>(double &error, const double &xVal,
+		double &delta, std::vector<double> &x,
+		std::vector<double> &C, std::vector<double> &w,
+		std::vector<band_t<double>> &bands);
+

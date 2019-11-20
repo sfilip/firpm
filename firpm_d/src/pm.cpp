@@ -65,7 +65,8 @@ void afp(std::vector<double>& points, MatrixXd& A,
 
 }
 
-void countBand(std::vector<band_t>& cb, std::vector<double>& x)
+template<typename T>
+void countBand(std::vector<band_t<T>>& cb, std::vector<double>& x)
 {
     for(auto& it : cb)
         it.xs = 0u;
@@ -78,8 +79,8 @@ void countBand(std::vector<band_t>& cb, std::vector<double>& x)
     }
 }
 
-
-void wam(std::vector<double>& wam, std::vector<band_t>& cb, 
+template<typename T>
+void wam(std::vector<T>& wam, std::vector<band_t<T>>& cb,
          std::size_t deg)
 {
     std::vector<double> cp;
@@ -102,14 +103,14 @@ void wam(std::vector<double>& wam, std::vector<band_t>& cb,
     }
 }
 
-
-void uniform(std::vector<double>& omega,
-        std::vector<band_t>& B, std::size_t n)
+template<typename T>
+void uniform(std::vector<T>& omega,
+        std::vector<band_t<T>>& B, std::size_t n)
 {
-    double avgDist = 0;
+    T avgDist = 0;
     omega.resize(n);
 
-    std::vector<double> bandwidths(B.size());
+    std::vector<T> bandwidths(B.size());
     std::vector<std::size_t> nonPointBands;
     for(std::size_t i{0u}; i < B.size(); ++i) {
         bandwidths[i] = B[i].stop - B[i].start;
@@ -130,7 +131,7 @@ void uniform(std::vector<double>& omega,
     std::size_t npSize = nonPointBands.size();
 
     B[nonPointBands[npSize - 1u]].xs = omega.size() - (B.size() - npSize);
-    double buffer;
+    T buffer;
     buffer = bandwidths[nonPointBands[0]] / avgDist;
     buffer += 0.5;
 
@@ -159,10 +160,11 @@ void uniform(std::vector<double>& omega,
         }
 }
 
-void referenceScaling(std::vector<double>& newX, std::vector<band_t>& newChebyBands,
-        std::vector<band_t>& newFreqBands, std::size_t newXSize,
-        std::vector<double>& x, std::vector<band_t>& chebyBands,
-        std::vector<band_t>& freqBands)
+template<typename T>
+void referenceScaling(std::vector<T>& newX, std::vector<band_t<T>>& newChebyBands,
+        std::vector<band_t<T>>& newFreqBands, std::size_t newXSize,
+        std::vector<T>& x, std::vector<band_t<T>>& chebyBands,
+        std::vector<band_t<T>>& freqBands)
 {
         std::vector<std::size_t> newDistribution(chebyBands.size());
         for(std::size_t i{0u}; i < chebyBands.size(); ++i)
@@ -276,8 +278,9 @@ void referenceScaling(std::vector<double>& newX, std::vector<band_t>& newChebyBa
         }
 }
 
+template<typename T>
 void split(std::vector<interval_t>& subIntervals,
-        std::vector<band_t>& chebyBands,
+        std::vector<band_t<T>>& chebyBands,
         std::vector<double> &x)
 {
     std::size_t bandOffset{0u};
@@ -328,9 +331,10 @@ void split(std::vector<interval_t>& subIntervals,
     }
 }
 
+template<typename T>
 void extremaSearch(double& convergenceOrder,
-        double& delta, std::vector<double>& eigenExtrema,
-        std::vector<double>& x, std::vector<band_t>& chebyBands,
+        T& delta, std::vector<double>& eigenExtrema,
+        std::vector<T>& x, std::vector<band_t<T>>& chebyBands,
         std::size_t Nmax)
 {
     // 1.   Split the initial [-1, 1] interval in subintervals
@@ -607,19 +611,20 @@ void extremaSearch(double& convergenceOrder,
 // pertaining to the reference x and the frequency bands (i.e. the
 // number of reference values inside each band) is given at the
 // beginning of the execution
-pmoutput_t<double> exchange(std::vector<double>& x,
-        std::vector<band_t>& chebyBands, double eps,
+template<typename T>
+pmoutput_t<T> exchange(std::vector<T>& x,
+        std::vector<band_t<T>>& chebyBands, double eps,
         std::size_t Nmax)
 {
-    pmoutput_t<double> output;
+    pmoutput_t<T> output;
 
     std::size_t degree = x.size() - 2u;
     std::sort(x.begin(), x.end(),
-            [](const double& lhs,
-               const double& rhs) {
+            [](const T& lhs,
+               const T& rhs) {
                 return lhs < rhs;
             });
-    std::vector<double> startX{x};
+    std::vector<T> startX{x};
     std::cout.precision(20);
 
     output.q = 1;
@@ -715,10 +720,10 @@ void parseSpecification(std::vector<double> const &f,
 }
 
 template<typename T>
-pmoutput_t<double> firpm(std::size_t n,
-            std::vector<double>const &f,
-            std::vector<double>const &a,
-            std::vector<double>const &w,
+pmoutput_t<T> firpm(std::size_t n,
+            std::vector<T>const &f,
+            std::vector<T>const &a,
+            std::vector<T>const &w,
             double eps,
             std::size_t nmax,
             init_t strategy,
@@ -726,9 +731,9 @@ pmoutput_t<double> firpm(std::size_t n,
             init_t rstrategy)
 {
     parseSpecification(f, a, w);
-    std::vector<double> h;
-    std::vector<band_t> fbands(w.size());
-    std::vector<band_t> cbands;
+    std::vector<T> h;
+    std::vector<band_t<T>> fbands(w.size());
+    std::vector<band_t<T>> cbands;
     if(n % 2 != 0) {
         if(f[f.size()-1u] == 1 && a[a.size()-1u] != 0) {
             std::cout << "Warning: gain at Nyquist frequency different from 0.\n"
@@ -743,7 +748,7 @@ pmoutput_t<double> firpm(std::size_t n,
             fbands[i].start = M_PI * f[2u*i];
             fbands[i].stop  = M_PI * f[2u*i+1u];
             fbands[i].space = space_t::FREQ;
-            fbands[i].amplitude = [i, &a, &fbands](space_t space, double x) -> double {
+            fbands[i].amplitude = [i, &a, &fbands](space_t space, T x) -> T {
                 if(a[2u*i] != a[2u*i+1u]) {
                     if(space == space_t::CHEBY)
                         x = acosl(x);
@@ -753,7 +758,7 @@ pmoutput_t<double> firpm(std::size_t n,
                 }
                 return a[2u*i];
             };
-            fbands[i].weight = [i, &w](space_t, double x) -> double {
+            fbands[i].weight = [i, &w](space_t, T x) -> T {
                 return w[i];
             };
         }
@@ -771,7 +776,7 @@ pmoutput_t<double> firpm(std::size_t n,
                 else
                     fbands[i].stop = M_PI * f[2u*i+1u];
             fbands[i].space = space_t::FREQ;
-            fbands[i].amplitude = [i, &a, &fbands](space_t space, double x) -> double {
+            fbands[i].amplitude = [i, &a, &fbands](space_t space, T x) -> T {
                 if(a[2u*i] != a[2u*i+1u]) {
                     if(space == space_t::CHEBY)
                         x = acosl(x);
@@ -784,7 +789,7 @@ pmoutput_t<double> firpm(std::size_t n,
                 else
                     return a[2u*i] / sqrt((x+1)/2);
             };
-            fbands[i].weight = [i, &w](space_t space, double x) -> double {
+            fbands[i].weight = [i, &w](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
                     return cosl(x/2) * w[i];
                 else
@@ -793,10 +798,10 @@ pmoutput_t<double> firpm(std::size_t n,
         }
     }
 
-    pmoutput_t<double> output;
-    std::vector<double> x;
+    pmoutput_t<T> output;
+    std::vector<T> x;
     bandconv(cbands, fbands, convdir_t::FROMFREQ);
-    std::function<double(double)> wf = [&cbands](double x) -> double {
+    std::function<T(T)> wf = [&cbands](T x) -> T {
         for(std::size_t i{0u}; i < cbands.size(); ++i)
             if(cbands[i].start <= x && x <= cbands[i].stop)
                 return cbands[i].weight(space_t::CHEBY, x);
@@ -811,13 +816,13 @@ pmoutput_t<double> firpm(std::size_t n,
         case init_t::UNIFORM: 
         {
             if (fbands.size() <= (deg + 2u) / 4) { 
-                std::vector<double> omega;
+                std::vector<T> omega;
                 uniform(omega, fbands, deg + 2u);
                 cos(x, omega);
                 bandconv(cbands, fbands, convdir_t::FROMFREQ);
             } else {
                 // use AFP strategy for very small degrees (wrt nb of bands)
-                std::vector<double> mesh;
+                std::vector<T> mesh;
                 wam(mesh, cbands, deg);
                 MatrixXd A;
                 chebvand(A, deg+1u, mesh, wf);
@@ -835,13 +840,13 @@ pmoutput_t<double> firpm(std::size_t n,
 
             if(rstrategy == init_t::UNIFORM) {
                 if (fbands.size() <= (sdegs[0] + 2u) / 4) {
-                    std::vector<double> omega;
+                    std::vector<T> omega;
                     uniform(omega, fbands, sdegs[0]+2u);
                     cos(x, omega);
                     bandconv(cbands, fbands, convdir_t::FROMFREQ);
                 } else {
                     // use AFP strategy for very small degrees (wrt nb of bands)
-                    std::vector<double> mesh;
+                    std::vector<T> mesh;
                     wam(mesh, cbands, sdegs[0]);
                     MatrixXd A;
                     chebvand(A, sdegs[0]+1u, mesh, wf);
@@ -850,7 +855,7 @@ pmoutput_t<double> firpm(std::size_t n,
                 }
                 output = exchange(x, cbands, eps, nmax);
             } else { // AFP-based strategy
-                std::vector<double> mesh;
+                std::vector<T> mesh;
                 wam(mesh, cbands, sdegs[0]);
                 MatrixXd A;
                 chebvand(A, sdegs[0]+1u, mesh, wf);
@@ -866,7 +871,7 @@ pmoutput_t<double> firpm(std::size_t n,
             }
         } break;
         default: { // AFP-based initialization
-            std::vector<double> mesh;
+            std::vector<T> mesh;
             wam(mesh, cbands, deg);
             MatrixXd A;
             chebvand(A, deg+1u, mesh, wf);
@@ -893,32 +898,33 @@ pmoutput_t<double> firpm(std::size_t n,
 }
 
 template<typename T>
-pmoutput_t<double> firpmRS(std::size_t n,
-            std::vector<double>const &f,
-            std::vector<double>const &a,
-            std::vector<double>const &w,
-            double eps, std::size_t nmax,
+pmoutput_t<T> firpmRS(std::size_t n,
+            std::vector<T>const &f,
+            std::vector<T>const &a,
+            std::vector<T>const &w,
+            double eps,
+	    std::size_t nmax,
             std::size_t depth, 
             init_t rstrategy)
 {
-    return firpm<double>(n, f, a, w, eps, nmax, init_t::SCALING, depth, rstrategy);
+    return firpm<T>(n, f, a, w, eps, nmax, init_t::SCALING, depth, rstrategy);
 }
 
 template<typename T>
-pmoutput_t<double> firpmAFP(std::size_t n,
-            std::vector<double>const &f,
-            std::vector<double>const &a,
-            std::vector<double>const &w,
+pmoutput_t<T> firpmAFP(std::size_t n,
+            std::vector<T>const &f,
+            std::vector<T>const &a,
+            std::vector<T>const &w,
             double eps, std::size_t nmax)
 {
-    return firpm<double>(n, f, a, w, eps, nmax, init_t::AFP);
+    return firpm<T>(n, f, a, w, eps, nmax, init_t::AFP);
 }
 
 template<typename T>
-pmoutput_t<double> firpm(std::size_t n,
-            std::vector<double>const& f,
-            std::vector<double>const& a,
-            std::vector<double>const& w,
+pmoutput_t<T> firpm(std::size_t n,
+            std::vector<T>const& f,
+            std::vector<T>const& a,
+            std::vector<T>const& w,
             filter_t type,
             double eps,
             std::size_t nmax,
@@ -927,12 +933,12 @@ pmoutput_t<double> firpm(std::size_t n,
             init_t rstrategy)
 {
     parseSpecification(f, a, w);
-    std::vector<double> h;
-    std::vector<band_t> fbands(w.size());
-    std::vector<band_t> cbands;
-    std::vector<double> fn{f};
+    std::vector<T> h;
+    std::vector<band_t<T>> fbands(w.size());
+    std::vector<band_t<T>> cbands;
+    std::vector<T> fn{f};
     std::size_t deg = n / 2u;
-    double sFactor = a[1] / (f[1] * M_PI);
+    T sFactor = a[1] / (f[1] * M_PI);
 
     if(n % 2 == 0) { // TYPE III
         if(f[0u] == 0.0) {
@@ -952,26 +958,26 @@ pmoutput_t<double> firpm(std::size_t n,
         fbands[0u].stop  = M_PI * fn[1u];
         fbands[0u].space = space_t::FREQ;
         if(type == filter_t::FIR_DIFFERENTIATOR) {
-            fbands[0u].weight = [&w](space_t space, double x) -> double {
+            fbands[0u].weight = [&w](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
                     return (sinl(x) / x) * w[0u];
                 else
                     return (sqrtl(1.0l - x * x) / acosl(x)) * w[0u];                    
             };
-            fbands[0u].amplitude = [sFactor](space_t space, double x) -> double {
+            fbands[0u].amplitude = [sFactor](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
                     return (x / sinl(x)) * sFactor;
                 else 
                     return (acosl(x) / sqrtl(1.0l - x * x)) * sFactor;
             };
         } else { // FIR_HILBERT
-            fbands[0u].weight = [&w](space_t space, double x) -> double {
+            fbands[0u].weight = [&w](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
                     return sinl(x) * w[0u];
                 else
                     return sqrtl(1.0l - x * x) * w[0u];                    
             };
-            fbands[0u].amplitude = [&a, &fbands](space_t space, double x) -> double {
+            fbands[0u].amplitude = [&a, &fbands](space_t space, T x) -> T {
                 if(space == space_t::CHEBY)
                     x = acosl(x);
                 if(a[0u] != a[1u]) 
@@ -986,13 +992,13 @@ pmoutput_t<double> firpm(std::size_t n,
             fbands[i].stop  = M_PI * fn[2u * i + 1u];
             fbands[i].space = space_t::FREQ;
             if(type == filter_t::FIR_DIFFERENTIATOR) {
-                fbands[i].weight = [&w, i](space_t space, double x) -> double {
+                fbands[i].weight = [&w, i](space_t space, T x) -> T {
                     if(space == space_t::FREQ)
                         return sinl(x) * w[i];
                     else
                         return sqrtl(1.0l - x * x) * w[i];
                 };
-                fbands[i].amplitude = [&fbands, &a, i](space_t space, double x) -> double {
+                fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
                     if(a[2u * i] != a[2u * i + 1u]) {
                         if(space == space_t::CHEBY) {
                             x = acosl(x);
@@ -1004,13 +1010,13 @@ pmoutput_t<double> firpm(std::size_t n,
                     return a[2u * i];
                 };
             } else { // FIR_HILBERT
-                fbands[i].weight = [&w, i](space_t space, double x) -> double {
+                fbands[i].weight = [&w, i](space_t space, T x) -> T {
                     if(space == space_t::FREQ)
                         return sinl(x) * w[i];
                     else
                         return sqrtl(1.0l - x * x) * w[i];
                 };
-                fbands[i].amplitude = [&fbands, &a, i](space_t space, double x) -> double {
+                fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
                     if(space == space_t::CHEBY)
                         x = acosl(x);
                     if(a[2u * i] != a[2u * i + 1u])
@@ -1033,26 +1039,26 @@ pmoutput_t<double> firpm(std::size_t n,
         fbands[0u].stop  = M_PI * fn[1u];
         fbands[0u].space = space_t::FREQ;
         if(type == filter_t::FIR_DIFFERENTIATOR) {
-            fbands[0u].weight = [&w](space_t space, double x) -> double {
+            fbands[0u].weight = [&w](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
                     return (sinl(x / 2) / x) * w[0u];
                 else
                     return (sinl(acosl(x) / 2) / acosl(x)) * w[0u];
             };
-            fbands[0u].amplitude = [sFactor](space_t space, double x) -> double {
+            fbands[0u].amplitude = [sFactor](space_t space, T x) -> T {
                 if(space == space_t::FREQ) 
                     return (x / sinl(x / 2)) * sFactor;
                 else 
                     return (acosl(x) / sinl(acosl(x) / 2)) * sFactor;
             };
         } else { // FIR_HILBERT
-            fbands[0u].weight = [&w](space_t space, double x) -> double {
+            fbands[0u].weight = [&w](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
                     return sinl(x / 2) * w[0u];
                 else
                     return sinl(acosl(x) / 2) * w[0u];
             };
-            fbands[0u].amplitude = [&fbands, &a](space_t space, double x) -> double {
+            fbands[0u].amplitude = [&fbands, &a](space_t space, T x) -> T {
                 if(space == space_t::CHEBY)
                     x = acosl(x);
                 if(a[0u] != a[1u]) 
@@ -1067,13 +1073,13 @@ pmoutput_t<double> firpm(std::size_t n,
             fbands[i].stop  = M_PI * fn[2u * i + 1u];
             fbands[i].space = space_t::FREQ;
             if(type == filter_t::FIR_DIFFERENTIATOR) {
-                fbands[i].weight = [&w, i](space_t space, double x) -> double {
+                fbands[i].weight = [&w, i](space_t space, T x) -> T {
                     if(space == space_t::FREQ)
                         return sinl(x / 2) * w[i];
                     else
                         return (sinl(acosl(x) / 2)) * w[i];
                 };
-                fbands[i].amplitude = [&fbands, &a, i](space_t space, double x) -> double {
+                fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
                     if(a[2u * i] != a[2u * i + 1u]) {
                         if(space == space_t::CHEBY)
                             x = acosl(x);
@@ -1084,13 +1090,13 @@ pmoutput_t<double> firpm(std::size_t n,
                     return a[2u * i];
                 };
             } else { // FIR_HILBERT
-                fbands[i].weight = [&w, i](space_t space, double x) -> double {
+                fbands[i].weight = [&w, i](space_t space, T x) -> T {
                     if(space == space_t::FREQ)
                         return sinl(x / 2) * w[i];
                     else
                         return sinl(acosl(x) / 2) * w[i];
                 };
-                fbands[i].amplitude = [&fbands, &a, i](space_t space, double x) -> double {
+                fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
                     if(space == space_t::CHEBY)
                         x = acosl(x);
                     if(a[2u * i] != a[2u * i + 1u]) 
@@ -1103,10 +1109,10 @@ pmoutput_t<double> firpm(std::size_t n,
         }
     }
 
-    pmoutput_t<double> output;
-    std::vector<double> x;
+    pmoutput_t<T> output;
+    std::vector<T> x;
     bandconv(cbands, fbands, convdir_t::FROMFREQ);
-    std::function<double(double)> wf = [&cbands](double x) -> double {
+    std::function<T(T)> wf = [&cbands](T x) -> T {
         for(std::size_t i{0u}; i < cbands.size(); ++i)
             if(cbands[i].start <= x && x <= cbands[i].stop)
                 return cbands[i].weight(space_t::CHEBY, x);
@@ -1121,13 +1127,13 @@ pmoutput_t<double> firpm(std::size_t n,
         case init_t::UNIFORM: 
         {
             if (fbands.size() <= (deg + 2u) / 4) { 
-                std::vector<double> omega;
+                std::vector<T> omega;
                 uniform(omega, fbands, deg + 2u);
                 cos(x, omega);
                 bandconv(cbands, fbands, convdir_t::FROMFREQ);
             } else {
                 // use AFP strategy for very small degrees (wrt nb of bands)
-                std::vector<double> mesh;
+                std::vector<T> mesh;
                 wam(mesh, cbands, deg);
                 MatrixXd A;
                 chebvand(A, deg+1u, mesh, wf);
@@ -1145,13 +1151,13 @@ pmoutput_t<double> firpm(std::size_t n,
 
             if(rstrategy == init_t::UNIFORM) {
                 if (fbands.size() <= (sdegs[0] + 2u) / 4) {
-                    std::vector<double> omega;
+                    std::vector<T> omega;
                     uniform(omega, fbands, sdegs[0]+2u);
                     cos(x, omega);
                     bandconv(cbands, fbands, convdir_t::FROMFREQ);
                 } else {
                     // use AFP strategy for very small degrees (wrt nb of bands)
-                    std::vector<double> mesh;
+                    std::vector<T> mesh;
                     wam(mesh, cbands, sdegs[0]);
                     MatrixXd A;
                     chebvand(A, sdegs[0]+1u, mesh, wf);
@@ -1160,7 +1166,7 @@ pmoutput_t<double> firpm(std::size_t n,
                 }
                 output = exchange(x, cbands, eps, nmax);
             } else { // AFP-based strategy
-                std::vector<double> mesh;
+                std::vector<T> mesh;
                 wam(mesh, cbands, sdegs[0]);
                 MatrixXd A;
                 chebvand(A, sdegs[0]+1u, mesh, wf);
@@ -1176,7 +1182,7 @@ pmoutput_t<double> firpm(std::size_t n,
             }
         } break;
         default: { // AFP-based initialization
-            std::vector<double> mesh;
+            std::vector<T> mesh;
             wam(mesh, cbands, deg);
             MatrixXd A;
             chebvand(A, deg+1u, mesh, wf);
@@ -1219,27 +1225,29 @@ pmoutput_t<double> firpm(std::size_t n,
 }
 
 template<typename T>
-pmoutput_t<double> firpmRS(std::size_t n,
-            std::vector<double>const &f,
-            std::vector<double>const &a,
-            std::vector<double>const &w,
-            filter_t type, double eps,
+pmoutput_t<T> firpmRS(std::size_t n,
+            std::vector<T>const &f,
+            std::vector<T>const &a,
+            std::vector<T>const &w,
+            filter_t type,
+	    double eps,
             std::size_t nmax, std::size_t depth,
             init_t rstrategy)
 {
-    return firpm<double>(n, f, a, w, type, eps, nmax,
+    return firpm<T>(n, f, a, w, type, eps, nmax,
                  init_t::SCALING, depth, rstrategy);
 }
 
 template<typename T>
-pmoutput_t<double> firpmAFP(std::size_t n,
-            std::vector<double>const &f,
-            std::vector<double>const &a,
-            std::vector<double>const &w,
-            filter_t type, double eps,
+pmoutput_t<T> firpmAFP(std::size_t n,
+            std::vector<T>const &f,
+            std::vector<T>const &a,
+            std::vector<T>const &w,
+            filter_t type,
+	    double eps,
             std::size_t nmax)
 {
-    return firpm<double>(n, f, a, w, type, eps,
+    return firpm<T>(n, f, a, w, type, eps,
                  nmax, init_t::AFP);
 }
 

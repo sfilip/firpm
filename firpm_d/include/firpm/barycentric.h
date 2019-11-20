@@ -37,8 +37,9 @@
  * @param[out] w the computed weights
  * @param[in] x the interpolation points
  */
-void baryweights(std::vector<double>& w,
-        std::vector<double>& x);
+template<typename T>
+void baryweights(std::vector<T>& w,
+        std::vector<T>& x);
 
 /*! Determines the current reference error according to the
  * barycentric formula (internally it also computes the barycentric weights)
@@ -47,8 +48,9 @@ void baryweights(std::vector<double>& w,
  * @param[in] bands information relating to the ideal frequency response of
  * the filter
  */
-void compdelta(double &delta, std::vector<double>& x,
-        std::vector<band_t> &bands);
+template<typename T>
+void compdelta(T &delta, std::vector<T>& x,
+        std::vector<band_t<T>> &bands);
 
 /*! Determines the current reference error according to the
  * barycentric formula
@@ -60,8 +62,9 @@ void compdelta(double &delta, std::vector<double>& x,
  * the filter
  */
 
-void compdelta(double &delta, std::vector<double>& w,
-        std::vector<double>& x, std::vector<band_t> &bands);
+template<typename T>
+void compdelta(T &delta, std::vector<T>& w,
+        std::vector<T>& x, std::vector<band_t<T>> &bands);
 
 /*! Computes the filter response at the current reference set
  * @param[out] C the vector of frequency responses at the reference set
@@ -69,8 +72,9 @@ void compdelta(double &delta, std::vector<double>& w,
  * @param[in] x the current reference vector
  * @param[in] bands frequency band information for the ideal filter
  */
-void compc(std::vector<double> &C, double &delta,
-        std::vector<double> &x, std::vector<band_t> &bands);
+template<typename T>
+void compc(std::vector<T> &C, T &delta,
+        std::vector<T> &x, std::vector<band_t<T>> &bands);
 
 /*! Computes the frequency response of the current filter
  * @param[out] Pc the frequency response amplitude value at the current node
@@ -81,9 +85,10 @@ void compc(std::vector<double> &C, double &delta,
  * @param[in] C the frequency responses at the current reference set
  * @param[in] w the current barycentric weights
  */
-void approx(double &Pc, const double &xVal,
-        std::vector<double> &x, std::vector<double> &C,
-        std::vector<double> & w);
+template<typename T>
+void approx(T &Pc, const T &xVal,
+        std::vector<T> &x, std::vector<T> &C,
+        std::vector<T> & w);
 
 /*! Computes the approximation error at a given node using the current set of
  * reference points
@@ -95,10 +100,11 @@ void approx(double &Pc, const double &xVal,
  * @param[in] w the barycentric weights
  * @param[in] bands frequency band information for the ideal filter
  */
-void comperror(double &error, const double &xVal,
-        double &delta, std::vector<double> &x,
-        std::vector<double> &C, std::vector<double> &w,
-        std::vector<band_t> &bands);
+template<typename T>
+void comperror(T &error, const T &xVal,
+        T &delta, std::vector<T> &x,
+        std::vector<T> &C, std::vector<T> &w,
+        std::vector<band_t<T>> &bands);
 
 /*! The ideal frequency response and weight information at the given frequency
  * node (it can be in the \f$\left[-1,1\right]\f$ interval,
@@ -109,8 +115,8 @@ void comperror(double &error, const double &xVal,
  * @param[in] xVal the current frequency node where we do our computation
  * @param[in] bands frequency band information for the ideal filter
  */
-void idealvals(double &D, double &W,
-        const double &xVal, std::vector<band_t> &bands);
-
+template<typename T>
+void idealvals(T &D, T &W,
+        const T &xVal, std::vector<band_t<T>> &bands);
 
 #endif // BARYCENTRIC_H

@@ -11,8 +11,7 @@
 // example of how to use the exchange method directly
 TEST(firpm_scaling_test, lowpass100a)
 {
-
-    std::vector<band_t> freqBands(2);
+    std::vector<band_t<double>> freqBands(2);
 
     freqBands[0].start = 0;
     freqBands[0].stop = M_PI * 0.4;
@@ -32,7 +31,7 @@ TEST(firpm_scaling_test, lowpass100a)
 
     std::size_t degree = 50;
     std::vector<double> a;
-    std::vector<band_t> chebyBands;
+    std::vector<band_t<double>> chebyBands;
     std::vector<double> omega(degree + 2u);
     std::vector<double> x(degree + 2u);
     uniform(omega, freqBands, degree + 2u);

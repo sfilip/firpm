@@ -45,13 +45,14 @@ enum space_t {
  * Contains important information concerning a frequency band 
  * used during the execution of the exchange algorithm.
  */
+template<typename T>
 struct band_t {
     space_t space;          /**< the space in which we are working */
-    std::function<double(space_t, double)> amplitude;
+    std::function<double(space_t, T)> amplitude;
                             /**< the ideal amplitude for this band */
-    double start;           /**< the left bound of the band */
-    double stop;            /**< the right bound of the band */
-    std::function<double(space_t, double)> weight;
+    T start;           /**< the left bound of the band */
+    T stop;            /**< the right bound of the band */
+    std::function<double(space_t, T)> weight;
                             /**< weight function value on the band */
     std::size_t xs;         /**< number of interpolation points taken in the band */
 };
@@ -70,7 +71,8 @@ enum convdir_t {
  * @param[in]  direction the direction in which the change of 
  * variable is performed
  */
-void bandconv(std::vector<band_t> &out, std::vector<band_t> &in,
+template<typename T>
+void bandconv(std::vector<band_t<T>> &out, std::vector<band_t<T>> &in,
         convdir_t direction);
 
 #endif /* BAND_H_ */

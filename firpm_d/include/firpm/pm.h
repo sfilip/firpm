@@ -66,8 +66,8 @@ struct pmoutput_t
                                 filter (values are in \f$[-1,1]\f$ and NOT \f$[0,\pi]\f$)*/
     std::size_t iter;         /**< number of iterations that were necessary to 
                                 achieve convergence*/
-    double delta;             /**< the final reference error */
-    double q;                 /**< convergence parameter value */
+    T delta;             /**< the final reference error */
+    T q;                 /**< convergence parameter value */
 };
 
 /*! An implementation of the uniform initialization approach for 
@@ -78,8 +78,9 @@ struct pmoutput_t
  * @param[in] n the size of the reference set
  */
 
-void uniform(std::vector<double>& omega,
-        std::vector<band_t>& B, std::size_t n);
+template<typename T>
+void uniform(std::vector<T>& omega,
+        std::vector<band_t<T>>& B, std::size_t n);
 
 /*! An implementation of the reference scaling approach mentioned 
  * in section 4 of the article.
@@ -100,10 +101,11 @@ void uniform(std::vector<double>& omega,
  * corresponds to. The bands are given inside \f$[0,\pi]\f$ (i.e., the FREQ 
  * band space)
  */
-void referenceScaling(std::vector<double>& nx, std::vector<band_t>& ncbands,
-        std::vector<band_t>& nfbands, std::size_t nxs,
-        std::vector<double>& x, std::vector<band_t>& cbands,
-        std::vector<band_t>& fbands);
+template<typename T>
+void referenceScaling(std::vector<T>& nx, std::vector<band_t<T>>& ncbands,
+        std::vector<band_t<T>>& nfbands, std::size_t nxs,
+        std::vector<T>& x, std::vector<band_t<T>>& cbands,
+        std::vector<band_t<T>>& fbands);
 
 /*! An internal routine which implements the exchange algorithm for designing 
  * FIR filters
@@ -159,8 +161,9 @@ void referenceScaling(std::vector<double>& nx, std::vector<band_t>& ncbands,
  * @endcode
  */
 
-pmoutput_t<double> exchange(std::vector<double>& x,
-        std::vector<band_t>& cbands,
+template<typename T>
+pmoutput_t<T> exchange(std::vector<T>& x,
+        std::vector<band_t<T>>& cbands,
         double eps = 0.01,
         std::size_t nmax = 4u);
 
@@ -203,10 +206,10 @@ pmoutput_t<double> exchange(std::vector<double>& x,
  */
 
 template<typename T>
-pmoutput_t<double> firpm(std::size_t n,
-            std::vector<double>const &f,
-            std::vector<double>const &a,
-            std::vector<double>const &w,
+pmoutput_t<T> firpm(std::size_t n,
+            std::vector<T>const &f,
+            std::vector<T>const &a,
+            std::vector<T>const &w,
             double eps = 0.01,
             std::size_t nmax = 4u,
             init_t strategy = init_t::UNIFORM,
@@ -236,10 +239,10 @@ pmoutput_t<double> firpm(std::size_t n,
  */
 
 template<typename T>
-pmoutput_t<double> firpmRS(std::size_t n,
-            std::vector<double>const &f,
-            std::vector<double>const &a,
-            std::vector<double>const &w,
+pmoutput_t<T> firpmRS(std::size_t n,
+            std::vector<T>const &f,
+            std::vector<T>const &a,
+            std::vector<T>const &w,
             double eps = 0.01,
             std::size_t nmax = 4u,
             std::size_t depth = 1u,
@@ -263,10 +266,10 @@ pmoutput_t<double> firpmRS(std::size_t n,
  */
 
 template<typename T>
-pmoutput_t<double> firpmAFP(std::size_t n,
-            std::vector<double>const &f,
-            std::vector<double>const &a,
-            std::vector<double>const &w,
+pmoutput_t<T> firpmAFP(std::size_t n,
+            std::vector<T>const &f,
+            std::vector<T>const &a,
+            std::vector<T>const &w,
             double eps = 0.01,
             std::size_t nmax = 4u);
 
@@ -297,10 +300,10 @@ pmoutput_t<double> firpmAFP(std::size_t n,
  * the values are antisymmetrical to the middle coefficient(s))*/
 
 template<typename T>
-pmoutput_t<double> firpm(std::size_t n,
-        std::vector<double>const& f,
-        std::vector<double>const& a,
-        std::vector<double>const& w,
+pmoutput_t<T> firpm(std::size_t n,
+        std::vector<T>const& f,
+        std::vector<T>const& a,
+        std::vector<T>const& w,
         filter_t type,
         double eps = 0.01,
         std::size_t nmax = 4,
@@ -332,10 +335,10 @@ pmoutput_t<double> firpm(std::size_t n,
  * IV, the values are antisymmetrical to the middle coefficient(s))*/
 
 template<typename T>
-pmoutput_t<double> firpmRS(std::size_t n,
-            std::vector<double>const &f,
-            std::vector<double>const &a,
-            std::vector<double>const &w,
+pmoutput_t<T> firpmRS(std::size_t n,
+            std::vector<T>const &f,
+            std::vector<T>const &a,
+            std::vector<T>const &w,
             filter_t type,
             double eps = 0.01,
             std::size_t nmax = 4u,
@@ -362,10 +365,10 @@ pmoutput_t<double> firpmRS(std::size_t n,
  * IV, the values are antisymmetrical to the middle coefficient(s))*/
 
 template<typename T>
-pmoutput_t<double> firpmAFP(std::size_t n,
-            std::vector<double>const &f,
-            std::vector<double>const &a,
-            std::vector<double>const &w,
+pmoutput_t<T> firpmAFP(std::size_t n,
+            std::vector<T>const &f,
+            std::vector<T>const &a,
+            std::vector<T>const &w,
             filter_t type,
             double eps = 0.01,
             std::size_t nmax = 4u);
