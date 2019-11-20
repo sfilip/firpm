@@ -192,7 +192,6 @@ void equipts(std::vector<double>& v, std::size_t n)
     }
 }
 
-
 // this function computes the values of the coefficients of 
 // the CI when Chebyshev nodes of the second kind are used
 void chebcoeffs(std::vector<double>& c,

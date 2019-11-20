@@ -525,6 +525,7 @@ void extremaSearch(long double& convergenceOrder,
             {
                 long double abs1 = fabsl(alternatingExtrema[0u].second);
                 long double abs2 = fabsl(alternatingExtrema[alternatingExtrema.size() - 1u].second);
+
                 std::size_t sIndex = 0u;
                 if (abs1 < abs2)
                     sIndex = 1u;
