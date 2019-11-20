@@ -142,7 +142,7 @@ void generateChebyshevPoints(std::vector<mpfr::mpreal>& x, std::size_t n,
     x.reserve(n + 1u);
     if(n > 0u)
     {
-        for(int k = n; k >= -n; k -= 2)
+        for(int k = n; k >= -(int)n; k -= 2)
             x.push_back(sin(pi * k / (n * 2)));
     }
     else
