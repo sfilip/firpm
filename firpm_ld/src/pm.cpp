@@ -904,7 +904,7 @@ PMOutput firpm(std::size_t n,
             {
                 std::size_t degree = n / 2u;
                 // TODO: error checking code
-                 std::vector<long double> fn = f;
+                std::vector<long double> fn = f;
 
                 std::vector<Band> freqBands(w.size());
                 std::vector<Band> chebyBands;
