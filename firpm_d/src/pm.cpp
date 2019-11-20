@@ -129,17 +129,15 @@ void uniform(std::vector<double>& omega,
     B[nonPointBands[npSize - 1u]].xs = omega.size() - (B.size() - npSize);
     double buffer;
     buffer = bandwidths[nonPointBands[0]] / avgDist;
-    buffer += 0.5;
 
         if (npSize > 1) {
-            B[nonPointBands[0]].xs = lrint(buffer) + 1;
+            B[nonPointBands[0]].xs = lroundl(buffer) + 1;
             B[nonPointBands[npSize - 1u]].xs -= B[nonPointBands[0]].xs;
         }
 
         for(std::size_t i{1u}; i < npSize - 1u; ++i) {
             buffer = bandwidths[nonPointBands[i]] / avgDist;
-            buffer += 0.5;
-            B[nonPointBands[i]].xs = lrint(buffer) + 1;
+            B[nonPointBands[i]].xs = lroundl(buffer) + 1;
             B[nonPointBands[npSize - 1u]].xs -= B[nonPointBands[i]].xs;
         }
 
