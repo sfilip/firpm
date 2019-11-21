@@ -15,8 +15,13 @@ list (INSERT CMAKE_MODULE_PATH 0 ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(OpenMP REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
-find_package(Doxygen)
+find_package(GMP 6.0.0)
+find_package(MPFR 4.0.0)
+#find_package(Doxygen)
 
+if( MPFR_FOUND AND GMP_FOUND)
+    add_definitions(-DHAVE_MPFR)
+endif( MPFR_FOUND AND GMP_FOUND)
 
 #-----------------------------------------------------------------------
 # build configuration
@@ -30,9 +35,9 @@ add_definitions(-std=c++11 -Wall)
 set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/src)
-#if(DOXYGEN_FOUND)
-#    add_subdirectory(${PROJECT_SOURCE_DIR}/doc)
-#endif()
+if(DOXYGEN_FOUND)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/doc)
+endif()
 
 #-----------------------------------------------------------------------
 # tests

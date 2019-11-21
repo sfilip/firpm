@@ -12,7 +12,11 @@ include_directories (${PROJECT_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIRS})
 
 add_library(firpm SHARED ${PROJECT_SRC_FILES})
 
-target_link_libraries(firpm PRIVATE OpenMP::OpenMP_CXX)
+if( MPFR_FOUND AND GMP_FOUND )
+    target_link_libraries(firpm PRIVATE gmp mpfr OpenMP::OpenMP_CXX)
+else()
+    target_link_libraries(firpm PRIVATE OpenMP::OpenMP_CXX)
+endif()
 
 install(TARGETS firpm DESTINATION lib)
 install(DIRECTORY ${PROJECT_INCLUDE_DIR}/firpm DESTINATION include)
