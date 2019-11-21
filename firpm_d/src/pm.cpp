@@ -745,8 +745,8 @@ pmoutput_t<T> firpm(std::size_t n,
     std::size_t deg = n / 2;
     if(n % 2 == 0) {            // type I filter
         for(std::size_t i{0u}; i < fbands.size(); ++i) {
-            fbands[i].start = M_PI * f[2u*i];
-            fbands[i].stop  = M_PI * f[2u*i+1u];
+            fbands[i].start = pmmath::const_pi<T>() * f[2u*i];
+            fbands[i].stop  = pmmath::const_pi<T>() * f[2u*i+1u];
             fbands[i].space = space_t::FREQ;
             fbands[i].amplitude = [i, &a, &fbands](space_t space, T x) -> T {
                 if(a[2u*i] != a[2u*i+1u]) {
@@ -764,15 +764,15 @@ pmoutput_t<T> firpm(std::size_t n,
         }
     } else {                    // type II filter
         for(std::size_t i{0u}; i < fbands.size(); ++i) {
-            fbands[i].start = M_PI * f[2u*i];
+            fbands[i].start = pmmath::const_pi<T>() * f[2u*i];
             if(f[2u*i + 1u] == 1.0) {
                 if(f[2u*i] < 0.9999)
-                    fbands[i].stop = M_PI * T(0.9999);
+                    fbands[i].stop = pmmath::const_pi<T>() * T(0.9999);
                 else
-                    fbands[i].stop = M_PI * ((f[2u*i] + 1) / 2);
+                    fbands[i].stop = pmmath::const_pi<T>() * ((f[2u*i] + 1) / 2);
             } 
             else 
-                fbands[i].stop = M_PI * f[2u*i+1u];
+                fbands[i].stop = pmmath::const_pi<T>() * f[2u*i+1u];
             fbands[i].space = space_t::FREQ;
             fbands[i].amplitude = [i, &a, &fbands](space_t space, T x) -> T {
                 if(a[2u*i] != a[2u*i+1u]) {
@@ -936,7 +936,7 @@ pmoutput_t<T> firpm(std::size_t n,
     std::vector<band_t<T>> cbands;
     std::vector<T> fn{f};
     std::size_t deg = n / 2u;
-    T sFactor = a[1] / (f[1] * M_PI);
+    T sFactor = a[1] / (f[1] * pmmath::const_pi<T>());
 
     if(n % 2 == 0) { // TYPE III
         if(f[0u] == 0.0) {
@@ -952,8 +952,8 @@ pmoutput_t<T> firpm(std::size_t n,
                 fn[f.size() - 1u] = 0.9999;
         }
         --deg;
-        fbands[0u].start = M_PI * fn[0u];
-        fbands[0u].stop  = M_PI * fn[1u];
+        fbands[0u].start = pmmath::const_pi<T>() * fn[0u];
+        fbands[0u].stop  = pmmath::const_pi<T>() * fn[1u];
         fbands[0u].space = space_t::FREQ;
         if(type == filter_t::FIR_DIFFERENTIATOR) {
             fbands[0u].weight = [&w](space_t space, T x) -> T {
@@ -986,8 +986,8 @@ pmoutput_t<T> firpm(std::size_t n,
             };
         }
         for(std::size_t i{1u}; i < fbands.size(); ++i) {
-            fbands[i].start = M_PI * fn[2u * i];
-            fbands[i].stop  = M_PI * fn[2u * i + 1u];
+            fbands[i].start = pmmath::const_pi<T>() * fn[2u * i];
+            fbands[i].stop  = pmmath::const_pi<T>() * fn[2u * i + 1u];
             fbands[i].space = space_t::FREQ;
             if(type == filter_t::FIR_DIFFERENTIATOR) {
                 fbands[i].weight = [&w, i](space_t space, T x) -> T {
@@ -1033,8 +1033,8 @@ pmoutput_t<T> firpm(std::size_t n,
                 fn[0u] = 1e-5;
         }
 
-        fbands[0u].start = M_PI * fn[0u];
-        fbands[0u].stop  = M_PI * fn[1u];
+        fbands[0u].start = pmmath::const_pi<T>() * fn[0u];
+        fbands[0u].stop  = pmmath::const_pi<T>() * fn[1u];
         fbands[0u].space = space_t::FREQ;
         if(type == filter_t::FIR_DIFFERENTIATOR) {
             fbands[0u].weight = [&w](space_t space, T x) -> T {
@@ -1067,8 +1067,8 @@ pmoutput_t<T> firpm(std::size_t n,
             };
         }
         for(std::size_t i{1u}; i < fbands.size(); ++i) {
-            fbands[i].start = M_PI * fn[2u * i];
-            fbands[i].stop  = M_PI * fn[2u * i + 1u];
+            fbands[i].start = pmmath::const_pi<T>() * fn[2u * i];
+            fbands[i].stop  = pmmath::const_pi<T>() * fn[2u * i + 1u];
             fbands[i].space = space_t::FREQ;
             if(type == filter_t::FIR_DIFFERENTIATOR) {
                 fbands[i].weight = [&w, i](space_t space, T x) -> T {

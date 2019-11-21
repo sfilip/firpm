@@ -53,6 +53,8 @@ namespace pmmath {
 
 	template<typename T> long round(T);
 
+	template<typename T> T const_pi(void);
+
 	/* Specializations: double precision */
 	template<> inline double sin<double>(double x) { return std::sin(x); };
 	template<> inline double cos<double>(double x) { return std::cos(x); };
@@ -76,6 +78,8 @@ namespace pmmath {
 	template<> inline bool isnan<double>(double x) { return std::isnan(x); };
 
 	template<> inline long round<double>(double x) { return std::round(x); };
+
+	template<> inline double const_pi<double>(void) { return M_PI; };
 
 	/* Specializations: long double precision */
 	template<> inline long double sin<long double>(long double x) { return sinl(x); };
@@ -101,6 +105,8 @@ namespace pmmath {
 
 	template<> inline long round<long double>(long double x) { return std::round(x); };
 
+	template<> inline long double const_pi<long double>(void) { return M_PI; };
+
 	/* Specialization: multiple precision mpreal */
 #ifdef HAVE_MPFR
 	template<> inline mpfr::mpreal sin<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::sin(x); };
@@ -125,6 +131,8 @@ namespace pmmath {
 	template<> inline bool isnan<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::isnan(x); };
 
 	template<> inline long round<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::round(x).toLong(); };
+
+	template<> inline mpfr::mpreal const_pi<mpfr::mpreal>(void) { return mpfr::const_pi(); };
 #endif
 
 }

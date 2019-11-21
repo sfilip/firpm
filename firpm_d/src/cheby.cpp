@@ -196,7 +196,7 @@ void equipts(std::vector<T>& v, std::size_t n)
     // store the points in the vector v as 
     // v[i] = i * pi / (n-1)
     for(std::size_t i{0u}; i < n; ++i) {
-        v[i] = M_PI * i;
+        v[i] = pmmath::const_pi<T>() * i;
         v[i] /= (n-1);
     }
 }
