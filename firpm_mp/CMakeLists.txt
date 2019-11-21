@@ -15,7 +15,7 @@ list (INSERT CMAKE_MODULE_PATH 0 ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(OpenMP REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(GMP REQUIRED)
+#find_package(GMP REQUIRED)
 find_package(MPFR REQUIRED)
 find_package(Doxygen)
 

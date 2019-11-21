@@ -13,19 +13,19 @@ using types = testing::Types<double, long double>;
 
 template<typename _T>
 struct firpm_scaling_test : public testing::Test { using T = _T; };
-TYPED_TEST_CASE(firpm_scaling_test, types);
+TYPED_TEST_SUITE(firpm_scaling_test, types);
 
 template<typename _T>
 struct firpm_lebesgue_test : public testing::Test { using T = _T; };
-TYPED_TEST_CASE(firpm_lebesgue_test, types);
+TYPED_TEST_SUITE(firpm_lebesgue_test, types);
 
 template<typename _T>
 struct firpm_cic_test : public testing::Test { using T = _T; };
-TYPED_TEST_CASE(firpm_cic_test, types);
+TYPED_TEST_SUITE(firpm_cic_test, types);
 
 template<typename _T>
 struct firpm_minimal_test : public testing::Test { using T = _T; };
-TYPED_TEST_CASE(firpm_minimal_test, types);
+TYPED_TEST_SUITE(firpm_minimal_test, types);
 
 // example of how to use the exchange method directly
 TYPED_TEST(firpm_scaling_test, lowpass100a)

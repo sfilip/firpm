@@ -12,7 +12,7 @@ using types = testing::Types<double, long double>;
 
 template<typename _T>
 struct firpm_extensive_test : public testing::Test { using T = _T; };
-TYPED_TEST_CASE(firpm_extensive_test, types);
+TYPED_TEST_SUITE(firpm_extensive_test, types);
 
 template<typename T>
 void printInfo(pmoutput_t<T>& output, double eps)
