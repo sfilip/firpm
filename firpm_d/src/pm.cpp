@@ -135,31 +135,29 @@ void uniform(std::vector<T>& omega,
     B[nonPointBands[npSize - 1u]].xs = omega.size() - (B.size() - npSize);
     T buffer;
     buffer = bandwidths[nonPointBands[0]] / avgDist;
-    buffer += 0.5;
 
-        if (npSize > 1) {
-            B[nonPointBands[0]].xs = lrint(buffer) + 1;
-            B[nonPointBands[npSize - 1u]].xs -= B[nonPointBands[0]].xs;
-        }
+    if (npSize > 1) {
+        B[nonPointBands[0]].xs = lroundl(buffer) + 1;
+        B[nonPointBands[npSize - 1u]].xs -= B[nonPointBands[0]].xs;
+    }
 
-        for(std::size_t i{1u}; i < npSize - 1u; ++i) {
-            buffer = bandwidths[nonPointBands[i]] / avgDist;
-            buffer += 0.5;
-            B[nonPointBands[i]].xs = lrint(buffer) + 1;
-            B[nonPointBands[npSize - 1u]].xs -= B[nonPointBands[i]].xs;
-        }
+    for(std::size_t i{1u}; i < npSize - 1u; ++i) {
+        buffer = bandwidths[nonPointBands[i]] / avgDist;
+        B[nonPointBands[i]].xs = lroundl(buffer) + 1;
+        B[nonPointBands[npSize - 1u]].xs -= B[nonPointBands[i]].xs;
+    }
 
 
-        std::size_t startIndex = 0ul;
-        for(std::size_t i{0ul}; i < B.size(); ++i) {
-            if(B[i].xs > 1u)
-                buffer = bandwidths[i] / (B[i].xs - 1);
-            omega[startIndex] = B[i].start;
-            omega[startIndex + B[i].xs - 1] = B[i].stop;
-            for(std::size_t j{1ul}; j < B[i].xs - 1; ++j)
-                omega[startIndex + j] = omega[startIndex + j - 1] + buffer;
-            startIndex += B[i].xs;
-        }
+    std::size_t startIndex = 0ul;
+    for(std::size_t i{0ul}; i < B.size(); ++i) {
+        if(B[i].xs > 1u)
+            buffer = bandwidths[i] / (B[i].xs - 1);
+        omega[startIndex] = B[i].start;
+        omega[startIndex + B[i].xs - 1] = B[i].stop;
+        for(std::size_t j{1ul}; j < B[i].xs - 1; ++j)
+            omega[startIndex + j] = omega[startIndex + j - 1] + buffer;
+        startIndex += B[i].xs;
+    }
 }
 
 template<typename T>
@@ -168,116 +166,115 @@ void referenceScaling(std::vector<T>& newX, std::vector<band_t<T>>& newChebyBand
         std::vector<T>& x, std::vector<band_t<T>>& chebyBands,
         std::vector<band_t<T>>& freqBands)
 {
-        std::vector<std::size_t> newDistribution(chebyBands.size());
-        for(std::size_t i{0u}; i < chebyBands.size(); ++i)
-            newDistribution[i] = 0u;
-        std::size_t multipointBands = 0u;
-        std::size_t offset = 0u;
-        int twoInt = 0;
-        for(std::size_t i{0u}; i < chebyBands.size(); ++i)
+    std::vector<std::size_t> newDistribution(chebyBands.size());
+    for(std::size_t i{0u}; i < chebyBands.size(); ++i)
+        newDistribution[i] = 0u;
+    std::size_t multipointBands = 0u;
+    std::size_t offset = 0u;
+    int twoInt = 0;
+    for(std::size_t i{0u}; i < chebyBands.size(); ++i)
+    {
+        newX.push_back(x[offset]);
+        if(chebyBands[i].xs > 2u)
         {
-            newX.push_back(x[offset]);
+            ++multipointBands;
+            for(std::size_t j{1u}; j < chebyBands[i].xs - 2u; ++j)
+            {
+                newX.push_back((x[offset + j] + x[offset + j + 1]) / 2);
+                newX.push_back(x[offset + j]);
+            }
+            newX.push_back(x[offset + chebyBands[i].xs - 2u]);
+            newX.push_back(x[offset + chebyBands[i].xs - 1u]);
+            twoInt += 2;
+        }
+        else if(chebyBands[i].xs == 2u)
+        {
+            ++multipointBands;
+            ++twoInt;
+            newX.push_back(x[offset + 1u]);
+        }
+        offset += chebyBands[i].xs;
+    }
+    int threeInt = newXSize - newX.size() - twoInt;
+    offset = 0u;
+    for(std::size_t i{0u}; i < chebyBands.size(); ++i)
+    {
+            if(chebyBands[i].xs > 1u)
+            {
+                if(threeInt > 0)
+                {
+                    newX.push_back(x[offset] + (x[offset + 1] - x[offset]) / 3);
+                    T secondValue = x[offset] + (x[offset + 1] - x[offset]) / 3
+                        + (x[offset + 1] - x[offset]) / 3;
+                    newX.push_back(secondValue);
+                    threeInt--;
+                    twoInt--;
+                }
+                else if (twoInt > 0)
+                {
+                    newX.push_back((x[offset] + x[offset + 1]) / 2);
+                    twoInt--;
+                }
+            }
+        offset += chebyBands[i].xs;
+    }
+    offset = 0;
+    for(std::size_t i{0u}; i < chebyBands.size(); ++i)
+    {
             if(chebyBands[i].xs > 2u)
             {
-                ++multipointBands;
-                for(std::size_t j{1u}; j < chebyBands[i].xs - 2u; ++j)
+                if(threeInt > 0)
                 {
-                    newX.push_back((x[offset + j] + x[offset + j + 1]) / 2);
-                    newX.push_back(x[offset + j]);
-                }
-                newX.push_back(x[offset + chebyBands[i].xs - 2u]);
-                newX.push_back(x[offset + chebyBands[i].xs - 1u]);
-                twoInt += 2;
-            }
-            else if(chebyBands[i].xs == 2u)
-            {
-                ++multipointBands;
-                ++twoInt;
-                newX.push_back(x[offset + 1u]);
-                ++newDistribution[i];
-            }
-            offset += chebyBands[i].xs;
-        }
-        int threeInt = newXSize - newX.size() - twoInt;
-        offset = 0u;
-        for(std::size_t i{0u}; i < chebyBands.size(); ++i)
-        {
-                if(chebyBands[i].xs > 1u)
-                {
-                    if(threeInt > 0)
-                    {
-                        newX.push_back(x[offset] + (x[offset + 1] - x[offset]) / 3);
-                        T secondValue = x[offset] + (x[offset + 1] - x[offset]) / 3
-                            + (x[offset + 1] - x[offset]) / 3;
-                        newX.push_back(secondValue);
-                        threeInt--;
-                        twoInt--;
-                    }
-                    else if (twoInt > 0)
-                    {
-                        newX.push_back((x[offset] + x[offset + 1]) / 2);
-                        twoInt--;
-                    }
-                }
-            offset += chebyBands[i].xs;
-        }
-        offset = 0;
-        for(std::size_t i{0u}; i < chebyBands.size(); ++i)
-        {
-                if(chebyBands[i].xs > 2u)
-                {
-                    if(threeInt > 0)
-                    {
-                        newX.push_back(x[offset + chebyBands[i].xs - 2u] +
-                                (x[offset + chebyBands[i].xs - 1u] -
-                                 x[offset + chebyBands[i].xs - 2u]) / 3);
-                        T secondValue = x[offset + chebyBands[i].xs - 2u] +
+                    newX.push_back(x[offset + chebyBands[i].xs - 2u] +
                             (x[offset + chebyBands[i].xs - 1u] -
-                             x[offset + chebyBands[i].xs - 2u]) / 3 +
-                            (x[offset + chebyBands[i].xs - 1u] -
-                             x[offset + chebyBands[i].xs - 2u]) / 3;
-                        newX.push_back(secondValue);
-                        threeInt--;
-                        twoInt--;
-                    }
-                    else if (twoInt > 0)
-                    {
-                        newX.push_back((x[offset + chebyBands[i].xs - 2u] +
-                                    x[offset + chebyBands[i].xs - 1u]) / 2);
-                        twoInt--;
-                    }
+                                x[offset + chebyBands[i].xs - 2u]) / 3);
+                    double secondValue = x[offset + chebyBands[i].xs - 2u] +
+                        (x[offset + chebyBands[i].xs - 1u] -
+                            x[offset + chebyBands[i].xs - 2u]) / 3 +
+                        (x[offset + chebyBands[i].xs - 1u] -
+                            x[offset + chebyBands[i].xs - 2u]) / 3;
+                    newX.push_back(secondValue);
+                    threeInt--;
+                    twoInt--;
                 }
-            offset += chebyBands[i].xs;
-        }
-        if(newXSize > newX.size())
-        {
-            std::cerr << "ERROR: Failed to do reference scaling\n";
-            exit(EXIT_FAILURE);
-        }
-        newX.resize(newXSize);
-        std::sort(newX.begin(), newX.end());
-        std::size_t total = 0u;
-        for(std::size_t i{0u}; i < newX.size(); ++i)
-        {
-                for(std::size_t j{0u}; j < chebyBands.size(); ++j)
-                    if(newX[i] >= chebyBands[j].start && newX[i] <= chebyBands[j].stop)
-                    {
-                        newDistribution[j]++;
-                        ++total;
-                    }
-        }
-        if(total != newXSize)
-        {
-            std::cout << "ERROR: Failed to find reference scaling distribution!\n";
-            exit(EXIT_FAILURE);
-        }
+                else if (twoInt > 0)
+                {
+                    newX.push_back((x[offset + chebyBands[i].xs - 2u] +
+                                x[offset + chebyBands[i].xs - 1u]) / 2);
+                    twoInt--;
+                }
+            }
+        offset += chebyBands[i].xs;
+    }
+    if(newXSize > newX.size())
+    {
+        std::cerr << "ERROR: Failed to do reference scaling\n";
+        exit(EXIT_FAILURE);
+    }
+    newX.resize(newXSize);
+    std::sort(newX.begin(), newX.end());
+    std::size_t total = 0u;
+    for(std::size_t i{0u}; i < newX.size(); ++i)
+    {
+            for(std::size_t j{0u}; j < chebyBands.size(); ++j)
+                if(newX[i] >= chebyBands[j].start && newX[i] <= chebyBands[j].stop)
+                {
+                    newDistribution[j]++;
+                    ++total;
+                }
+    }
+    if(total != newXSize)
+    {
+        std::cout << "ERROR: Failed to find reference scaling distribution!\n";
+        exit(EXIT_FAILURE);
+    }
 
 
-        for (std::size_t i{0u}; i < chebyBands.size(); ++i)
-        {
-            newFreqBands[freqBands.size() - 1u - i].xs = newDistribution[i];
-            newChebyBands[i].xs = newDistribution[i];
-        }
+    for (std::size_t i{0u}; i < chebyBands.size(); ++i)
+    {
+        newFreqBands[freqBands.size() - 1u - i].xs = newDistribution[i];
+        newChebyBands[i].xs = newDistribution[i];
+    }
 }
 
 template<typename T>
@@ -739,7 +736,7 @@ pmoutput_t<T> firpm(std::size_t n,
     std::vector<band_t<T>> cbands;
     if(n % 2 != 0) {
         if(f[f.size()-1u] == 1 && a[a.size()-1u] != 0) {
-            std::cout << "Warning: gain at Nyquist frequency different from 0.\n"
+            std::cout << "WARNING: gain at Nyquist frequency different from 0.\n"
                 << "Increasing the number of taps by one and passing to a "
                 << "type I filter" << std::endl;
             ++n;
@@ -768,16 +765,14 @@ pmoutput_t<T> firpm(std::size_t n,
     } else {                    // type II filter
         for(std::size_t i{0u}; i < fbands.size(); ++i) {
             fbands[i].start = M_PI * f[2u*i];
-            if(i < fbands.size()-1u)
-                fbands[i].stop = M_PI * f[2u*i+1u];
-            else
-                if(f[2u*i+1u] == 1.0)
-                    if(f[2u*i] < 0.9999)
-                        fbands[i].stop = M_PI * 0.9999;
-                    else
-                        fbands[i].stop = M_PI * ((f[2u*i]+1) / 2);
+            if(f[2u*i + 1u] == 1.0) {
+                if(f[2u*i] < 0.9999)
+                    fbands[i].stop = M_PI * 0.9999;
                 else
-                    fbands[i].stop = M_PI * f[2u*i+1u];
+                    fbands[i].stop = M_PI * ((f[2u*i] + 1) / 2);
+            } 
+            else 
+                fbands[i].stop = M_PI * f[2u*i+1u];
             fbands[i].space = space_t::FREQ;
             fbands[i].amplitude = [i, &a, &fbands](space_t space, T x) -> T {
                 if(a[2u*i] != a[2u*i+1u]) {

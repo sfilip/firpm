@@ -201,7 +201,6 @@ void equipts(std::vector<T>& v, std::size_t n)
     }
 }
 
-
 // this function computes the values of the coefficients of 
 // the CI when Chebyshev nodes of the second kind are used
 template<typename T>
@@ -261,7 +260,7 @@ void diffcoeffs(std::vector<T>& dc,
         default: {
             int n = c.size() - 1;
             for(int i{n}; i > 0; --i)
-            dc[i - 1] = c[i] * i;
+                dc[i - 1] = c[i] * i;
         }
         break;
     }

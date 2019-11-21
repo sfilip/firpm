@@ -671,6 +671,41 @@ TEST(firpm_lebesgue_test, multiband300)
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0l - (long double)output3.iter / output1.iter << std::endl;
 }
 
+TEST(firpm_lebesgue_test, multiband600)
+{
+
+    std::vector<long double> f = {0.0, 0.18, 0.2, 0.4, 0.42, 0.55, 0.57, 0.65, 0.67, 0.75, 0.77, 0.85, 0.87, 1.0};
+    std::vector<long double> a = {0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
+    std::vector<long double> w = {10.0, 1.0, 10.0, 1.0, 10.0, 1.0, 10.0};
+
+    std::size_t degree = 600;
+    std::cout << "START Parks-McClellan with uniform initialization\n";
+    pmoutput_t output1 = firpm(degree * 2u, f, a, w, 1e-5);
+    std::cout << "Final Delta     = " << output1.delta << std::endl;
+    std::cout << "Iteration count = " << output1.iter  << std::endl;
+    std::cout << "FINISH Parks-McClellan with uniform initialization\n";
+    //ASSERT_LT(output1.q, 0.1e-5);
+
+    std::cout << "START Parks-McClellan with reference scaling\n";
+    pmoutput_t output2 = firpmRS(degree * 2u, f, a, w, 1e-5);
+    std::cout << "Final Delta     = " << output2.delta << std::endl;
+    std::cout << "Iteration count = " << output2.iter  << std::endl;
+    std::cout << "FINISH Parks-McClellan with reference scaling\n";
+    ASSERT_LT(output2.q, 1e-5);
+
+    std::cout << "START Parks-McClellan with AFP\n";
+    pmoutput_t output3 = firpmAFP(degree * 2u, f, a, w, 1e-5);
+
+    std::cout << "Final Delta     = " << output3.delta << std::endl;
+    std::cout << "Iteration count = " << output3.iter  << std::endl;
+    std::cout << "FINISH Parks-McClellan with AFP\n";
+    ASSERT_LT(output3.q, 1e-5);
+
+    std::cout << "Iteration count reduction for final filter  RS: " << 1.0l - (long double)output2.iter / output1.iter << std::endl;
+    std::cout << "Iteration count reduction for final filter AFP: " << 1.0l - (long double)output3.iter / output1.iter << std::endl;
+
+}
+
 TEST(firpm_cic_test, cic119) {
     std::vector<long double>cf_freq = {
     0.000000000000000e+00, 1.666666666666667e-02, 3.333333333333333e-02,
@@ -738,7 +773,7 @@ TEST(firpm_minimal_test, smallfir1) {
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
 
-        std::cout << "START Parks-McClellan with AFP\n";
+    std::cout << "START Parks-McClellan with AFP\n";
     pmoutput_t output3 = firpmAFP(degree * 2u, {0.0, 0.4, 0.6, 0.64, 0.69, 0.74, 0.79, 0.83, 0.88, 1.0}, 
             {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, 
             {1.0, 1.0, 1.0, 1.0, 1.0});

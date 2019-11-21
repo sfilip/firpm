@@ -7,7 +7,7 @@
  */
 
 //    firpm_mp
-//    Copyright (C) 2015  S. Filip
+//    Copyright (C) 2015 - 2019  S. Filip
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -29,13 +29,23 @@
 
 #include "util.h"
 
+/**
+ * Gives the type of Chebyshev polynomial expansion to compute
+ */
+enum chebkind_t {
+        FIRST,          /**< Chebyshev expansion of the first kind*/
+        SECOND          /**< Chebyshev expansion of the second kind*/
+};
+
 /*! Computes the cosines of the elements of a vector
  * @param[in] in the vector to process
  * @param[out] out the vector containing the cosines of the elements from the
  * vector in
+ * @param[in] prec the MPFR working precision used for the computations
  */
-void applyCos(std::vector<mpfr::mpreal>& out,
-        std::vector<mpfr::mpreal> const& in);
+void cos(std::vector<mpfr::mpreal>& out,
+        std::vector<mpfr::mpreal> const& in,
+        mp_prec_t prec = 165ul);
 
 /*! Does a change of variable from the interval \f$\left[-1, 1\right]\f$ to the
  * interval \f$\left[a, b\right]\f$ on the elements of a given input vector
@@ -43,72 +53,26 @@ void applyCos(std::vector<mpfr::mpreal>& out,
  * @param[out] out the vector of elements after the change of variable
  * @param[in] a left bound of the desired interval
  * @param[in] b right bound of the desired interval
+ * @param[in] prec the MPFR working precision used for the computations
  */
-void changeOfVariable(std::vector<mpfr::mpreal>& out,
+void chgvar(std::vector<mpfr::mpreal>& out,
         std::vector<mpfr::mpreal> const& in,
-        mpfr::mpreal& a, mpfr::mpreal& b);
+        mpfr::mpreal& a, mpfr::mpreal& b,
+        mp_prec_t prec = 165ul);
 
-/*! The Clenshaw algorithm which evaluates the value of a Chebyshev interpolant
- *  (CI) at a certain point
- *  @param[out] result reference to the variable that will contain the
- *  evaluation of the CI at the specified point (parameter x)
- *  @param[in] p a vector containing the coefficients of the CI
- *  @param[in] x the point at which we want to compute the value
- *  of the CI
- *  @param[in] a left bound of the interval where the CI is considered
- *  @param[in] b right bound of the interval where the CI is considered
- *  @param[in] prec the MPFR working precision used for the computations
- */
-void evaluateClenshaw(mpfr::mpreal &result, std::vector<mpfr::mpreal> &p,
-                        mpfr::mpreal &x, mpfr::mpreal &a, mpfr::mpreal &b,
-                        mp_prec_t prec = 165ul);
 
-/*! The Clenshaw algorithm which evaluates the value of a CI implicitly
- *  considered on the \f$\left[-1,1\right]\f$ interval
- *  @param[out] result reference to the variable that will contain the
- *  evaluation of the CI at the specified point (parameter x)
- *  @param[in] p a vector containing the coefficients of the CI
- *  @param[in] x the point at which we want to compute the value
- *  of the CI
- *  @param[in] prec the MPFR working precision used for the computations
- */
-void evaluateClenshaw(mpfr::mpreal &result, std::vector<mpfr::mpreal> &p,
-                        mpfr::mpreal &x,
-                        mp_prec_t prec = 165ul);
-
-/*! The Clenshaw algorithm which evaluates the value of a CI expressed
- *  using a basis consisting of Chebyshev polynomials of the second kind.
- *  The working interval is considered to be \f$\left[-1,1\right]\f$.
- *  @param[out] result reference to the variable that will contain the
- *  evaluation of the CI at the specified point (parameter x)
- *  @param[in] p a vector containing the coefficients of the CI
- *  @param[in] x the point at which we want to compute the value
- *  of the CI
- *  @param[in] prec the MPFR working precision used for the computations
- */
-void evaluateClenshaw2ndKind(mpfr::mpreal &result, std::vector<mpfr::mpreal> &p,
-                        mpfr::mpreal &x,
-                        mp_prec_t prec = 165ul);
 
 
 /*! Function that generates equidistant nodes inside the
  * \f$\left[0,\pi\right]\f$ interval, meaning values of the
  * form \f$\frac{i\pi}{n}\f$, where \f$0\leq i\leq n\f$
  * @param[out] v the vector that will contain the equi-distributed points
- * @param[in] n the number of points - 1 which will be computed
+ * @param[in] n the number of points which will be computed
  * @param[in] prec the MPFR working precision used for the computations
  */
-void generateEquidistantNodes(std::vector<mpfr::mpreal>& v, std::size_t n,
-						mp_prec_t prec = 165ul);
-
-/*! Function that generates the Chebyshev nodes of the second kind
- * \f$\mu_k=\cos\left(\frac{k\pi}{n}\right), k=0,\ldots,n\f$.
- * @param[out] v the vector that will contain the Chebyshev nodes
- * @param[in] n the number of points - 1 which will be computed
- * @param[in] prec the MPFR working precision used for the computations
- */
-void generateChebyshevPoints(std::vector<mpfr::mpreal>& v, std::size_t n,
-						mp_prec_t prec = 165ul);
+void equipts(std::vector<mpfr::mpreal>& v, 
+        std::size_t n,
+	mp_prec_t prec = 165ul);
 
 
 /*! This function computes the values of the coefficients of the CI when
@@ -117,29 +81,41 @@ void generateChebyshevPoints(std::vector<mpfr::mpreal>& v, std::size_t n,
  * @param[in] fv vector that holds the value of the current function to
  * approximate at the Chebyshev nodes of the second kind scaled to the
  * appropriate interval (in our case it will be \f$\left[0,\pi\right]\f$)
- * @param[in] n degree of the CI
  * @param[in] prec the MPFR working precision used for the computations
  */
-void generateChebyshevCoefficients(std::vector<mpfr::mpreal>& c,
-                std::vector<mpfr::mpreal>& fv, std::size_t n,
+void chebcoeffs(std::vector<mpfr::mpreal>& c,
+                std::vector<mpfr::mpreal>& fv,
                 mp_prec_t prec = 165ul);
 
 /*! Function that generates the coefficients of the derivative of a given CI
- *  @param[out] derivC the vector of coefficients of the derivative of the CI
+ *  @param[out] dc the vector of coefficients of the derivative of the CI
  *  @param[in] c the vector of coefficients of the CI whose derivative we
  *  want to compute
+ *  @param[in] kind what kind of coefficient do we want to compute (for a
+ *  Chebyshev expansion of the first or second kind)
+ * @param[in] prec the MPFR working precision used for the computations
  */
-void derivativeCoefficients1stKind(std::vector<mpfr::mpreal>& derivC,
-                        std::vector<mpfr::mpreal>& c);
+void diffcoeffs(std::vector<mpfr::mpreal>& dc,
+                std::vector<mpfr::mpreal>& c,
+                chebkind_t kind = SECOND,
+                mp_prec_t prec = 165ul);
 
-/*! Function that generates the coefficients of the derivative of a given
- *  CI, but expressed in the orthogonal basis of Chebyshev polynomials of
- *  the second kind.
- *  @param[out] derivC the vector of coefficients of the derivative of the CI
- *  @param[in] c the vector of coefficients of the CI whose derivative we
- *  want to compute
- */
-void derivativeCoefficients2ndKind(std::vector<mpfr::mpreal>& derivC,
-        std::vector<mpfr::mpreal>& c);
+/*! Chebyshev proxy rootfinding method for a given CI
+* @param[out] r the vector of computed roots of the CI
+* @param[in] c the Chebyshev coeffients of the polynomial whose roots
+* we want to find
+* @param[in] dom the real domain where we are looking for the roots
+* @param[in] kind the type of Chebyshev expansion (first or second)
+* @param[in] balance flag signaling if we should use balancing (in 
+* the vein of [Parlett&Reinsch1969] "Balancing a Matrix for
+* Calculation of Eigenvalues and Eigenvectors") for the resulting 
+* Chebyshev companion matrix 
+* @param[in] prec the MPFR working precision used for the computations
+*/
+void roots(std::vector<mpfr::mpreal>& r, std::vector<mpfr::mpreal>& c,
+           std::pair<mpfr::mpreal, mpfr::mpreal> const &dom,
+           chebkind_t kind = SECOND,
+           bool balance = true,
+           mp_prec_t prec = 165ul);
 
 #endif /* CHEBY_H_ */

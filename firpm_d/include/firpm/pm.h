@@ -195,7 +195,7 @@ pmoutput_t<T> exchange(std::vector<T>& x,
  * the values are symmetrical to the middle coefficient(s))
  *
  * An example of how to use this function is given below. It designs a degree 
- * \f$n=100\f$ type I lowpass filter, with passband \f$[0, 0.4\pi]\f$ and stopband 
+ * \f$100\f$ type I lowpass filter, with passband \f$[0, 0.4\pi]\f$ and stopband 
  * \f$[0.5\pi, \pi]\f$. It has unit weight inside the passband and weight 10
  * inside the stopband. More examples, including code on how to use the customized
  * reference scaling and AFP versions <tt>firpmRS, firpmAFP</tt>, are provided inside 

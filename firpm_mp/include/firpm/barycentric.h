@@ -8,7 +8,7 @@
  */
 
 //    firpm_mp
-//    Copyright (C) 2015  S. Filip
+//    Copyright (C) 2015 - 2019  S. Filip
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -41,19 +41,19 @@
  * @param[in] x the interpolation points
  * @param[in] prec numerical precision used for the computations
  */
-void barycentricWeights(std::vector<mpfr::mpreal>& w,
+void baryweights(std::vector<mpfr::mpreal>& w,
         std::vector<mpfr::mpreal>& x, mp_prec_t prec = 165ul);
 
 /*! Determines the current reference error according to the
  * barycentric formula (internally it also computes the barycentric weights)
  * @param[out] delta the value of the current reference error
- * @param[in] x the current reference set (i.e. interpolation points)
+ * @param[in] x the current reference set (i.e., interpolation points)
  * @param[in] bands information relating to the ideal frequency response of
  * the filter
  * @param[in] prec numerical precision used for the computations
  */
-void computeDelta(mpfr::mpreal &delta, std::vector<mpfr::mpreal>& x,
-        std::vector<Band> &bands, mp_prec_t prec = 165ul);
+void compdelta(mpfr::mpreal &delta, std::vector<mpfr::mpreal>& x,
+        std::vector<band_t> &bands, mp_prec_t prec = 165ul);
 
 /*! Determines the current reference error according to the
  * barycentric formula
@@ -65,8 +65,8 @@ void computeDelta(mpfr::mpreal &delta, std::vector<mpfr::mpreal>& x,
  * @param[in] prec numerical precision used for the computations
  */
 
-void computeDelta(mpfr::mpreal &delta, std::vector<mpfr::mpreal>& w,
-        std::vector<mpfr::mpreal>& x, std::vector<Band> &bands,
+void compdelta(mpfr::mpreal &delta, std::vector<mpfr::mpreal>& w,
+        std::vector<mpfr::mpreal>& x, std::vector<band_t> &bands,
         mp_prec_t prec = 165ul);
 
 /*! Computes the filter response at the current reference set
@@ -76,8 +76,8 @@ void computeDelta(mpfr::mpreal &delta, std::vector<mpfr::mpreal>& w,
  * @param[in] bands frequency band information for the ideal filter
  * @param[in] prec numerical precision used for the computations
  */
-void computeC(std::vector<mpfr::mpreal> &C, mpfr::mpreal &delta,
-        std::vector<mpfr::mpreal> &x, std::vector<Band> &bands,
+void compc(std::vector<mpfr::mpreal> &C, mpfr::mpreal &delta,
+        std::vector<mpfr::mpreal> &x, std::vector<band_t> &bands,
         mp_prec_t prec = 165ul);
 
 /*! Computes the frequency response of the current filter
@@ -90,7 +90,7 @@ void computeC(std::vector<mpfr::mpreal> &C, mpfr::mpreal &delta,
  * @param[in] w the current barycentric weights
  * @param[in] prec numerical precision used for the computations
  */
-void computeApprox(mpfr::mpreal &Pc, const mpfr::mpreal &xVal,
+void approx(mpfr::mpreal &Pc, const mpfr::mpreal &xVal,
         std::vector<mpfr::mpreal> &x, std::vector<mpfr::mpreal> &C,
         std::vector<mpfr::mpreal> & w,
         mp_prec_t prec = 165ul);
@@ -106,10 +106,10 @@ void computeApprox(mpfr::mpreal &Pc, const mpfr::mpreal &xVal,
  * @param[in] bands frequency band information for the ideal filter
  * @param[in] prec numerical precision used for the computations
  */
-void computeError(mpfr::mpreal &error, const mpfr::mpreal &xVal,
+void comperror(mpfr::mpreal &error, const mpfr::mpreal &xVal,
         mpfr::mpreal &delta, std::vector<mpfr::mpreal> &x,
         std::vector<mpfr::mpreal> &C, std::vector<mpfr::mpreal> &w,
-        std::vector<Band> &bands,
+        std::vector<band_t> &bands,
         mp_prec_t prec = 165ul);
 
 /*! The ideal frequency response and weight information at the given frequency
@@ -120,9 +120,11 @@ void computeError(mpfr::mpreal &error, const mpfr::mpreal &xVal,
  * @param[out] W weight value for the current point
  * @param[in] xVal the current frequency node where we do our computation
  * @param[in] bands frequency band information for the ideal filter
+ * @param[in] prec numerical precision used for the computations
  */
-void computeIdealResponseAndWeight(mpfr::mpreal &D, mpfr::mpreal &W,
-        const mpfr::mpreal &xVal, std::vector<Band> &bands);
+void idealvals(mpfr::mpreal &D, mpfr::mpreal &W,
+        const mpfr::mpreal &xVal, std::vector<band_t> &bands,
+        mp_prec_t prec = 165ul);
 
 
 #endif // BARYCENTRIC_H

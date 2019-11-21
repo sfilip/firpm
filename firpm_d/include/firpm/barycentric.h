@@ -44,7 +44,7 @@ void baryweights(std::vector<T>& w,
 /*! Determines the current reference error according to the
  * barycentric formula (internally it also computes the barycentric weights)
  * @param[out] delta the value of the current reference error
- * @param[in] x the current reference set (i.e. interpolation points)
+ * @param[in] x the current reference set (i.e., interpolation points)
  * @param[in] bands information relating to the ideal frequency response of
  * the filter
  */
