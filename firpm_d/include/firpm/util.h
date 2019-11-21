@@ -39,8 +39,8 @@
 #include <cmath>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
-#if HAVE_MPFR
+//#if HAVE_MPFR
     #include "mpreal.h"
-#endif
+//#endif
 
 #endif /* UTIL_H_ */

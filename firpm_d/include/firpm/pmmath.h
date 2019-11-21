@@ -43,6 +43,7 @@ namespace pmmath {
 	template<typename T> T fabs(T);
 	template<typename T> T fmax(T, T);
 	template<typename T> T fmin(T, T);
+	template<typename T> bool signbit(T);
 
 	/* Specializations: double precision */
 	template<> inline double sin<double>(double x) { return std::sin(x); };
@@ -62,6 +63,8 @@ namespace pmmath {
 	template<> inline double fmax<double>(double x, double y) { return std::fmax(x, y); };
 	template<> inline double fmin<double>(double x, double y) { return std::fmin(x, y); };
 
+	template<> inline bool signbit<double>(double x) { return std::signbit(x); };
+
 	/* Specializations: long double precision */
 	template<> inline long double sin<long double>(long double x) { return sinl(x); };
 	template<> inline long double cos<long double>(long double x) { return cosl(x); };
@@ -79,6 +82,31 @@ namespace pmmath {
 	template<> inline long double fabs<long double>(long double x) { return fabsl(x); };
 	template<> inline long double fmax<long double>(long double x, long double y) { return fmaxl(x, y); };
 	template<> inline long double fmin<long double>(long double x, long double y) { return fminl(x, y); };
+
+	template<> inline bool signbit<long double>(long double x) { return std::signbit(x); };
+
+	/* Specialization: multiple precision mpreal */
+#ifdef HAVE_MPFR
+	template<> inline mpfr::mpreal sin<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::sin(x); };
+	template<> inline mpfr::mpreal cos<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::cos(x); };
+	template<> inline mpfr::mpreal tan<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::tan(x); };
+
+	template<> inline mpfr::mpreal asin<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::asin(x); };
+	template<> inline mpfr::mpreal acos<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::acos(x); };
+	template<> inline mpfr::mpreal atan<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::atan(x); };
+
+	template<> inline mpfr::mpreal log<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::log(x); };
+	template<> inline mpfr::mpreal exp<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::exp(x); };
+	template<> inline mpfr::mpreal sqrt<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::sqrt(x); };
+	template<> inline mpfr::mpreal pow<mpfr::mpreal>(mpfr::mpreal x, mpfr::mpreal y) { return mpfr::pow(x, y); };
+
+	template<> inline mpfr::mpreal fabs<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::abs(x); };
+	template<> inline mpfr::mpreal fmax<mpfr::mpreal>(mpfr::mpreal x, mpfr::mpreal y) { return mpfr::max(x, y); };
+	template<> inline mpfr::mpreal fmin<mpfr::mpreal>(mpfr::mpreal x, mpfr::mpreal y) { return mpfr::min(x, y); };
+
+	template<> inline bool signbit<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::signbit(x); };
+#endif
+
 }
 
 #endif

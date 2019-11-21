@@ -15,6 +15,7 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "firpm/band.h"
+#include "firpm/pmmath.h"
 
 template<typename T>
 void bandconv(std::vector<band_t<T>> &out, std::vector<band_t<T>> &in,
@@ -29,12 +30,12 @@ void bandconv(std::vector<band_t<T>> &out, std::vector<band_t<T>> &in,
         out[i].xs        = in[n - i].xs;
         if (direction == convdir_t::FROMFREQ)
         {
-            out[i].start = cosl(in[n - i].stop);
-            out[i].stop  = cosl(in[n - i].start);
+            out[i].start = pmmath::cos(in[n - i].stop);
+            out[i].stop  = pmmath::cos(in[n - i].start);
             out[i].space = space_t::CHEBY;
         } else {
-            out[i].start = acosl(in[n - i].stop);
-            out[i].stop  = acosl(in[n - i].start);
+            out[i].start = pmmath::acos(in[n - i].stop);
+            out[i].stop  = pmmath::acos(in[n - i].start);
             out[i].space = space_t::FREQ;
         }
     }

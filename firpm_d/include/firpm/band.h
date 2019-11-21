@@ -48,11 +48,11 @@ enum space_t {
 template<typename T>
 struct band_t {
     space_t space;          /**< the space in which we are working */
-    std::function<double(space_t, T)> amplitude;
+    std::function<T(space_t, T)> amplitude;
                             /**< the ideal amplitude for this band */
     T start;           /**< the left bound of the band */
     T stop;            /**< the right bound of the band */
-    std::function<double(space_t, T)> weight;
+    std::function<T(space_t, T)> weight;
                             /**< weight function value on the band */
     std::size_t xs;         /**< number of interpolation points taken in the band */
 };
