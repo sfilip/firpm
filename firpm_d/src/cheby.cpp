@@ -15,6 +15,7 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "firpm/cheby.h"
+#include "firpm/pmmath.h"
 
 template<typename T>
 using MatrixXd = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
@@ -42,8 +43,8 @@ void balance(MatrixXd<T> &A)
             {
                 if(i == j)
                     continue;
-                cNorm += fabs(A(j, i));
-                rNorm += fabs(A(i, j));
+                cNorm += pmmath::fabs(A(j, i));
+                rNorm += pmmath::fabs(A(i, j));
             }
             if((cNorm == 0.0) || (rNorm == 0))
                 continue;
@@ -122,7 +123,7 @@ void cos(std::vector<T>& out,
 {
     out.resize(in.size());
     for(std::size_t i{0u}; i < in.size(); ++i)
-        out[i] = cosl(in[i]);
+        out[i] = pmmath::cos(in[i]);
 }
 
 template<typename T>
@@ -222,7 +223,7 @@ void chebcoeffs(std::vector<T>& c,
     for(std::size_t i{0u}; i < n; ++i) {
         // compute the actual value at the Chebyshev
         // node cos(i * pi / n)
-        buffer = cosl(v[i]);
+        buffer = pmmath::cos(v[i]);
         clenshaw(c[i], fv, buffer, FIRST);
 
         if(i == 0u || i == n-1u) {
@@ -283,7 +284,7 @@ void roots(std::vector<T>& r, std::vector<T>& c,
 
     T threshold = 1e-20;
     for(Eigen::Index i{0}; i < eigs.size(); ++i) {
-        if(fabs(eigs(i).imag()) < threshold)
+        if(pmmath::fabs(eigs(i).imag()) < threshold)
             if(dom.first < eigs(i).real() && 
                dom.second >= eigs(i).real()) {
                 r.push_back(eigs(i).real());

@@ -16,6 +16,7 @@
 
 
 #include "firpm/barycentric.h"
+#include "firpm/pmmath.h"
 
 template<typename T>
 void baryweights(std::vector<T>& w,
@@ -35,7 +36,7 @@ void baryweights(std::vector<T>& w,
                     one *= ((xi - x[j] > 0) ? 1 : -1);
                 }
             }
-            w[i] = one / exp(denom + log(2.0)* (x.size() - 1));
+            w[i] = one / pmmath::exp(denom + log(2.0)* (x.size() - 1));
         }
     }
     else

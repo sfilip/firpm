@@ -17,6 +17,7 @@
 #include "firpm/pm.h"
 #include "firpm/band.h"
 #include "firpm/barycentric.h"
+#include "firpm/pmmath.h"
 #include <set>
 #include <fstream>
 #include <sstream>
@@ -390,8 +391,8 @@ void extremaSearch(T& convergenceOrder,
             potentialExtrema.push_back(std::make_pair(
                     chebyBands[i + 1u].start, extremaErrorValueRight));
         } else {
-            T abs1 = fabs(extremaErrorValueLeft);
-            T abs2 = fabs(extremaErrorValueRight);
+            T abs1 = pmmath::fabs(extremaErrorValueLeft);
+            T abs2 = pmmath::fabs(extremaErrorValueRight);
             if(abs1 > abs2)
                 potentialExtrema.push_back(std::make_pair(
                         chebyBands[i].stop, extremaErrorValueLeft));
@@ -485,7 +486,7 @@ void extremaSearch(T& convergenceOrder,
              std::signbit(potentialExtrema[extremaIt + 1u].second)))
         {
             ++extremaIt;
-            if (fabs(maxErrorPoint.second) < fabs(potentialExtrema[extremaIt].second))
+            if (pmmath::fabs(maxErrorPoint.second) < pmmath::fabs(potentialExtrema[extremaIt].second))
                 maxErrorPoint = potentialExtrema[extremaIt];
         }
         if (std::isfinite(maxErrorPoint.second)) {
@@ -521,8 +522,8 @@ void extremaSearch(T& convergenceOrder,
                 T delta1, delta2;
                 compdelta(delta1, x1, chebyBands);
                 compdelta(delta2, x2, chebyBands);
-                delta1 = fabsl(delta1);
-                delta2 = fabsl(delta2);
+                delta1 = pmmath::fabs(delta1);
+                delta2 = pmmath::fabs(delta2);
                 std::size_t sIndex{1u};
                 if(delta1 > delta2)
                     sIndex = 0u;
@@ -533,8 +534,8 @@ void extremaSearch(T& convergenceOrder,
             }
             else
             {
-                T abs1 = fabs(alternatingExtrema[0u].second);
-                T abs2 = fabs(alternatingExtrema[alternatingExtrema.size() - 1u].second);
+                T abs1 = pmmath::fabs(alternatingExtrema[0u].second);
+                T abs2 = pmmath::fabs(alternatingExtrema[alternatingExtrema.size() - 1u].second);
                 std::size_t sIndex = 0u;
                 if (abs1 < abs2)
                     sIndex = 1u;
@@ -549,13 +550,13 @@ void extremaSearch(T& convergenceOrder,
         while (alternatingExtrema.size() > x.size())
         {
             std::size_t toRemoveIndex{0u};
-            T minValToRemove = fminl(fabsl(alternatingExtrema[0u].second),
-                                              fabsl(alternatingExtrema[1u].second));
+            T minValToRemove = pmmath::fmin(pmmath::fabs(alternatingExtrema[0u].second),
+                                              pmmath::fabs(alternatingExtrema[1u].second));
             T removeBuffer;
             for (std::size_t i{1u}; i < alternatingExtrema.size() - 1u; ++i)
             {
-                removeBuffer = fminl(fabsl(alternatingExtrema[i].second),
-                                   fabsl(alternatingExtrema[i + 1u].second));
+                removeBuffer = pmmath::fmin(pmmath::fabs(alternatingExtrema[i].second),
+                                   pmmath::fabs(alternatingExtrema[i + 1u].second));
                 if (removeBuffer < minValToRemove)
                 {
                     minValToRemove = removeBuffer;
@@ -581,9 +582,9 @@ void extremaSearch(T& convergenceOrder,
     for (auto& it : alternatingExtrema)
     {
         eigenExtrema.push_back(it.first);
-        absError = fabs(it.second);
-        minError = fmin(minError, absError);
-        maxError = fmax(maxError, absError);
+        absError = pmmath::fabs(it.second);
+        minError = pmmath::fmin(minError, absError);
+        maxError = pmmath::fmax(maxError, absError);
     }
 
     convergenceOrder = (maxError - minError) / maxError;
@@ -657,7 +658,7 @@ pmoutput_t<T> exchange(std::vector<T>& x,
     std::vector<T> finalAlpha(output.x.size());
     baryweights(finalAlpha, output.x);
     T finalDelta = output.delta;
-    output.delta = fabsl(output.delta);
+    output.delta = pmmath::fabs(output.delta);
     compc(finalC, finalDelta, output.x, chebyBands);
     std::vector<T> finalChebyNodes(degree + 1);
     equipts(finalChebyNodes, degree + 1);
@@ -753,7 +754,7 @@ pmoutput_t<T> firpm(std::size_t n,
             fbands[i].amplitude = [i, &a, &fbands](space_t space, T x) -> T {
                 if(a[2u*i] != a[2u*i+1u]) {
                     if(space == space_t::CHEBY)
-                        x = acosl(x);
+                        x = pmmath::acos(x);
                     return ((x-fbands[i].start) * a[2u*i+1u] - 
                             (x-fbands[i].stop) * a[2u*i]) /
                             (fbands[i].stop - fbands[i].start);
@@ -781,21 +782,21 @@ pmoutput_t<T> firpm(std::size_t n,
             fbands[i].amplitude = [i, &a, &fbands](space_t space, T x) -> T {
                 if(a[2u*i] != a[2u*i+1u]) {
                     if(space == space_t::CHEBY)
-                        x = acosl(x);
+                        x = pmmath::acos(x);
                     return (((x-fbands[i].start) * a[2u*i+1u] -
                             (x-fbands[i].stop) * a[2u*i]) /
-                            (fbands[i].stop - fbands[i].start)) / cosl(x/2);
+                            (fbands[i].stop - fbands[i].start)) / pmmath::cos(x/2);
                 }
                 if(space == space_t::FREQ)
-                    return a[2u*i] / cosl(x/2);
+                    return a[2u*i] / pmmath::cos(x/2);
                 else
-                    return a[2u*i] / sqrt((x+1)/2);
+                    return a[2u*i] / pmmath::sqrt((x+1)/2);
             };
             fbands[i].weight = [i, &w](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
-                    return cosl(x/2) * w[i];
+                    return pmmath::cos(x/2) * w[i];
                 else
-                    return sqrt((x+1)/2) * w[i];
+                    return pmmath::sqrt((x+1)/2) * w[i];
             };
         }
     }
@@ -962,31 +963,31 @@ pmoutput_t<T> firpm(std::size_t n,
         if(type == filter_t::FIR_DIFFERENTIATOR) {
             fbands[0u].weight = [&w](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
-                    return (sinl(x) / x) * w[0u];
+                    return (pmmath::sin(x) / x) * w[0u];
                 else
-                    return (sqrtl(1.0l - x * x) / acosl(x)) * w[0u];                    
+                    return (pmmath::sqrt(1.0l - x * x) / pmmath::acos(x)) * w[0u];
             };
             fbands[0u].amplitude = [sFactor](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
-                    return (x / sinl(x)) * sFactor;
+                    return (x / pmmath::sin(x)) * sFactor;
                 else 
-                    return (acosl(x) / sqrtl(1.0l - x * x)) * sFactor;
+                    return (pmmath::acos(x) / pmmath::sqrt(1.0l - x * x)) * sFactor;
             };
         } else { // FIR_HILBERT
             fbands[0u].weight = [&w](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
-                    return sinl(x) * w[0u];
+                    return pmmath::sin(x) * w[0u];
                 else
-                    return sqrtl(1.0l - x * x) * w[0u];                    
+                    return pmmath::sqrt(1.0l - x * x) * w[0u];
             };
             fbands[0u].amplitude = [&a, &fbands](space_t space, T x) -> T {
                 if(space == space_t::CHEBY)
-                    x = acosl(x);
+                    x = pmmath::acos(x);
                 if(a[0u] != a[1u]) 
                     return (((x - fbands[0].start) * a[1u] -
                             (x - fbands[0].stop) * a[0u]) /
-                            (fbands[0u].stop - fbands[0u].start)) / sinl(x);
-                return a[0u] / sinl(x);
+                            (fbands[0u].stop - fbands[0u].start)) / pmmath::sin(x);
+                return a[0u] / pmmath::sin(x);
             };
         }
         for(std::size_t i{1u}; i < fbands.size(); ++i) {
@@ -996,14 +997,14 @@ pmoutput_t<T> firpm(std::size_t n,
             if(type == filter_t::FIR_DIFFERENTIATOR) {
                 fbands[i].weight = [&w, i](space_t space, T x) -> T {
                     if(space == space_t::FREQ)
-                        return sinl(x) * w[i];
+                        return pmmath::sin(x) * w[i];
                     else
-                        return sqrtl(1.0l - x * x) * w[i];
+                        return pmmath::sqrt(1.0l - x * x) * w[i];
                 };
                 fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
                     if(a[2u * i] != a[2u * i + 1u]) {
                         if(space == space_t::CHEBY) {
-                            x = acosl(x);
+                            x = pmmath::acos(x);
                             return ((x - fbands[i].start) * a[2u * i + 1u] -
                                     (x - fbands[i].stop) * a[2u * i]) /
                                     (fbands[i].stop - fbands[i].start);
@@ -1014,18 +1015,18 @@ pmoutput_t<T> firpm(std::size_t n,
             } else { // FIR_HILBERT
                 fbands[i].weight = [&w, i](space_t space, T x) -> T {
                     if(space == space_t::FREQ)
-                        return sinl(x) * w[i];
+                        return pmmath::sin(x) * w[i];
                     else
-                        return sqrtl(1.0l - x * x) * w[i];
+                        return pmmath::sqrt(1.0l - x * x) * w[i];
                 };
                 fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
                     if(space == space_t::CHEBY)
-                        x = acosl(x);
+                        x = pmmath::acos(x);
                     if(a[2u * i] != a[2u * i + 1u])
                         return (((x - fbands[i].start) * a[2u * i + 1u] -
                                 (x - fbands[i].stop) * a[2u * i]) / 
-                                (fbands[i].stop - fbands[i].start)) / sinl(x);
-                    return a[2u * i] / sinl(x);
+                                (fbands[i].stop - fbands[i].start)) / pmmath::sin(x);
+                    return a[2u * i] / pmmath::sin(x);
                 };
             }
         }
@@ -1043,31 +1044,31 @@ pmoutput_t<T> firpm(std::size_t n,
         if(type == filter_t::FIR_DIFFERENTIATOR) {
             fbands[0u].weight = [&w](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
-                    return (sinl(x / 2) / x) * w[0u];
+                    return (pmmath::sin(x / 2) / x) * w[0u];
                 else
-                    return (sinl(acosl(x) / 2) / acosl(x)) * w[0u];
+                    return (pmmath::sin(pmmath::acos(x) / 2) / pmmath::acos(x)) * w[0u];
             };
             fbands[0u].amplitude = [sFactor](space_t space, T x) -> T {
                 if(space == space_t::FREQ) 
-                    return (x / sinl(x / 2)) * sFactor;
+                    return (x / pmmath::sin(x / 2)) * sFactor;
                 else 
-                    return (acosl(x) / sinl(acosl(x) / 2)) * sFactor;
+                    return (pmmath::acos(x) / pmmath::sin(pmmath::acos(x) / 2)) * sFactor;
             };
         } else { // FIR_HILBERT
             fbands[0u].weight = [&w](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
-                    return sinl(x / 2) * w[0u];
+                    return pmmath::sin(x / 2) * w[0u];
                 else
-                    return sinl(acosl(x) / 2) * w[0u];
+                    return pmmath::sin(pmmath::acos(x) / 2) * w[0u];
             };
             fbands[0u].amplitude = [&fbands, &a](space_t space, T x) -> T {
                 if(space == space_t::CHEBY)
-                    x = acosl(x);
+                    x = pmmath::acos(x);
                 if(a[0u] != a[1u]) 
                     return (((x - fbands[0].start) * a[1u] -
                             (x - fbands[0].stop) * a[0u]) /
-                            (fbands[0].stop - fbands[0].start)) / sinl(x / 2);
-                return a[0u] / sinl(x / 2);
+                            (fbands[0].stop - fbands[0].start)) / pmmath::sin(x / 2);
+                return a[0u] / pmmath::sin(x / 2);
             };
         }
         for(std::size_t i{1u}; i < fbands.size(); ++i) {
@@ -1077,14 +1078,14 @@ pmoutput_t<T> firpm(std::size_t n,
             if(type == filter_t::FIR_DIFFERENTIATOR) {
                 fbands[i].weight = [&w, i](space_t space, T x) -> T {
                     if(space == space_t::FREQ)
-                        return sinl(x / 2) * w[i];
+                        return pmmath::sin(x / 2) * w[i];
                     else
-                        return (sinl(acosl(x) / 2)) * w[i];
+                        return (pmmath::sin(pmmath::acos(x) / 2)) * w[i];
                 };
                 fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
                     if(a[2u * i] != a[2u * i + 1u]) {
                         if(space == space_t::CHEBY)
-                            x = acosl(x);
+                            x = pmmath::acos(x);
                         return ((x - fbands[i].start) * a[2u * i + 1u] -
                                 (x - fbands[i].stop) * a[2u * i]) /
                                 (fbands[i].stop - fbands[i].start);
@@ -1094,18 +1095,18 @@ pmoutput_t<T> firpm(std::size_t n,
             } else { // FIR_HILBERT
                 fbands[i].weight = [&w, i](space_t space, T x) -> T {
                     if(space == space_t::FREQ)
-                        return sinl(x / 2) * w[i];
+                        return pmmath::sin(x / 2) * w[i];
                     else
-                        return sinl(acosl(x) / 2) * w[i];
+                        return pmmath::sin(pmmath::acos(x) / 2) * w[i];
                 };
                 fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
                     if(space == space_t::CHEBY)
-                        x = acosl(x);
+                        x = pmmath::acos(x);
                     if(a[2u * i] != a[2u * i + 1u]) 
                         return (((x - fbands[i].start) * a[2u * i + 1u] -
                                 (x - fbands[i].stop) * a[2u * i]) /
-                                (fbands[i].stop - fbands[i].start)) / sinl(x / 2);
-                    return a[2u * i] / sinl(x / 2);
+                                (fbands[i].stop - fbands[i].start)) / pmmath::sin(x / 2);
+                    return a[2u * i] / pmmath::sin(x / 2);
                 };
             }
         }
@@ -1308,6 +1309,14 @@ template pmoutput_t<double> firpmAFP<double>(std::size_t n,
             filter_t type,
             double eps,
             std::size_t nmax);
+
+template void referenceScaling<double>(std::vector<double>& newX,
+	    std::vector<band_t<double>>& newChebyBands,
+            std::vector<band_t<double>>& newFreqBands,
+	    std::size_t newXSize,
+            std::vector<double>& x,
+	    std::vector<band_t<double>>& chebyBands,
+            std::vector<band_t<double>>& freqBands);
 
 /* long double precision */
 template pmoutput_t<long double> firpm<long double>(std::size_t n,
