@@ -85,19 +85,41 @@ set(TEST_SRC_EXTENSIVE ${PROJECT_SOURCE_DIR}/test/extensive_tests.cpp)
 add_executable(${PROJECT_TEST_SCALING} ${TEST_SRC_SCALING})
 add_executable(${PROJECT_TEST_EXTENSIVE} ${TEST_SRC_EXTENSIVE})
 
-target_link_libraries(${PROJECT_TEST_SCALING}
-    gtest
-    gtest_main
-    pthread
-    firpm    
-)
+if( MPFR_FOUND AND GMP_FOUND )
+    target_link_libraries(${PROJECT_TEST_SCALING}
+        gtest
+        gtest_main
+        pthread
+        gmp 
+        mpfr
+        firpm    
+    )
+else()
+    target_link_libraries(${PROJECT_TEST_SCALING}
+        gtest
+        gtest_main
+        pthread
+        firpm    
+    )
+endif()
 
-target_link_libraries(${PROJECT_TEST_EXTENSIVE}
-    gtest
-    gtest_main
-    pthread
-    firpm
-)
+if( MPFR_FOUND AND GMP_FOUND )
+    target_link_libraries(${PROJECT_TEST_EXTENSIVE}
+        gtest
+        gtest_main
+        pthread
+        gmp 
+        mpfr
+        firpm    
+    )
+else()
+    target_link_libraries(${PROJECT_TEST_EXTENSIVE}
+        gtest
+        gtest_main
+        pthread
+        firpm    
+    )
+endif()
 
 add_test(ScalingTests ${PROJECT_TEST_SCALING})
 add_test(ExtensiveTests ${PROJECT_TEST_EXTENSIVE})

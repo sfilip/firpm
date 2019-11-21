@@ -25,6 +25,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include <cmath>
+#ifdef HAVE_MPFR
+	#include "mpreal.h"
+#endif
 
 namespace pmmath {
 	template<typename T> T sin(T);
@@ -43,7 +46,12 @@ namespace pmmath {
 	template<typename T> T fabs(T);
 	template<typename T> T fmax(T, T);
 	template<typename T> T fmin(T, T);
+
 	template<typename T> bool signbit(T);
+	template<typename T> bool isfinite(T);
+	template<typename T> bool isnan(T);
+
+	template<typename T> long round(T);
 
 	/* Specializations: double precision */
 	template<> inline double sin<double>(double x) { return std::sin(x); };
@@ -64,6 +72,10 @@ namespace pmmath {
 	template<> inline double fmin<double>(double x, double y) { return std::fmin(x, y); };
 
 	template<> inline bool signbit<double>(double x) { return std::signbit(x); };
+	template<> inline bool isfinite<double>(double x) { return std::isfinite(x); };
+	template<> inline bool isnan<double>(double x) { return std::isnan(x); };
+
+	template<> inline long round<double>(double x) { return std::round(x); };
 
 	/* Specializations: long double precision */
 	template<> inline long double sin<long double>(long double x) { return sinl(x); };
@@ -84,6 +96,10 @@ namespace pmmath {
 	template<> inline long double fmin<long double>(long double x, long double y) { return fminl(x, y); };
 
 	template<> inline bool signbit<long double>(long double x) { return std::signbit(x); };
+	template<> inline bool isfinite<long double>(long double x) { return std::isfinite(x); };
+	template<> inline bool isnan<long double>(long double x) { return std::isnan(x); };
+
+	template<> inline long round<long double>(long double x) { return std::round(x); };
 
 	/* Specialization: multiple precision mpreal */
 #ifdef HAVE_MPFR
@@ -105,6 +121,10 @@ namespace pmmath {
 	template<> inline mpfr::mpreal fmin<mpfr::mpreal>(mpfr::mpreal x, mpfr::mpreal y) { return mpfr::min(x, y); };
 
 	template<> inline bool signbit<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::signbit(x); };
+	template<> inline bool isfinite<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::isfinite(x); };
+	template<> inline bool isnan<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::isnan(x); };
+
+	template<> inline long round<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::round(x).toLong(); };
 #endif
 
 }

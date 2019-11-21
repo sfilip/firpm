@@ -137,13 +137,13 @@ void uniform(std::vector<T>& omega,
     buffer = bandwidths[nonPointBands[0]] / avgDist;
 
     if (npSize > 1) {
-        B[nonPointBands[0]].xs = lroundl(buffer) + 1;
+        B[nonPointBands[0]].xs = pmmath::round(buffer) + 1;
         B[nonPointBands[npSize - 1u]].xs -= B[nonPointBands[0]].xs;
     }
 
     for(std::size_t i{1u}; i < npSize - 1u; ++i) {
         buffer = bandwidths[nonPointBands[i]] / avgDist;
-        B[nonPointBands[i]].xs = lroundl(buffer) + 1;
+        B[nonPointBands[i]].xs = pmmath::round(buffer) + 1;
         B[nonPointBands[npSize - 1u]].xs -= B[nonPointBands[i]].xs;
     }
 
@@ -228,7 +228,7 @@ void referenceScaling(std::vector<T>& newX, std::vector<band_t<T>>& newChebyBand
                     newX.push_back(x[offset + chebyBands[i].xs - 2u] +
                             (x[offset + chebyBands[i].xs - 1u] -
                                 x[offset + chebyBands[i].xs - 2u]) / 3);
-                    double secondValue = x[offset + chebyBands[i].xs - 2u] +
+                    T secondValue = x[offset + chebyBands[i].xs - 2u] +
                         (x[offset + chebyBands[i].xs - 1u] -
                             x[offset + chebyBands[i].xs - 2u]) / 3 +
                         (x[offset + chebyBands[i].xs - 1u] -
@@ -380,8 +380,8 @@ void extremaSearch(T& convergenceOrder,
                 delta, x, C, w, chebyBands);
         comperror(extremaErrorValueRight, chebyBands[i + 1].start,
                 delta, x, C, w, chebyBands);
-        bool sgnLeft = std::signbit(extremaErrorValueLeft);
-        bool sgnRight = std::signbit(extremaErrorValueRight);
+        bool sgnLeft = pmmath::signbit(extremaErrorValueLeft);
+        bool sgnRight = pmmath::signbit(extremaErrorValueRight);
         if (sgnLeft != sgnRight) {
             potentialExtrema.push_back(std::make_pair(
                     chebyBands[i].stop, extremaErrorValueLeft));
@@ -479,14 +479,14 @@ void extremaSearch(T& convergenceOrder,
         std::pair<T, T> maxErrorPoint;
         maxErrorPoint = potentialExtrema[extremaIt];
         while(extremaIt < potentialExtrema.size() - 1u &&
-            (std::signbit(maxErrorPoint.second) ==
-             std::signbit(potentialExtrema[extremaIt + 1u].second)))
+            (pmmath::signbit(maxErrorPoint.second) ==
+             pmmath::signbit(potentialExtrema[extremaIt + 1u].second)))
         {
             ++extremaIt;
             if (pmmath::fabs(maxErrorPoint.second) < pmmath::fabs(potentialExtrema[extremaIt].second))
                 maxErrorPoint = potentialExtrema[extremaIt];
         }
-        if (std::isfinite(maxErrorPoint.second)) {
+        if (pmmath::isfinite(maxErrorPoint.second)) {
             alternatingExtrema.push_back(maxErrorPoint);
         }
         ++extremaIt;
@@ -637,7 +637,7 @@ pmoutput_t<T> exchange(std::vector<T>& x,
             break;
     } while (output.q > eps && output.iter <= 100u);
 
-    if(std::isnan(output.delta) || std::isnan(output.q))
+    if(pmmath::isnan(output.delta) || pmmath::isnan(output.q))
         std::cerr << "WARNING: The exchange algorithm did not converge.\n"
             << "TRIGGER: numerical instability\n"
             << "POSSIBLE CAUSES: poor starting reference and/or "
@@ -767,7 +767,7 @@ pmoutput_t<T> firpm(std::size_t n,
             fbands[i].start = M_PI * f[2u*i];
             if(f[2u*i + 1u] == 1.0) {
                 if(f[2u*i] < 0.9999)
-                    fbands[i].stop = M_PI * 0.9999;
+                    fbands[i].stop = M_PI * T(0.9999);
                 else
                     fbands[i].stop = M_PI * ((f[2u*i] + 1) / 2);
             } 
@@ -947,7 +947,7 @@ pmoutput_t<T> firpm(std::size_t n,
         }
         if(f[f.size() - 1u] == 1.0) {
             if(f[f.size() - 2u] > 0.9999)
-                fn[f.size() - 1u] = (1.0 + f[f.size() - 2u]) / 2;
+                fn[f.size() - 1u] = (f[f.size() - 2u] + 1.0) / 2;
             else
                 fn[f.size() - 1u] = 0.9999;
         }
@@ -960,20 +960,20 @@ pmoutput_t<T> firpm(std::size_t n,
                 if(space == space_t::FREQ)
                     return (pmmath::sin(x) / x) * w[0u];
                 else
-                    return (pmmath::sqrt(1.0l - x * x) / pmmath::acos(x)) * w[0u];
+                    return (pmmath::sqrt(T(1.0) - x * x) / pmmath::acos(x)) * w[0u];
             };
             fbands[0u].amplitude = [sFactor](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
                     return (x / pmmath::sin(x)) * sFactor;
                 else 
-                    return (pmmath::acos(x) / pmmath::sqrt(1.0l - x * x)) * sFactor;
+                    return (pmmath::acos(x) / pmmath::sqrt(T(1.0) - x * x)) * sFactor;
             };
         } else { // FIR_HILBERT
             fbands[0u].weight = [&w](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
                     return pmmath::sin(x) * w[0u];
                 else
-                    return pmmath::sqrt(1.0l - x * x) * w[0u];
+                    return pmmath::sqrt(T(1.0) - x * x) * w[0u];
             };
             fbands[0u].amplitude = [&a, &fbands](space_t space, T x) -> T {
                 if(space == space_t::CHEBY)
@@ -994,7 +994,7 @@ pmoutput_t<T> firpm(std::size_t n,
                     if(space == space_t::FREQ)
                         return pmmath::sin(x) * w[i];
                     else
-                        return pmmath::sqrt(1.0l - x * x) * w[i];
+                        return pmmath::sqrt(T(1.0) - x * x) * w[i];
                 };
                 fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
                     if(a[2u * i] != a[2u * i + 1u]) {
@@ -1012,7 +1012,7 @@ pmoutput_t<T> firpm(std::size_t n,
                     if(space == space_t::FREQ)
                         return pmmath::sin(x) * w[i];
                     else
-                        return pmmath::sqrt(1.0l - x * x) * w[i];
+                        return pmmath::sqrt(T(1.0) - x * x) * w[i];
                 };
                 fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
                     if(space == space_t::CHEBY)
@@ -1390,3 +1390,75 @@ template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
             filter_t type,
             double eps,
             std::size_t nmax);
+
+/* multiple precision mpreal */
+#ifdef HAVE_MPFR
+    template void uniform<mpfr::mpreal>(std::vector<mpfr::mpreal>& omega,
+                std::vector<band_t<mpfr::mpreal>>& B, std::size_t n);
+
+    template void referenceScaling<mpfr::mpreal>(std::vector<mpfr::mpreal>& newX,
+                std::vector<band_t<mpfr::mpreal>>& newChebyBands,
+                std::vector<band_t<mpfr::mpreal>>& newFreqBands,
+                std::size_t newXSize,
+                std::vector<mpfr::mpreal>& x,
+                std::vector<band_t<mpfr::mpreal>>& chebyBands,
+                std::vector<band_t<mpfr::mpreal>>& freqBands);
+
+    template pmoutput_t<mpfr::mpreal> exchange<mpfr::mpreal>(std::vector<mpfr::mpreal>& x,
+                std::vector<band_t<mpfr::mpreal>>& chebyBands, 
+                double eps, 
+                std::size_t nmax);
+
+    template pmoutput_t<mpfr::mpreal> firpm<mpfr::mpreal>(std::size_t n,
+                std::vector<mpfr::mpreal>const &f,
+                std::vector<mpfr::mpreal>const &a,
+                std::vector<mpfr::mpreal>const &w,
+                double eps,
+                std::size_t nmax,
+                init_t strategy,
+                std::size_t depth,
+                init_t rstrategy);
+
+    template pmoutput_t<mpfr::mpreal> firpm<mpfr::mpreal>(std::size_t n,
+                std::vector<mpfr::mpreal>const& f,
+                std::vector<mpfr::mpreal>const& a,
+                std::vector<mpfr::mpreal>const& w,
+                filter_t type,
+                double eps,
+                std::size_t nmax,
+                init_t strategy,
+                std::size_t depth,
+                init_t rstrategy);
+
+    template pmoutput_t<mpfr::mpreal> firpmRS<mpfr::mpreal>(std::size_t n,
+                std::vector<mpfr::mpreal>const &f,
+                std::vector<mpfr::mpreal>const &a,
+                std::vector<mpfr::mpreal>const &w,
+                double eps, std::size_t nmax,
+                std::size_t depth,
+                init_t rstrategy);
+
+    template pmoutput_t<mpfr::mpreal> firpmRS<mpfr::mpreal>(std::size_t n,
+                std::vector<mpfr::mpreal>const &f,
+                std::vector<mpfr::mpreal>const &a,
+                std::vector<mpfr::mpreal>const &w,
+                filter_t type,
+                double eps,
+                std::size_t nmax,
+                std::size_t depth,
+                init_t rstrategy);
+
+    template pmoutput_t<mpfr::mpreal> firpmAFP<mpfr::mpreal>(std::size_t n,
+                std::vector<mpfr::mpreal>const &f,
+                std::vector<mpfr::mpreal>const &a,
+                std::vector<mpfr::mpreal>const &w,
+                double eps, std::size_t nmax);
+
+    template pmoutput_t<mpfr::mpreal> firpmAFP<mpfr::mpreal>(std::size_t n,
+                std::vector<mpfr::mpreal>const &f,
+                std::vector<mpfr::mpreal>const &a,
+                std::vector<mpfr::mpreal>const &w,
+                filter_t type,
+                double eps,
+                std::size_t nmax);
+#endif

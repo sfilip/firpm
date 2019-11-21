@@ -32,7 +32,7 @@ void baryweights(std::vector<T>& w,
             for(std::size_t j{0u}; j < x.size(); ++j)
             {
                 if (j != i) {
-                    denom += logl(((xi - x[j] > 0) ? (xi - x[j]) : (x[j] - xi)));
+                    denom += pmmath::log(((xi - x[j] > 0) ? (xi - x[j]) : (x[j] - xi)));
                     one *= ((xi - x[j] > 0) ? 1 : -1);
                 }
             }
@@ -228,3 +228,27 @@ template void comperror<long double>(long double &error, const long double &xVal
 		long double &delta, std::vector<long double> &x,
 		std::vector<long double> &C, std::vector<long double> &w,
 		std::vector<band_t<long double>> &bands);
+
+#ifdef HAVE_MPFR
+    template void baryweights<mpfr::mpreal>(std::vector<mpfr::mpreal>& w,
+            std::vector<mpfr::mpreal>& x);
+
+    template void compdelta<mpfr::mpreal>(mpfr::mpreal &delta,
+            std::vector<mpfr::mpreal>& x, std::vector<band_t<mpfr::mpreal>> &bands);
+
+    template void compdelta<mpfr::mpreal>(mpfr::mpreal &delta,
+            std::vector<mpfr::mpreal>& w, std::vector<mpfr::mpreal>& x,
+            std::vector<band_t<mpfr::mpreal>> &bands);
+
+    template void compc<mpfr::mpreal>(std::vector<mpfr::mpreal> &C, mpfr::mpreal &delta,
+            std::vector<mpfr::mpreal> &x, std::vector<band_t<mpfr::mpreal>> &bands);
+
+    template void approx<mpfr::mpreal>(mpfr::mpreal &Pc, const mpfr::mpreal &xVal,
+            std::vector<mpfr::mpreal> &x, std::vector<mpfr::mpreal> &C,
+            std::vector<mpfr::mpreal> & w);
+
+    template void comperror<mpfr::mpreal>(mpfr::mpreal &error, const mpfr::mpreal &xVal,
+            mpfr::mpreal &delta, std::vector<mpfr::mpreal> &x,
+            std::vector<mpfr::mpreal> &C, std::vector<mpfr::mpreal> &w,
+            std::vector<band_t<mpfr::mpreal>> &bands);
+#endif

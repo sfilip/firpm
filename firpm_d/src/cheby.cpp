@@ -54,7 +54,7 @@ void balance(MatrixXd<T> &A)
             s = cNorm + rNorm;
 
 
-            while(std::isfinite(cNorm) && cNorm < g)
+            while(pmmath::isfinite(cNorm) && cNorm < g)
             {
                 f *= 2.0;
                 cNorm *= 4.0;
@@ -62,7 +62,7 @@ void balance(MatrixXd<T> &A)
 
             g = rNorm * 2.0;
 
-            while(std::isfinite(cNorm) && cNorm > g)
+            while(pmmath::isfinite(cNorm) && cNorm > g)
             {
                 f /= 2.0;
                 cNorm /= 4.0;
@@ -71,7 +71,7 @@ void balance(MatrixXd<T> &A)
             if((rNorm + cNorm) < s * f * 0.95)
             {
                 converged = false;
-                g = 1.0 / f;
+                g = T(1.0) / f;
                 // multiply by D^{-1} on the left
                 A.row(i) *= g;
                 // multiply by D on the right
@@ -274,7 +274,7 @@ void roots(std::vector<T>& r, std::vector<T>& c,
 {
     r.clear();
     for(auto &it : c)
-        if(!std::isfinite(it))
+        if(!pmmath::isfinite(it))
             return;
 
     MatrixXd<T> C = colleague(c, kind, balance);
@@ -340,3 +340,26 @@ template void diffcoeffs<long double>(std::vector<long double>& dc,
 template void roots<long double>(std::vector<long double>& r, std::vector<long double>& c,
            std::pair<long double, long double> const &dom,
            chebkind_t kind, bool balance);
+
+#ifdef HAVE_MPFR
+    template void cos<mpfr::mpreal>(std::vector<mpfr::mpreal>& out,
+            std::vector<mpfr::mpreal> const& in);
+
+    template void chgvar<mpfr::mpreal>(std::vector<mpfr::mpreal>& out,
+            std::vector<mpfr::mpreal> const& in,
+            mpfr::mpreal& a, mpfr::mpreal& b);
+
+    template void equipts<mpfr::mpreal>(std::vector<mpfr::mpreal>& v, std::size_t n);
+
+
+    template void chebcoeffs<mpfr::mpreal>(std::vector<mpfr::mpreal>& c,
+                    std::vector<mpfr::mpreal>& fv);
+
+    template void diffcoeffs<mpfr::mpreal>(std::vector<mpfr::mpreal>& dc,
+                    std::vector<mpfr::mpreal>& c,
+                    chebkind_t kind);
+
+    template void roots<mpfr::mpreal>(std::vector<mpfr::mpreal>& r, std::vector<mpfr::mpreal>& c,
+            std::pair<mpfr::mpreal, mpfr::mpreal> const &dom,
+            chebkind_t kind, bool balance);
+#endif

@@ -51,3 +51,10 @@ template void bandconv<long double>(
 	std::vector<band_t<long double>> &out,
 	std::vector<band_t<long double>> &in,
         convdir_t direction);
+
+#ifdef HAVE_MPFR
+template void bandconv<mpfr::mpreal>(
+	std::vector<band_t<mpfr::mpreal>> &out,
+	std::vector<band_t<mpfr::mpreal>> &in,
+        convdir_t direction);
+#endif

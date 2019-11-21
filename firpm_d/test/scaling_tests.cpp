@@ -9,7 +9,13 @@
 
 using testing::Types;
 
-using types = testing::Types<double, long double>;
+#ifdef HAVE_MPFR
+    #include "mpreal.h"
+    //using types = testing::Types<double, long double, mpfr::mpreal>;
+    using types = testing::Types<double, long double>;
+#else
+    using types = testing::Types<double, long double>;
+#endif
 
 template<typename _T>
 struct firpm_scaling_test : public testing::Test { using T = _T; };
@@ -30,6 +36,10 @@ TYPED_TEST_SUITE(firpm_minimal_test, types);
 // example of how to use the exchange method directly
 TYPED_TEST(firpm_scaling_test, lowpass100a)
 {
+#ifdef HAVE_MPFR
+    mpfr::mpreal::set_default_prec(165ul);
+#endif
+
     using T = typename TestFixture::T;
 
     std::vector<band_t<T>> freqBands(2);
