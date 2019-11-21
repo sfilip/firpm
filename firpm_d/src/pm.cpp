@@ -1252,6 +1252,22 @@ pmoutput_t<T> firpmAFP(std::size_t n,
 /* Explicit instantiations, since template code is not in header */
 
 /* double precision */
+template void uniform<double>(std::vector<double>& omega,
+            std::vector<band_t<double>>& B, std::size_t n);
+
+template void referenceScaling<double>(std::vector<double>& newX,
+	        std::vector<band_t<double>>& newChebyBands,
+            std::vector<band_t<double>>& newFreqBands,
+	        std::size_t newXSize,
+            std::vector<double>& x,
+	        std::vector<band_t<double>>& chebyBands,
+            std::vector<band_t<double>>& freqBands);
+
+template pmoutput_t<double> exchange<double>(std::vector<double>& x,
+            std::vector<band_t<double>>& chebyBands, 
+            double eps, 
+            std::size_t nmax);
+
 template pmoutput_t<double> firpm<double>(std::size_t n,
             std::vector<double>const &f,
             std::vector<double>const &a,
@@ -1305,15 +1321,23 @@ template pmoutput_t<double> firpmAFP<double>(std::size_t n,
             double eps,
             std::size_t nmax);
 
-template void referenceScaling<double>(std::vector<double>& newX,
-	    std::vector<band_t<double>>& newChebyBands,
-            std::vector<band_t<double>>& newFreqBands,
-	    std::size_t newXSize,
-            std::vector<double>& x,
-	    std::vector<band_t<double>>& chebyBands,
-            std::vector<band_t<double>>& freqBands);
-
 /* long double precision */
+template void uniform<long double>(std::vector<long double>& omega,
+            std::vector<band_t<long double>>& B, std::size_t n);
+
+template void referenceScaling<long double>(std::vector<long double>& newX,
+	        std::vector<band_t<long double>>& newChebyBands,
+            std::vector<band_t<long double>>& newFreqBands,
+	        std::size_t newXSize,
+            std::vector<long double>& x,
+	        std::vector<band_t<long double>>& chebyBands,
+            std::vector<band_t<long double>>& freqBands);
+
+template pmoutput_t<long double> exchange<long double>(std::vector<long double>& x,
+            std::vector<band_t<long double>>& chebyBands, 
+            double eps, 
+            std::size_t nmax);
+
 template pmoutput_t<long double> firpm<long double>(std::size_t n,
             std::vector<long double>const &f,
             std::vector<long double>const &a,

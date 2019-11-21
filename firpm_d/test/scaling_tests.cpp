@@ -64,8 +64,8 @@ TYPED_TEST(firpm_scaling_test, lowpass100a)
 
     for(std::size_t counter = 0; counter < 1; ++counter) {
         std::vector<T> newX;
-        referenceScaling(newX, chebyBands, freqBands, 2 * degree + 2, output.x, chebyBands,
-                freqBands);
+        referenceScaling(newX, chebyBands, freqBands, 2 * degree + 2, 
+                output.x, chebyBands, freqBands);
         degree = 2 * degree;
 
         output = exchange(newX, chebyBands);
