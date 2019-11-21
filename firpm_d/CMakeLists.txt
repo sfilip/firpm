@@ -14,7 +14,7 @@ set(doxy_main_page ${PROJECT_SOURCE_DIR}/README.md)
 list (INSERT CMAKE_MODULE_PATH 0 ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(OpenMP REQUIRED)
-find_package(Eigen3 REQUIRED)
+find_package(Eigen3 3.3 REQUIRED)
 find_package(Doxygen)
 
 
@@ -72,7 +72,7 @@ enable_testing()
 set(PROJECT_TEST_SCALING ${PROJECT_NAME_STR}_scaling_test)
 set(PROJECT_TEST_EXTENSIVE ${PROJECT_NAME_STR}_extensive_test)
 set(CMAKE_CTEST_COMMAND ctest -V)
-include_directories(${GTEST_INCLUDE_DIR} ${COMMON_INCLUDES})
+include_directories(${GTEST_INCLUDE_DIR} ${COMMON_INCLUDES} ${EIGEN3_INCLUDE_DIRS})
 
 set(TEST_SRC_SCALING ${PROJECT_SOURCE_DIR}/test/scaling_tests.cpp)
 set(TEST_SRC_EXTENSIVE ${PROJECT_SOURCE_DIR}/test/extensive_tests.cpp)

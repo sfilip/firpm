@@ -7,7 +7,8 @@ add_definitions("-std=c++11")
 
 file(GLOB PROJECT_SRC_FILES ${PROJECT_SOURCE_DIR}/*.cpp)
 set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../include)
-include_directories(${PROJECT_INCLUDE_DIR})
+add_definitions     (${EIGEN3_DEFINITIONS})
+include_directories (${PROJECT_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIRS})
 
 add_library(firpm SHARED ${PROJECT_SRC_FILES})
 
