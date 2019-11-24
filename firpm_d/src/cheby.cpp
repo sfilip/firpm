@@ -292,9 +292,7 @@ void roots(std::vector<T>& r, std::vector<T>& c,
         for(Eigen::Index i{0}; i < eigs.size(); ++i) {
             if(pmmath::fabs(eigs(i).imag()) < threshold)
                 if(dom.first < eigs(i).real() && 
-            if(dom.first < eigs(i).real() && 
-                if(dom.first < eigs(i).real() && 
-                dom.second >= eigs(i).real()) {
+                dom.second > eigs(i).real()) {
                     r.push_back(eigs(i).real());
                 }
         }
