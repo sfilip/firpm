@@ -343,7 +343,8 @@ void extremaSearch(T& convergenceOrder,
     std::pair<T, T> dom{std::make_pair(-1.0, 1.0)};
 
     split(subIntervals, chebyBands, x);
-
+    //std::cout << "Number of subintervals: "
+    //    << subIntervals.size() << std::endl;
 
     // 2.   Compute the barycentric variables (i.e. weights)
     //      needed for the current iteration
@@ -353,6 +354,7 @@ void extremaSearch(T& convergenceOrder,
 
 
     compdelta(delta, w, x, chebyBands);
+    //std::cout << "delta = " << delta << std::endl;
 
     std::vector<T> C(x.size());
     compc(C, delta, x, chebyBands);
@@ -411,8 +413,7 @@ void extremaSearch(T& convergenceOrder,
     #pragma omp parallel for
     for (std::size_t i = 0u; i < subIntervals.size(); ++i)
     {
-
-        // find the Chebyshev nodes scaled to the current subinterval
+        // find the Chebyshev nodes scaled to the current subinterval  
         std::vector<T> siCN(Nmax + 1u);
         chgvar(siCN, chebyNodes, subIntervals[i].first,
                 subIntervals[i].second);
@@ -421,10 +422,8 @@ void extremaSearch(T& convergenceOrder,
         // current subinterval
         std::vector<T> fx(Nmax + 1u);
         for (std::size_t j{0u}; j < fx.size(); ++j)
-        {
             comperror(fx[j], siCN[j], delta, x, C, w,
                     chebyBands);
-        }
 
         // compute the values of the CI coefficients and those of its
         // derivative
@@ -437,10 +436,12 @@ void extremaSearch(T& convergenceOrder,
         // local extrema situated in the current subinterval
         std::vector<T> eigenRoots;
         roots(eigenRoots, dc, dom);
-        chgvar(eigenRoots, eigenRoots,
-                subIntervals[i].first, subIntervals[i].second);
-        for (std::size_t j{0u}; j < eigenRoots.size(); ++j)
-            pExs[i].push_back(eigenRoots[j]);
+        if(!eigenRoots.empty()) {
+            chgvar(eigenRoots, eigenRoots,
+                    subIntervals[i].first, subIntervals[i].second);
+            for (std::size_t j{0u}; j < eigenRoots.size(); ++j)
+                pExs[i].push_back(eigenRoots[j]);
+        }
         pExs[i].push_back(subIntervals[i].first);
         pExs[i].push_back(subIntervals[i].second);
     }
@@ -492,6 +493,8 @@ void extremaSearch(T& convergenceOrder,
         ++extremaIt;
     }
     std::vector<std::pair<T, T>> bufferExtrema;
+    //std::cout << "Alternating extrema: " << x.size() << " | "
+    //    << alternatingExtrema.size() << std::endl;
 
     if(alternatingExtrema.size() < x.size())
     {
@@ -576,6 +579,7 @@ void extremaSearch(T& convergenceOrder,
         exit(EXIT_FAILURE);
     }
 
+    //std::cout << "After removal: " << alternatingExtrema.size() << std::endl;
     for (auto& it : alternatingExtrema)
     {
         eigenExtrema.push_back(it.first);
@@ -584,7 +588,10 @@ void extremaSearch(T& convergenceOrder,
         maxError = pmmath::fmax(maxError, absError);
     }
 
+    //std::cout << "Min error = " << minError << std::endl;
+    //std::cout << "Max error = " << maxError << std::endl;
     convergenceOrder = (maxError - minError) / maxError;
+    //std::cout << "Convergence order = " << convergenceOrder << std::endl;
     // update the extrema count in each frequency band
     std::size_t bIndex{0u};
     for(std::size_t i{0u}; i < chebyBands.size(); ++i)
@@ -630,6 +637,7 @@ pmoutput_t<T> exchange(std::vector<T>& x,
     output.iter = 0u;
     do {
         ++output.iter;
+        //std::cout << "*********ITERATION " << output.iter << " **********\n";
         extremaSearch(output.q, output.delta,
                 output.x, startX, chebyBands, Nmax);
         startX = output.x;
@@ -656,6 +664,7 @@ pmoutput_t<T> exchange(std::vector<T>& x,
     baryweights(finalAlpha, output.x);
     T finalDelta = output.delta;
     output.delta = pmmath::fabs(output.delta);
+    //std::cout << "MINIMAX delta = " << output.delta << std::endl;
     compc(finalC, finalDelta, output.x, chebyBands);
     std::vector<T> finalChebyNodes(degree + 1);
     equipts(finalChebyNodes, degree + 1);
