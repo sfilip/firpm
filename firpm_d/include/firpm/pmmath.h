@@ -26,7 +26,7 @@
 
 #include <cmath>
 #ifdef HAVE_MPFR
-	#include "mpreal.h"
+	#include <unsupported/Eigen/MPRealSupport>
 #endif
 
 namespace pmmath {
