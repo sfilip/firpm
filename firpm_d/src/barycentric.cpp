@@ -230,9 +230,27 @@ template void comperror<long double>(long double &error, const long double &xVal
 		std::vector<band_t<long double>> &bands);
 
 #ifdef HAVE_MPFR
-    template void baryweights<mpfr::mpreal>(std::vector<mpfr::mpreal>& w,
-            std::vector<mpfr::mpreal>& x);
-
+    // separate implementation for the MPFR version; it is much faster and
+    // the higher precision should usually compensate for any eventual
+    // ill-conditioning
+    template<> void baryweights<mpfr::mpreal>(std::vector<mpfr::mpreal>& w,
+            std::vector<mpfr::mpreal>& x)
+    {
+        std::size_t step = (x.size() - 2u) / 15 + 1;
+        mpfr::mpreal one = 1u;
+        for(std::size_t i{0u}; i < x.size(); ++i)
+        {
+            mpfr::mpreal denom = 1.0;
+            mpfr::mpreal xi = x[i];
+            for(std::size_t j{0u}; j < step; ++j)
+            {
+                for(std::size_t k{j}; k < x.size(); k += step)
+                    if (k != i)
+                        denom *= ((xi - x[k]) << 1);
+            }
+            w[i] = one / denom;
+        }
+    }
     template void compdelta<mpfr::mpreal>(mpfr::mpreal &delta,
             std::vector<mpfr::mpreal>& x, std::vector<band_t<mpfr::mpreal>> &bands);
 
