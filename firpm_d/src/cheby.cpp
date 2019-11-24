@@ -277,20 +277,32 @@ void roots(std::vector<T>& r, std::vector<T>& c,
         if(!pmmath::isfinite(it))
             return;
 
-    MatrixXd<T> C = colleague(c, kind, balance);
-    Eigen::EigenSolver<MatrixXd<T>> es(C);
-    VectorXcd<T> eigs = es.eigenvalues();
+    // preprocess c and remove all the high order
+    // zero coefficients
+    std::size_t idx{c.size() - 1u};
+    while(idx > 0u && c[idx] == 0) { --idx; }
 
-    T threshold = 1e-20;
-    for(Eigen::Index i{0}; i < eigs.size(); ++i) {
-        if(pmmath::fabs(eigs(i).imag()) < threshold)
+    if(idx > 1u) {
+        c.resize(idx + 1u);
+        MatrixXd<T> C = colleague(c, kind, balance);
+        Eigen::EigenSolver<MatrixXd<T>> es(C);
+        VectorXcd<T> eigs = es.eigenvalues();
+
+        T threshold = 1e-20;
+        for(Eigen::Index i{0}; i < eigs.size(); ++i) {
+            if(pmmath::fabs(eigs(i).imag()) < threshold)
+                if(dom.first < eigs(i).real() && 
             if(dom.first < eigs(i).real() && 
-               dom.second >= eigs(i).real()) {
-                r.push_back(eigs(i).real());
-            }
-    }
+                if(dom.first < eigs(i).real() && 
+                dom.second >= eigs(i).real()) {
+                    r.push_back(eigs(i).real());
+                }
+        }
 
-    std::sort(begin(r), end(r));
+        std::sort(begin(r), end(r));
+    } else if(idx == 1) {
+        r.push_back(-c[0u] / c[1u]);
+    }
 }
 
 /* Explicit instantiation */
