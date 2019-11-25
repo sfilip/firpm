@@ -780,14 +780,14 @@ TYPED_TEST(firpm_cic_test, cic119) {
     std::cout << "Final Delta     = " << output1.delta << std::endl;
     std::cout << "Iteration count = " << output1.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with uniform initialization\n";
-    ASSERT_LT(output1.q, 1e-5);
+    ASSERT_LT(output1.q, 1e-2);
 
     std::cout << "START Parks-McClellan with reference scaling\n";
     auto output2 = firpmRS<T>(119, cf_freq, cf_mag, cf_weight);
     std::cout << "Final Delta     = " << output2.delta << std::endl;
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
-    ASSERT_LT(output2.q, 1e-5);
+    ASSERT_LT(output2.q, 1e-2);
     ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
@@ -795,7 +795,7 @@ TYPED_TEST(firpm_cic_test, cic119) {
     std::cout << "Final Delta     = " << output3.delta << std::endl;
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
-    ASSERT_LT(output3.q, 1e-5);
+    ASSERT_LT(output3.q, 1e-2);
     ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
