@@ -380,6 +380,31 @@ TYPED_TEST(firpm_scaling_test, combfir)
 
 }
 
+// might take dozens of minutes to compute, depending on your system
+// prefer to comment it out
+/*TYPED_TEST(firpm_scaling_test, hugefilter)
+{
+    using T = typename TestFixture::T;
+
+    std::vector<T> f = {0.0, 1.0 / 8192, 3.0 / 8192, 1.0};
+    std::vector<T> a = {1.0, 1.0, 0.0, 0.0};
+    std::vector<T> w = {1.0, 1.0};
+
+    if(std::is_same<T, long double>::value) {
+        std::size_t degree = 53248u;
+        std::cout << "START Parks-McClellan with reference scaling\n";
+        auto output2 = firpmRS<T>(degree * 2u + 1u, f, a, w, 0.01, 4u, 2u);
+        std::cout << "Final Delta     = " << output2.delta << std::endl;
+        std::cout << "Iteration count = " << output2.iter  << std::endl;
+        std::cout << "FINISH Parks-McClellan with reference scaling\n";
+        ASSERT_LT(output2.q, 1e-2);
+    } else {
+        std::cout << "This test is not run for the double and mpfr::mpreal versions of the code.\n"
+            << "REASON:\n"
+            << " * double:       failure to converge\n"
+            << " * mpfr::mpreal: takes too long to compute\n";
+    }
+}*/
 
 TYPED_TEST(firpm_lebesgue_test, lowpass500)
 {

@@ -17,7 +17,7 @@ find_package(OpenMP REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
 find_package(GMP 6.0.0)
 find_package(MPFR 4.0.0)
-#find_package(Doxygen)
+find_package(Doxygen)
 
 if( MPFR_FOUND AND GMP_FOUND)
     add_definitions(-DHAVE_MPFR)
