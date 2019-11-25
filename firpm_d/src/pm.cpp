@@ -834,6 +834,11 @@ pmoutput_t<T> firpm(std::size_t n,
                 MatrixXd<T> A;
                 chebvand(A, deg+1u, mesh, wf);
                 afp(x, A, mesh);
+                if(x.size() != deg + 2u) {
+                    std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                        << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
+                    exit(EXIT_FAILURE);
+                }
                 countBand(cbands, x);
             }
             output = exchange(x, cbands, eps, nmax);
@@ -858,6 +863,11 @@ pmoutput_t<T> firpm(std::size_t n,
                     MatrixXd<T> A;
                     chebvand(A, sdegs[0]+1u, mesh, wf);
                     afp(x, A, mesh);
+                    if(x.size() != sdegs[0] + 2u) {
+                        std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                            << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
+                        exit(EXIT_FAILURE);
+                    }
                     countBand(cbands, x);                    
                 }
                 output = exchange(x, cbands, eps, nmax);
@@ -867,6 +877,11 @@ pmoutput_t<T> firpm(std::size_t n,
                 MatrixXd<T> A;
                 chebvand(A, sdegs[0]+1u, mesh, wf);
                 afp(x, A, mesh);
+                if(x.size() != sdegs[0] + 2u) {
+                    std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                        << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
+                    exit(EXIT_FAILURE);
+                }
                 countBand(cbands, x);
                 output = exchange(x, cbands, eps, nmax);
             }
@@ -883,6 +898,11 @@ pmoutput_t<T> firpm(std::size_t n,
             MatrixXd<T> A;
             chebvand(A, deg+1u, mesh, wf);
             afp(x, A, mesh);
+            if(x.size() != deg + 2u) {
+                std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                    << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
+                exit(EXIT_FAILURE);
+            }
             countBand(cbands, x);
             output = exchange(x, cbands, eps, nmax);
         }
@@ -1145,6 +1165,11 @@ pmoutput_t<T> firpm(std::size_t n,
                 MatrixXd<T> A;
                 chebvand(A, deg+1u, mesh, wf);
                 afp(x, A, mesh);
+                if(x.size() != deg + 2u) {
+                    std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                        << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
+                    exit(EXIT_FAILURE);
+                }
                 countBand(cbands, x);
             }
             output = exchange(x, cbands, eps, nmax);
@@ -1169,6 +1194,11 @@ pmoutput_t<T> firpm(std::size_t n,
                     MatrixXd<T> A;
                     chebvand(A, sdegs[0]+1u, mesh, wf);
                     afp(x, A, mesh);
+                    if(x.size() != sdegs[0] + 2u) {
+                        std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                            << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
+                        exit(EXIT_FAILURE);
+                    }
                     countBand(cbands, x);                    
                 }
                 output = exchange(x, cbands, eps, nmax);
@@ -1178,6 +1208,11 @@ pmoutput_t<T> firpm(std::size_t n,
                 MatrixXd<T> A;
                 chebvand(A, sdegs[0]+1u, mesh, wf);
                 afp(x, A, mesh);
+                if(x.size() != sdegs[0] + 2u) {
+                    std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                        << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
+                    exit(EXIT_FAILURE);
+                }
                 countBand(cbands, x);
                 output = exchange(x, cbands, eps, nmax);
             }
@@ -1194,6 +1229,11 @@ pmoutput_t<T> firpm(std::size_t n,
             MatrixXd<T> A;
             chebvand(A, deg+1u, mesh, wf);
             afp(x, A, mesh);
+            if(x.size() != deg + 2u) {
+                std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                    << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
+                exit(EXIT_FAILURE);
+            }
             countBand(cbands, x);
             output = exchange(x, cbands, eps, nmax);
         }
@@ -1251,7 +1291,7 @@ pmoutput_t<T> firpmAFP(std::size_t n,
             std::vector<T>const &a,
             std::vector<T>const &w,
             filter_t type,
-	    double eps,
+	        double eps,
             std::size_t nmax)
 {
     return firpm<T>(n, f, a, w, type, eps,
