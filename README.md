@@ -3,7 +3,7 @@ firpm library
 
 ## Folder organization
 
-Previous to November 2019, there were three different folders containing
+Prior to November 2019, there were three different folders containing
 implementations with different numerical precision used for the computations:
 * double (64-bit)
 * long double (80-bit on x86 architectures)
@@ -99,4 +99,4 @@ no. 1, Aug. 2016, Art. no. 7.
 applications to digital filter design, Ph.D. dissertation, ENS de Lyon, France, 2016.
 
 ## Acknowledgements
-* Graeme Smecher (@gsmecher) - setting up the templatized version of the code base
+* Graeme Smecher [@gsmecher]( https://github.com/gsmecher ) - setting up the templatized version of the code base
