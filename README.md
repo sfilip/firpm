@@ -100,4 +100,4 @@ no. 1, Aug. 2016, Art. no. 7.
 applications to digital filter design, Ph.D. dissertation, ENS de Lyon, France, 2016.
 
 ## Acknowledgements
-* Graeme Smecher [@gsmecher]( https://github.com/gsmecher ) - setting up the templatized version of the code base
+* Graeme Smecher [@gsmecher]( https://github.com/gsmecher ) - setting up the template version of the code base
