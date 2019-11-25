@@ -48,17 +48,17 @@ endif()
 #-----------------------------------------------------------------------
 # use the solution proposed at:
 # https://github.com/google/googletest/blob/master/googletest/README.md
-# for downloading and compiling the googletest framework inside the 
+# for downloading and compiling the googletest framework inside the
 # project build directory
 
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
-execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" . 
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
     RESULT_VARIABLE result
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
 if(result)
     message(FATAL_ERROR "CMake step for googletest failed: ${result}")
 endif()
-execute_process(COMMAND ${CMAKE_COMMAND} --build . 
+execute_process(COMMAND ${CMAKE_COMMAND} --build .
     RESULT_VARIABLE result
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
 if(result)
@@ -71,17 +71,17 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 # add googletest directory to our build. This defines the gtest
 # and gtest_main targets.
 add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
-                 ${CMAKE_CURRENT_BINARY_DIR}/googletest-build 
+                 ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
                  EXCLUDE_FROM_ALL)
 
 
 # add the test files and generate the test executables
-# they can be run by calling *make test* after the initial *make*                 
+# they can be run by calling *make test* after the initial *make*
 enable_testing()
 set(PROJECT_TEST_SCALING ${PROJECT_NAME_STR}_scaling_test)
 set(PROJECT_TEST_EXTENSIVE ${PROJECT_NAME_STR}_extensive_test)
 set(CMAKE_CTEST_COMMAND ctest -V)
-include_directories(${GTEST_INCLUDE_DIR} ${COMMON_INCLUDES} ${EIGEN3_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS}/unsupported/test/mpreal)
+include_directories(${GTEST_INCLUDE_DIR} ${COMMON_INCLUDES} ${EIGEN3_INCLUDE_DIRS})
 
 set(TEST_SRC_SCALING ${PROJECT_SOURCE_DIR}/test/scaling_tests.cpp)
 set(TEST_SRC_EXTENSIVE ${PROJECT_SOURCE_DIR}/test/extensive_tests.cpp)
@@ -96,14 +96,14 @@ if( MPFR_FOUND AND GMP_FOUND )
         pthread
         ${GMP_LIBRARIES}
         ${MPFR_LIBRARIES}
-        firpm    
+        firpm
     )
 else()
     target_link_libraries(${PROJECT_TEST_SCALING}
         gtest
         gtest_main
         pthread
-        firpm    
+        firpm
     )
 endif()
 
@@ -114,14 +114,14 @@ if( MPFR_FOUND AND GMP_FOUND )
         pthread
         ${GMP_LIBRARIES}
         ${MPFR_LIBRARIES}
-        firpm    
+        firpm
     )
 else()
     target_link_libraries(${PROJECT_TEST_EXTENSIVE}
         gtest
         gtest_main
         pthread
-        firpm    
+        firpm
     )
 endif()
 
