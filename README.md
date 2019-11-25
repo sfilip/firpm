@@ -9,7 +9,7 @@ implementations with different numerical precision used for the computations:
 * long double (80-bit on x86 architectures)
 * MPFR-based custom extendend precision
 
-They have now been merged into one templatized version.
+They have now been merged into one template version.
 
 ## Installation instructions
 
