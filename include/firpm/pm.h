@@ -116,6 +116,8 @@ void referenceScaling(std::vector<T>& nx, std::vector<band_t<T>>& ncbands,
  * significant digits of the minimax error that are accurate at the end of the 
  * final iteration)
  * @param[in] nmax the degree used by the CPR method on each subinterval
+ * @param[in] prec the numerical precision of the MPFR type (will be disregarded for
+ * the double and long double instantiations of the functions)
  * @return information pertaining to the polynomial computed at the last 
  * iteration. Since there is no explicit filter type (I to IV) given as input, 
  * the h vector of the output will correspond to the coefficients of the frequency 
@@ -165,7 +167,7 @@ template<typename T>
 pmoutput_t<T> exchange(std::vector<T>& x,
         std::vector<band_t<T>>& cbands,
         double eps = 0.01,
-        std::size_t nmax = 4u);
+        std::size_t nmax = 4u, unsigned long prec = 165ul);
 
 /*! Parks-McClellan routine for implementing type I and II FIR filters. 
  * This routine is the most general and can be set to use any of the three
@@ -214,7 +216,8 @@ pmoutput_t<T> firpm(std::size_t n,
             std::size_t nmax = 4u,
             init_t strategy = init_t::UNIFORM,
             std::size_t depth = 0u,
-            init_t rstrategy = init_t::UNIFORM);
+            init_t rstrategy = init_t::UNIFORM,
+            unsigned long prec = 165ul);
 
 /*! Parks-McClellan routine for implementing type I and II FIR filters. This routine uses 
  * reference scaling by default and is just a wrapper over the <tt>firpm</tt>.
@@ -232,6 +235,8 @@ pmoutput_t<T> firpm(std::size_t n,
  * recursively (default value is 1)
  * @param[in] rstrategy  what initialization strategy to use at the lowest level 
  * (uniform or AFP-based) if strategy is reference scaling 
+ * @param[in] prec the numerical precision of the MPFR type (will be disregarded for
+ * the double and long double instantiations of the functions)
  * @return information pertaining to the polynomial computed at the last iteration. 
  * The h vector of the output contains the coefficients corresponding to the transfer 
  * function of the final filter (in this case, for types I and II, the values are 
@@ -246,7 +251,8 @@ pmoutput_t<T> firpmRS(std::size_t n,
             double eps = 0.01,
             std::size_t nmax = 4u,
             std::size_t depth = 1u,
-            init_t rstrategy = init_t::UNIFORM);
+            init_t rstrategy = init_t::UNIFORM,
+            unsigned long prec = 165ul);
 
 /*! Parks-McClellan routine for implementing type I and II FIR filters. This routine 
  * uses AFP-based initialization and is just a wrapper over <tt>firpm</tt>.
@@ -259,6 +265,8 @@ pmoutput_t<T> firpmRS(std::size_t n,
  * significant digits of the minimax error that are accurate at the end of the 
  * final iteration)
  * @param[in] nmax the degree used by the CPR method on each subinterval
+ * @param[in] prec the numerical precision of the MPFR type (will be disregarded for
+ * the double and long double instantiations of the functions)
  * @return information pertaining to the polynomial computed at the last iteration. 
  * The h vector of the output contains the coefficients corresponding to the transfer 
  * function of the final filter (in this case, for types I and II, the values are 
@@ -271,7 +279,8 @@ pmoutput_t<T> firpmAFP(std::size_t n,
             std::vector<T>const &a,
             std::vector<T>const &w,
             double eps = 0.01,
-            std::size_t nmax = 4u);
+            std::size_t nmax = 4u,
+            unsigned long prec = 165ul);
 
 /*! Parks-McClellan routine for implementing type III and IV FIR filters. 
  * This routine is the most general and can be set to use any of the three
@@ -294,6 +303,8 @@ pmoutput_t<T> firpmAFP(std::size_t n,
  * recursively (default value is 1)
  * @param[in] rstrategy  what initialization strategy to use at the lowest level 
  * (uniform or AFP-based) if strategy is reference scaling 
+ * @param[in] prec the numerical precision of the MPFR type (will be disregarded for
+ * the double and long double instantiations of the functions)
  * @return information pertaining to the polynomial computed at the last iteration. 
  * The h vector of the output contains the coefficients corresponding to the 
  * transfer function of the final filter (in this case, for types III and IV, 
@@ -309,7 +320,8 @@ pmoutput_t<T> firpm(std::size_t n,
         std::size_t nmax = 4,
         init_t strategy = init_t::UNIFORM,
         std::size_t depth = 0u,
-        init_t rstrategy = init_t::UNIFORM);
+        init_t rstrategy = init_t::UNIFORM,
+        unsigned long prec = 165ul);
 
 /*! Parks-McClellan routine for implementing type III and IV FIR filters. 
  * This routine uses reference scaling.
@@ -329,6 +341,8 @@ pmoutput_t<T> firpm(std::size_t n,
  * recursively (default value is 1)
  * @param[in] rstrategy  what initialization strategy to use at the 
  * lowest level (uniform or AFP-based)
+ * @param[in] prec the numerical precision of the MPFR type (will be disregarded for
+ * the double and long double instantiations of the functions)
  * @return information pertaining to the polynomial computed at the last 
  * iteration. The h vector of the output contains the coefficients corresponding 
  * to the transfer function of the final filter (in this case, for types III and 
@@ -343,7 +357,8 @@ pmoutput_t<T> firpmRS(std::size_t n,
             double eps = 0.01,
             std::size_t nmax = 4u,
             std::size_t depth = 1u,
-            init_t rstrategy = init_t::UNIFORM);
+            init_t rstrategy = init_t::UNIFORM,
+            unsigned long prec = 165ul);
 
 /*! Parks-McClellan routine for implementing type III and IV FIR filters.
  * This routine uses AFP-based initialization.
@@ -359,6 +374,8 @@ pmoutput_t<T> firpmRS(std::size_t n,
  * of significant digits of the minimax error that are accurate at the end 
  * of the final iteration)
  * @param[in] nmax the degree used by the CPR method on each subinterval
+ * @param[in] prec the numerical precision of the MPFR type (will be disregarded for
+ * the double and long double instantiations of the functions)
  * @return information pertaining to the polynomial computed at the last 
  * iteration. The h vector of the output contains the coefficients corresponding 
  * to the transfer function of the final filter (in this case, for types III and 
@@ -371,6 +388,7 @@ pmoutput_t<T> firpmAFP(std::size_t n,
             std::vector<T>const &w,
             filter_t type,
             double eps = 0.01,
-            std::size_t nmax = 4u);
+            std::size_t nmax = 4u,
+            unsigned long prec = 165ul);
 
 #endif

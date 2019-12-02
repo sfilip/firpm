@@ -334,8 +334,13 @@ template<typename T>
 void extremaSearch(T& convergenceOrder,
         T& delta, std::vector<T>& eigenExtrema,
         std::vector<T>& x, std::vector<band_t<T>>& chebyBands,
-        std::size_t Nmax)
+        std::size_t Nmax, unsigned long prec)
 {
+#ifdef HAVE_MPFR
+    mpfr_prec_t prevPrec = mpfr::mpreal::get_default_prec();
+    mpfr::mpreal::set_default_prec(prec);
+#endif
+
     // 1.   Split the initial [-1, 1] interval in subintervals
     //      in order that we can use a reasonable size matrix
     //      eigenvalue solver on the subintervals
@@ -413,6 +418,10 @@ void extremaSearch(T& convergenceOrder,
     #pragma omp parallel for
     for (std::size_t i = 0u; i < subIntervals.size(); ++i)
     {
+        #ifdef HAVE_MPFR
+            mpfr_prec_t prevPrec = mpfr::mpreal::get_default_prec();
+            mpfr::mpreal::set_default_prec(prec);
+        #endif
         // find the Chebyshev nodes scaled to the current subinterval  
         std::vector<T> siCN(Nmax + 1u);
         chgvar(siCN, chebyNodes, subIntervals[i].first,
@@ -444,6 +453,9 @@ void extremaSearch(T& convergenceOrder,
         }
         pExs[i].push_back(subIntervals[i].first);
         pExs[i].push_back(subIntervals[i].second);
+        #ifdef HAVE_MPFR
+            mpfr::mpreal::set_default_prec(prevPrec);
+        #endif
     }
 
     for(std::size_t i{0u}; i < pExs.size(); ++i)
@@ -455,10 +467,17 @@ void extremaSearch(T& convergenceOrder,
     #pragma omp parallel for
     for(std::size_t i = 0u; i < pEx.size(); ++i)
     {
+        #ifdef HAVE_MPFR
+            mpfr_prec_t prevPrec = mpfr::mpreal::get_default_prec();
+            mpfr::mpreal::set_default_prec(prec);
+        #endif
         T valBuffer;
         comperror(valBuffer, pEx[i],
                 delta, x, C, w, chebyBands);
         potentialExtrema[startingOffset + i] = std::make_pair(pEx[i], valBuffer);
+        #ifdef HAVE_MPFR
+            mpfr::mpreal::set_default_prec(prevPrec);
+        #endif
     }
 
     // sort list of potential extrema in increasing order
@@ -610,6 +629,9 @@ void extremaSearch(T& convergenceOrder,
             ++chebyBands[bIndex].xs;
         }
     }
+#ifdef HAVE_MPFR
+    mpfr::mpreal::set_default_prec(prevPrec);
+#endif
 }
 
 
@@ -620,7 +642,7 @@ void extremaSearch(T& convergenceOrder,
 template<typename T>
 pmoutput_t<T> exchange(std::vector<T>& x,
         std::vector<band_t<T>>& chebyBands, double eps,
-        std::size_t Nmax)
+        std::size_t Nmax, unsigned long prec)
 {
     pmoutput_t<T> output;
 
@@ -639,7 +661,7 @@ pmoutput_t<T> exchange(std::vector<T>& x,
         ++output.iter;
         //std::cout << "*********ITERATION " << output.iter << " **********\n";
         extremaSearch(output.q, output.delta,
-                output.x, startX, chebyBands, Nmax);
+                output.x, startX, chebyBands, Nmax, prec);
         startX = output.x;
         if(output.q > 1.0)
             break;
@@ -737,7 +759,8 @@ pmoutput_t<T> firpm(std::size_t n,
             std::size_t nmax,
             init_t strategy,
             std::size_t depth,
-            init_t rstrategy)
+            init_t rstrategy, 
+            unsigned long prec)
 {
     parseSpecification(f, a, w);
     std::vector<T> h;
@@ -841,7 +864,7 @@ pmoutput_t<T> firpm(std::size_t n,
                 }
                 countBand(cbands, x);
             }
-            output = exchange(x, cbands, eps, nmax);
+            output = exchange(x, cbands, eps, nmax, prec);
         } break;
         case init_t::SCALING: 
         {
@@ -870,7 +893,7 @@ pmoutput_t<T> firpm(std::size_t n,
                     }
                     countBand(cbands, x);                    
                 }
-                output = exchange(x, cbands, eps, nmax);
+                output = exchange(x, cbands, eps, nmax, prec);
             } else { // AFP-based strategy
                 std::vector<T> mesh;
                 wam(mesh, cbands, sdegs[0]);
@@ -883,13 +906,13 @@ pmoutput_t<T> firpm(std::size_t n,
                     exit(EXIT_FAILURE);
                 }
                 countBand(cbands, x);
-                output = exchange(x, cbands, eps, nmax);
+                output = exchange(x, cbands, eps, nmax, prec);
             }
             for(std::size_t i{1u}; i <= depth && output.q <= 0.5; ++i) {
                 x.clear();
                 referenceScaling(x, cbands, fbands, sdegs[i]+2u, 
                                  output.x, cbands, fbands);
-                output = exchange(x, cbands, eps, nmax);
+                output = exchange(x, cbands, eps, nmax, prec);
             }
         } break;
         default: { // AFP-based initialization
@@ -904,7 +927,7 @@ pmoutput_t<T> firpm(std::size_t n,
                 exit(EXIT_FAILURE);
             }
             countBand(cbands, x);
-            output = exchange(x, cbands, eps, nmax);
+            output = exchange(x, cbands, eps, nmax, prec);
         }
     }
 
@@ -930,11 +953,12 @@ pmoutput_t<T> firpmRS(std::size_t n,
             std::vector<T>const &a,
             std::vector<T>const &w,
             double eps,
-	    std::size_t nmax,
+	        std::size_t nmax,
             std::size_t depth, 
-            init_t rstrategy)
+            init_t rstrategy,
+            unsigned long prec)
 {
-    return firpm<T>(n, f, a, w, eps, nmax, init_t::SCALING, depth, rstrategy);
+    return firpm<T>(n, f, a, w, eps, nmax, init_t::SCALING, depth, rstrategy, prec);
 }
 
 template<typename T>
@@ -942,9 +966,10 @@ pmoutput_t<T> firpmAFP(std::size_t n,
             std::vector<T>const &f,
             std::vector<T>const &a,
             std::vector<T>const &w,
-            double eps, std::size_t nmax)
+            double eps, std::size_t nmax,
+            unsigned long prec)
 {
-    return firpm<T>(n, f, a, w, eps, nmax, init_t::AFP);
+    return firpm<T>(n, f, a, w, eps, nmax, init_t::AFP, 0u, init_t::AFP, prec);
 }
 
 template<typename T>
@@ -957,7 +982,8 @@ pmoutput_t<T> firpm(std::size_t n,
             std::size_t nmax,
             init_t strategy,
             std::size_t depth,
-            init_t rstrategy)
+            init_t rstrategy,
+            unsigned long prec)
 {
     parseSpecification(f, a, w);
     std::vector<T> h;
@@ -1172,7 +1198,7 @@ pmoutput_t<T> firpm(std::size_t n,
                 }
                 countBand(cbands, x);
             }
-            output = exchange(x, cbands, eps, nmax);
+            output = exchange(x, cbands, eps, nmax, prec);
         } break;
         case init_t::SCALING: 
         {
@@ -1220,7 +1246,7 @@ pmoutput_t<T> firpm(std::size_t n,
                 x.clear();
                 referenceScaling(x, cbands, fbands, sdegs[i]+2u, 
                                  output.x, cbands, fbands);
-                output = exchange(x, cbands, eps, nmax);
+                output = exchange(x, cbands, eps, nmax, prec);
             }
         } break;
         default: { // AFP-based initialization
@@ -1235,7 +1261,7 @@ pmoutput_t<T> firpm(std::size_t n,
                 exit(EXIT_FAILURE);
             }
             countBand(cbands, x);
-            output = exchange(x, cbands, eps, nmax);
+            output = exchange(x, cbands, eps, nmax, prec);
         }
     }
 
@@ -1277,12 +1303,13 @@ pmoutput_t<T> firpmRS(std::size_t n,
             std::vector<T>const &a,
             std::vector<T>const &w,
             filter_t type,
-	    double eps,
+	        double eps,
             std::size_t nmax, std::size_t depth,
-            init_t rstrategy)
+            init_t rstrategy,
+            unsigned long prec)
 {
     return firpm<T>(n, f, a, w, type, eps, nmax,
-                 init_t::SCALING, depth, rstrategy);
+                 init_t::SCALING, depth, rstrategy, prec);
 }
 
 template<typename T>
@@ -1292,10 +1319,11 @@ pmoutput_t<T> firpmAFP(std::size_t n,
             std::vector<T>const &w,
             filter_t type,
 	        double eps,
-            std::size_t nmax)
+            std::size_t nmax,
+            unsigned long prec)
 {
     return firpm<T>(n, f, a, w, type, eps,
-                 nmax, init_t::AFP);
+                 nmax, init_t::AFP, 0u, init_t::AFP, prec);
 }
 
 /* Explicit instantiations, since template code is not in header */
@@ -1315,7 +1343,8 @@ template void referenceScaling<double>(std::vector<double>& newX,
 template pmoutput_t<double> exchange<double>(std::vector<double>& x,
             std::vector<band_t<double>>& chebyBands, 
             double eps, 
-            std::size_t nmax);
+            std::size_t nmax,
+            unsigned long prec);
 
 template pmoutput_t<double> firpm<double>(std::size_t n,
             std::vector<double>const &f,
@@ -1325,7 +1354,8 @@ template pmoutput_t<double> firpm<double>(std::size_t n,
             std::size_t nmax,
             init_t strategy,
             std::size_t depth,
-            init_t rstrategy);
+            init_t rstrategy,
+            unsigned long prec);
 
 template pmoutput_t<double> firpm<double>(std::size_t n,
             std::vector<double>const& f,
@@ -1336,7 +1366,8 @@ template pmoutput_t<double> firpm<double>(std::size_t n,
             std::size_t nmax,
             init_t strategy,
             std::size_t depth,
-            init_t rstrategy);
+            init_t rstrategy,
+            unsigned long prec);
 
 template pmoutput_t<double> firpmRS<double>(std::size_t n,
             std::vector<double>const &f,
@@ -1344,7 +1375,8 @@ template pmoutput_t<double> firpmRS<double>(std::size_t n,
             std::vector<double>const &w,
             double eps, std::size_t nmax,
             std::size_t depth,
-            init_t rstrategy);
+            init_t rstrategy,
+            unsigned long prec);
 
 template pmoutput_t<double> firpmRS<double>(std::size_t n,
             std::vector<double>const &f,
@@ -1354,13 +1386,15 @@ template pmoutput_t<double> firpmRS<double>(std::size_t n,
             double eps,
             std::size_t nmax,
             std::size_t depth,
-            init_t rstrategy);
+            init_t rstrategy,
+            unsigned long prec);
 
 template pmoutput_t<double> firpmAFP<double>(std::size_t n,
             std::vector<double>const &f,
             std::vector<double>const &a,
             std::vector<double>const &w,
-            double eps, std::size_t nmax);
+            double eps, std::size_t nmax,
+            unsigned long prec);
 
 template pmoutput_t<double> firpmAFP<double>(std::size_t n,
             std::vector<double>const &f,
@@ -1368,7 +1402,8 @@ template pmoutput_t<double> firpmAFP<double>(std::size_t n,
             std::vector<double>const &w,
             filter_t type,
             double eps,
-            std::size_t nmax);
+            std::size_t nmax,
+            unsigned long prec);
 
 /* long double precision */
 template void uniform<long double>(std::vector<long double>& omega,
@@ -1385,7 +1420,8 @@ template void referenceScaling<long double>(std::vector<long double>& newX,
 template pmoutput_t<long double> exchange<long double>(std::vector<long double>& x,
             std::vector<band_t<long double>>& chebyBands, 
             double eps, 
-            std::size_t nmax);
+            std::size_t nmax,
+            unsigned long prec);
 
 template pmoutput_t<long double> firpm<long double>(std::size_t n,
             std::vector<long double>const &f,
@@ -1395,7 +1431,8 @@ template pmoutput_t<long double> firpm<long double>(std::size_t n,
             std::size_t nmax,
             init_t strategy,
             std::size_t depth,
-            init_t rstrategy);
+            init_t rstrategy,
+            unsigned long prec);
 
 template pmoutput_t<long double> firpm<long double>(std::size_t n,
             std::vector<long double>const& f,
@@ -1406,7 +1443,8 @@ template pmoutput_t<long double> firpm<long double>(std::size_t n,
             std::size_t nmax,
             init_t strategy,
             std::size_t depth,
-            init_t rstrategy);
+            init_t rstrategy,
+            unsigned long prec);
 
 template pmoutput_t<long double> firpmRS<long double>(std::size_t n,
             std::vector<long double>const &f,
@@ -1414,7 +1452,8 @@ template pmoutput_t<long double> firpmRS<long double>(std::size_t n,
             std::vector<long double>const &w,
             double eps, std::size_t nmax,
             std::size_t depth,
-            init_t rstrategy);
+            init_t rstrategy,
+            unsigned long prec);
 
 template pmoutput_t<long double> firpmRS<long double>(std::size_t n,
             std::vector<long double>const &f,
@@ -1424,13 +1463,15 @@ template pmoutput_t<long double> firpmRS<long double>(std::size_t n,
             double eps,
             std::size_t nmax,
             std::size_t depth,
-            init_t rstrategy);
+            init_t rstrategy,
+            unsigned long prec);
 
 template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
             std::vector<long double>const &f,
             std::vector<long double>const &a,
             std::vector<long double>const &w,
-            double eps, std::size_t nmax);
+            double eps, std::size_t nmax,
+            unsigned long prec);
 
 template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
             std::vector<long double>const &f,
@@ -1438,7 +1479,8 @@ template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
             std::vector<long double>const &w,
             filter_t type,
             double eps,
-            std::size_t nmax);
+            std::size_t nmax,
+            unsigned long prec);
 
 /* multiple precision mpreal */
 #ifdef HAVE_MPFR
@@ -1456,7 +1498,7 @@ template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
     template pmoutput_t<mpfr::mpreal> exchange<mpfr::mpreal>(std::vector<mpfr::mpreal>& x,
                 std::vector<band_t<mpfr::mpreal>>& chebyBands, 
                 double eps, 
-                std::size_t nmax);
+                std::size_t nmax, unsigned long prec);
 
     template pmoutput_t<mpfr::mpreal> firpm<mpfr::mpreal>(std::size_t n,
                 std::vector<mpfr::mpreal>const &f,
@@ -1466,7 +1508,8 @@ template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
                 std::size_t nmax,
                 init_t strategy,
                 std::size_t depth,
-                init_t rstrategy);
+                init_t rstrategy,
+                unsigned long prec);
 
     template pmoutput_t<mpfr::mpreal> firpm<mpfr::mpreal>(std::size_t n,
                 std::vector<mpfr::mpreal>const& f,
@@ -1477,7 +1520,8 @@ template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
                 std::size_t nmax,
                 init_t strategy,
                 std::size_t depth,
-                init_t rstrategy);
+                init_t rstrategy,
+                unsigned long prec);
 
     template pmoutput_t<mpfr::mpreal> firpmRS<mpfr::mpreal>(std::size_t n,
                 std::vector<mpfr::mpreal>const &f,
@@ -1485,7 +1529,8 @@ template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
                 std::vector<mpfr::mpreal>const &w,
                 double eps, std::size_t nmax,
                 std::size_t depth,
-                init_t rstrategy);
+                init_t rstrategy,
+                unsigned long prec);
 
     template pmoutput_t<mpfr::mpreal> firpmRS<mpfr::mpreal>(std::size_t n,
                 std::vector<mpfr::mpreal>const &f,
@@ -1495,13 +1540,15 @@ template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
                 double eps,
                 std::size_t nmax,
                 std::size_t depth,
-                init_t rstrategy);
+                init_t rstrategy,
+                unsigned long prec);
 
     template pmoutput_t<mpfr::mpreal> firpmAFP<mpfr::mpreal>(std::size_t n,
                 std::vector<mpfr::mpreal>const &f,
                 std::vector<mpfr::mpreal>const &a,
                 std::vector<mpfr::mpreal>const &w,
-                double eps, std::size_t nmax);
+                double eps, std::size_t nmax,
+                unsigned long prec);
 
     template pmoutput_t<mpfr::mpreal> firpmAFP<mpfr::mpreal>(std::size_t n,
                 std::vector<mpfr::mpreal>const &f,
@@ -1509,5 +1556,6 @@ template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
                 std::vector<mpfr::mpreal>const &w,
                 filter_t type,
                 double eps,
-                std::size_t nmax);
+                std::size_t nmax,
+                unsigned long prec);
 #endif
