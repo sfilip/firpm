@@ -9,5 +9,7 @@ FILE_PATTERNS          = *.h \
                          *.cpp \
                          *.md
 EXCLUDE_PATTERNS       = mpreal.h
+EXCLUDE_PATTERNS      += */googletest-src/*
+EXCLUDE_PATTERNS      += */test/*.cpp
 RECURSIVE              = YES
 USE_MDFILE_AS_MAINPAGE = @doxy_main_page@
