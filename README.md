@@ -85,7 +85,7 @@ instantiation) of the routines looks like this:
 
 ## Use
 
-Examples of how to use the library can be found in the **test** folder
+Examples of how to use the library can be found in the **test** folder.
 
 ## Licensing
 
