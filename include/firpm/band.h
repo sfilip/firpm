@@ -55,6 +55,7 @@ struct band_t {
     std::function<T(space_t, T)> weight;
                             /**< weight function value on the band */
     std::size_t xs;         /**< number of interpolation points taken in the band */
+    std::vector<T> part;    /**< partition points (if any) inside the band */
 };
 
 /**

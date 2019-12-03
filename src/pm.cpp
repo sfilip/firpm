@@ -21,12 +21,16 @@
 #include <set>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 template<typename T>
 using MatrixXd = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
 template<typename T>
 using VectorXd = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+
+// global variable used to detect cycling
+bool cycle;
 
 template<typename T>
 void chebvand(MatrixXd<T>& A, std::size_t degree,
@@ -277,7 +281,7 @@ void referenceScaling(std::vector<T>& newX, std::vector<band_t<T>>& newChebyBand
     }
 }
 
-template<typename T>
+/*template<typename T>
 void split(std::vector<std::pair<T, T>>& subIntervals,
         std::vector<band_t<T>>& chebyBands,
         std::vector<T> &x)
@@ -327,6 +331,31 @@ void split(std::vector<std::pair<T, T>>& subIntervals,
                     std::make_pair(middleValA, chebyBands[i].stop));
         }
         bandOffset += chebyBands[i].xs;
+    }
+}*/
+
+template<typename T>
+void split(std::vector<std::pair<T, T>>& subIntervals,
+        std::vector<band_t<T>>& chebyBands,
+        std::vector<T> &x) {
+    std::vector<T> splitpts = x;
+    for(std::size_t i{0u}; i < chebyBands.size(); ++i) {
+        splitpts.push_back(chebyBands[i].start);
+        splitpts.insert(splitpts.end(), chebyBands[i].part.begin(), chebyBands[i].part.end());
+        splitpts.push_back(chebyBands[i].stop);
+    }
+
+    std::set<T> s(splitpts.begin(), splitpts.end());
+    splitpts.assign(s.begin(), s.end());
+    std::sort(splitpts.begin(), splitpts.end());
+
+    std::size_t bidx{0u};
+    for(std::size_t i{0u}; i < splitpts.size()-1u; ++i) {
+        if(splitpts[i+1u] > chebyBands[bidx].stop) {
+            ++bidx;
+        } else {
+            subIntervals.push_back(std::make_pair(splitpts[i], splitpts[i+1u]));
+        }
     }
 }
 
@@ -569,13 +598,25 @@ void extremaSearch(T& convergenceOrder,
         while (alternatingExtrema.size() > x.size())
         {
             std::size_t toRemoveIndex{0u};
-            T minValToRemove = pmmath::fmin(pmmath::fabs(alternatingExtrema[0u].second),
+            T minValToRemove;
+            // change removal rule for extra extrema in case cycling is detected
+            if(!cycle) {
+                minValToRemove = pmmath::fmin(pmmath::fabs(alternatingExtrema[0u].second),
                                               pmmath::fabs(alternatingExtrema[1u].second));
+            } else {
+                minValToRemove = pmmath::fmax(pmmath::fabs(alternatingExtrema[0u].second),
+                                              pmmath::fabs(alternatingExtrema[1u].second));
+            }
             T removeBuffer;
             for (std::size_t i{1u}; i < alternatingExtrema.size() - 1u; ++i)
             {
-                removeBuffer = pmmath::fmin(pmmath::fabs(alternatingExtrema[i].second),
+                if(!cycle) {
+                    removeBuffer = pmmath::fmin(pmmath::fabs(alternatingExtrema[i].second),
                                    pmmath::fabs(alternatingExtrema[i + 1u].second));
+                } else {
+                    removeBuffer = pmmath::fmax(pmmath::fabs(alternatingExtrema[i].second),
+                                   pmmath::fabs(alternatingExtrema[i + 1u].second));
+                }
                 if (removeBuffer < minValToRemove)
                 {
                     minValToRemove = removeBuffer;
@@ -589,8 +630,8 @@ void extremaSearch(T& convergenceOrder,
             alternatingExtrema = bufferExtrema;
             bufferExtrema.clear();
         }
-
-
+        if(cycle)
+            cycle = false;
     }
     if (alternatingExtrema.size() < x.size())
     {
@@ -654,6 +695,8 @@ pmoutput_t<T> exchange(std::vector<T>& x,
             });
     std::vector<T> startX{x};
     std::cout.precision(20);
+    cycle = false;
+    T qp1, qp2;
 
     output.q = 1;
     output.iter = 0u;
@@ -663,6 +706,16 @@ pmoutput_t<T> exchange(std::vector<T>& x,
         extremaSearch(output.q, output.delta,
                 output.x, startX, chebyBands, Nmax, prec);
         startX = output.x;
+        if(output.iter == 1u)
+            qp2 = output.q;
+        else if(output.iter == 2u)
+            qp1 = output.q;
+        else {
+            if(pmmath::fabs(qp2-output.q)/pmmath::fabs(qp2) < eps*1e-5)
+                cycle = true;
+            qp2 = qp1;
+            qp1 = output.q;
+        }
         if(output.q > 1.0)
             break;
     } while (output.q > eps && output.iter <= 100u);
@@ -764,8 +817,30 @@ pmoutput_t<T> firpm(std::size_t n,
 {
     parseSpecification(f, a, w);
     std::vector<T> h;
-    std::vector<band_t<T>> fbands(w.size());
+    std::vector<band_t<T>> fbands;
     std::vector<band_t<T>> cbands;
+    std::vector<std::vector<std::size_t>> bIdx;
+
+    std::size_t nbands{0u};
+    bool newBand{true};
+    for(std::size_t i{0u}; i < w.size(); ++i) {
+        if(newBand) {
+            bIdx.push_back({i});
+            newBand = false;
+        }
+        if(i < w.size()-1u && f[2u*i+1u] == f[2u*i+2u]) {
+            if(w[i] != w[i+1u]) {
+                std::cerr << "ERROR: Incompatible weights for partioned band!\n";
+                exit(EXIT_FAILURE);
+            }
+            bIdx[nbands].push_back(i+1u);
+        } else {
+            ++nbands;
+            newBand = true;
+        }
+    }
+    fbands.resize(bIdx.size());
+
     if(n % 2 != 0) {
         if(f[f.size()-1u] == 1 && a[a.size()-1u] != 0) {
             std::cout << "WARNING: gain at Nyquist frequency different from 0.\n"
@@ -777,53 +852,79 @@ pmoutput_t<T> firpm(std::size_t n,
     std::size_t deg = n / 2;
     if(n % 2 == 0) {            // type I filter
         for(std::size_t i{0u}; i < fbands.size(); ++i) {
-            fbands[i].start = pmmath::const_pi<T>() * f[2u*i];
-            fbands[i].stop  = pmmath::const_pi<T>() * f[2u*i+1u];
+            fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][0u]]));
+            for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
+                fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][j]+1u]));
+            }
+        }
+        for(std::size_t i{0u}; i < fbands.size(); ++i) {
+            fbands[i].start = fbands[i].part[0u];
+            fbands[i].stop  = fbands[i].part[fbands[i].part.size()-1u];
             fbands[i].space = space_t::FREQ;
-            fbands[i].amplitude = [i, &a, &fbands](space_t space, T x) -> T {
-                if(a[2u*i] != a[2u*i+1u]) {
-                    if(space == space_t::CHEBY)
-                        x = pmmath::acos(x);
-                    return ((x-fbands[i].start) * a[2u*i+1u] - 
-                            (x-fbands[i].stop) * a[2u*i]) /
-                            (fbands[i].stop - fbands[i].start);
+
+            fbands[i].amplitude = [i, &a, &bIdx, &fbands](space_t space, T x) -> T {
+                if(space == space_t::CHEBY)
+                    x = pmmath::acos(x);
+                for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
+                    if(fbands[i].part[j]*(1.0-1e-12) <= x && x <= fbands[i].part[j+1u]*(1.0+1e-12)) {
+                        if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
+                            return ((x-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] - 
+                                    (x-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
+                                    (fbands[i].part[j+1u] - fbands[i].part[j]);
+                        } else {
+                            return a[2u*bIdx[i][j]];
+                        }
+                    }
                 }
-                return a[2u*i];
+                // this should never happen
+                return a[2u*bIdx[i][0u]];
             };
-            fbands[i].weight = [i, &w](space_t, T x) -> T {
-                return w[i];
+            fbands[i].weight = [i, &w, &bIdx](space_t, T x) -> T {
+                return w[bIdx[i][0u]];
             };
         }
     } else {                    // type II filter
         for(std::size_t i{0u}; i < fbands.size(); ++i) {
-            fbands[i].start = pmmath::const_pi<T>() * f[2u*i];
-            if(f[2u*i + 1u] == 1.0) {
-                if(f[2u*i] < 0.9999)
-                    fbands[i].stop = pmmath::const_pi<T>() * T(0.9999);
-                else
-                    fbands[i].stop = pmmath::const_pi<T>() * ((f[2u*i] + 1) / 2);
-            } 
-            else 
-                fbands[i].stop = pmmath::const_pi<T>() * f[2u*i+1u];
+            fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][0u]]));
+            for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
+                if(f[2u*bIdx[i][j]+1u] == 1.0) {
+                    if(f[2u*bIdx[i][j]] < 0.9999)
+                        fbands[i].part.push_back(T(pmmath::const_pi<T>() * T(0.9999)));
+                    else
+                        fbands[i].part.push_back(T(pmmath::const_pi<T>() * ((f[2u*bIdx[i][j]]+1u) / 2)));
+                } else {
+                    fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][j]+1u]));
+                }
+            }
+        }
+        for(std::size_t i{0u}; i < fbands.size(); ++i) {
+            fbands[i].start = fbands[i].part[0u];
+            fbands[i].stop  = fbands[i].part[fbands[i].part.size()-1u];
             fbands[i].space = space_t::FREQ;
-            fbands[i].amplitude = [i, &a, &fbands](space_t space, T x) -> T {
-                if(a[2u*i] != a[2u*i+1u]) {
-                    if(space == space_t::CHEBY)
-                        x = pmmath::acos(x);
-                    return (((x-fbands[i].start) * a[2u*i+1u] -
-                            (x-fbands[i].stop) * a[2u*i]) /
-                            (fbands[i].stop - fbands[i].start)) / pmmath::cos(x/2);
+
+            fbands[i].amplitude = [i, &a, &bIdx, &fbands](space_t space, T x) -> T {
+                T nx = x;
+                if(space == space_t::CHEBY)
+                    nx = pmmath::acos(x);
+                for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
+                    if(fbands[i].part[j]*(1.0-1e-12) <= nx && nx <= fbands[i].part[j+1u]*(1.0+1e-12)) {
+                        if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
+                            return ((nx-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] - 
+                                    (nx-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
+                                    (fbands[i].part[j+1u] - fbands[i].part[j]) / pmmath::cos(nx/2);
+                        }
+                    }
                 }
                 if(space == space_t::FREQ)
-                    return a[2u*i] / pmmath::cos(x/2);
+                    return a[2u*bIdx[i][0u]] / pmmath::cos(x/2);
                 else
-                    return a[2u*i] / pmmath::sqrt((x+1)/2);
+                    return a[2u*bIdx[i][0u]] / pmmath::sqrt((x+1)/2);
             };
-            fbands[i].weight = [i, &w](space_t space, T x) -> T {
+            fbands[i].weight = [i, &w, &bIdx](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
-                    return pmmath::cos(x/2) * w[i];
+                    return pmmath::cos(x/2) * w[bIdx[i][0u]];
                 else
-                    return pmmath::sqrt((x+1)/2) * w[i];
+                    return pmmath::sqrt((x+1)/2) * w[bIdx[i][0u]];
             };
         }
     }
