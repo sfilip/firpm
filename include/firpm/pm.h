@@ -64,16 +64,16 @@ struct pmoutput_t
     std::vector<T> h;         /**< the final filter coefficients*/
     std::vector<T> x;         /**< the reference set used to generate the final
                                 filter (values are in \f$[-1,1]\f$ and NOT \f$[0,\pi]\f$)*/
-    std::size_t iter;         /**< number of iterations that were necessary to 
+    std::size_t iter;         /**< number of iterations that were necessary to
                                 achieve convergence*/
     T delta;             /**< the final reference error */
     T q;                 /**< convergence parameter value */
 };
 
-/*! An implementation of the uniform initialization approach for 
+/*! An implementation of the uniform initialization approach for
  * starting the Parks-McClellan algorithm
  * @param[out] omega the initial set of references to be computed
- * @param[in] B the frequency bands of interest (i.e., stopbands and 
+ * @param[in] B the frequency bands of interest (i.e., stopbands and
  * passbands for example)
  * @param[in] n the size of the reference set
  */
@@ -82,7 +82,7 @@ template<typename T>
 void uniform(std::vector<T>& omega,
         std::vector<band_t<T>>& B, std::size_t n);
 
-/*! An implementation of the reference scaling approach mentioned 
+/*! An implementation of the reference scaling approach mentioned
  * in section 4 of the article.
  * @param[out] nx the reference set obtained from scaling the initial set x
  * @param[out] ncbands contains information about the bands of interest 
@@ -134,7 +134,7 @@ void referenceScaling(std::vector<T>& nx, std::vector<band_t<T>>& ncbands,
  * @see firpm
  * @code
  * // frequency band specification
- * std::vector<band_t> fbands(2);
+ * std::vector<band_t<double>> fbands(2);
  * double pi = M_PI;
  *
  * fbands[0].start = 0;
@@ -151,7 +151,7 @@ void referenceScaling(std::vector<T>& nx, std::vector<band_t<T>>& ncbands,
  * std::size_t degree = 100;  // filter degree
  *
  * // reference initialization code
- * std::vector<band_t> cbands;
+ * std::vector<band_t<double>> cbands;
  * std::vector<double> omega;
  * std::vector<double> x;
  * uniform(omega, fbands, degree + 2u);
@@ -159,7 +159,7 @@ void referenceScaling(std::vector<T>& nx, std::vector<band_t<T>>& ncbands,
  * cos(x, omega);
  * bandconv(cbands, fbands, convdir_t::FROMFREQ);
  * // apply the exchange algorithm
- * pmoutput_t output = exchange(x, cbands);
+ * pmoutput_t<double> output = exchange(x, cbands);
  * @endcode
  */
 
@@ -169,7 +169,7 @@ pmoutput_t<T> exchange(std::vector<T>& x,
         double eps = 0.01,
         std::size_t nmax = 4u, unsigned long prec = 165ul);
 
-/*! Parks-McClellan routine for implementing type I and II FIR filters. 
+/*! Parks-McClellan routine for implementing type I and II FIR filters.
  * This routine is the most general and can be set to use any of the three
  * proposed initialization types. If the default parameters are used, then
  * it will use uniform initialization.
@@ -191,6 +191,8 @@ pmoutput_t<T> exchange(std::vector<T>& x,
  * @param[in] rstrategy in case SCALING is used, specifies how to initialize
  * the smallest length filter used to perform reference scaling (UNIFORM by
  * default)
+ * @param[in] prec the numerical precision of the MPFR type (will be disregarded for
+ * the double and long double instantiations of the functions)
  * @return information pertaining to the polynomial computed at the last 
  * iteration. The h vector of the output contains the coefficients corresponding 
  * to the transfer function of the final filter (in this case, for types I and II,
@@ -203,7 +205,7 @@ pmoutput_t<T> exchange(std::vector<T>& x,
  * reference scaling and AFP versions <tt>firpmRS, firpmAFP</tt>, are provided inside 
  * the test files.
  * @code
- * pmoutput_t output = firpm(200, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
+ * pmoutput_t<double> output = firpm<double>(200, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 10.0});
  * @endcode
  */
 
@@ -230,7 +232,6 @@ pmoutput_t<T> firpm(std::size_t n,
  * significant digits of the minimax error that are accurate at the end of the 
  * final iteration)
  * @param[in] nmax the degree used by the CPR method on each subinterval
- * @param[in] strategy the initialization strategy
  * @param[in] depth how many times should reference scaling be applied 
  * recursively (default value is 1)
  * @param[in] rstrategy  what initialization strategy to use at the lowest level 

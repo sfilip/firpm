@@ -75,7 +75,7 @@ TYPED_TEST(firpm_scaling_test, lowpass50a)
 
     for(std::size_t counter = 0; counter < 1; ++counter) {
         std::vector<T> newX;
-        referenceScaling(newX, chebyBands, freqBands, 2 * degree + 2, 
+        referenceScaling(newX, chebyBands, freqBands, 2 * degree + 2,
                 output.x, chebyBands, freqBands);
         degree = 2 * degree;
 
@@ -305,9 +305,6 @@ TYPED_TEST(firpm_scaling_test, bandstop100)
     std::vector<T> w = {1.0, 1.0, 1.0};
 
     std::size_t degree = 100;
-    // There is currently a strange issue when OpenMP loop parallelization 
-    // is enabled for this example with the mpreal type (works if no OpenMP
-    // parallelization is enabled)
     pmoutput_t<T> output1;
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with uniform initialization\n";
@@ -453,11 +450,6 @@ TYPED_TEST(firpm_lebesgue_test, lowpass1000)
     std::vector<T> w = {1.0, 10.0};
 
     std::size_t degree = 1000;
-    // for the MPFR version of the code, running uniform initialization
-    // with OpenMP enabled does not converge; in fact, normally the double 
-    // and long double versions of the code should not converge either;
-    // => no uniform initialization test
-
 
     std::cout << "START Parks-McClellan with reference scaling\n";
     auto output2 = firpmRS<T>(degree * 2u, f, a, w);
@@ -834,8 +826,8 @@ TYPED_TEST(firpm_issues_test, smallfir1) {
     using T = typename TestFixture::T;
     std::size_t degree = 10u;
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    auto output1 = firpm<T>(degree * 2u, {0.0, 0.4, 0.6, 0.64, 0.69, 0.74, 0.79, 0.83, 0.88, 1.0}, 
-            {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, 
+    auto output1 = firpm<T>(degree * 2u, {0.0, 0.4, 0.6, 0.64, 0.69, 0.74, 0.79, 0.83, 0.88, 1.0},
+            {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0},
             {1.0, 1.0, 1.0, 1.0, 1.0});
     std::cout << "Final Delta     = " << output1.delta << std::endl;
     std::cout << "Iteration count = " << output1.iter  << std::endl;
@@ -843,8 +835,8 @@ TYPED_TEST(firpm_issues_test, smallfir1) {
     ASSERT_LT(output1.q, 1e-2);
 
     std::cout << "START Parks-McClellan with reference scaling\n";
-    auto output2 = firpmRS<T>(degree * 2u, {0.0, 0.4, 0.6, 0.64, 0.69, 0.74, 0.79, 0.83, 0.88, 1.0}, 
-            {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, 
+    auto output2 = firpmRS<T>(degree * 2u, {0.0, 0.4, 0.6, 0.64, 0.69, 0.74, 0.79, 0.83, 0.88, 1.0},
+            {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0},
             {1.0, 1.0, 1.0, 1.0, 1.0});
     std::cout << "Final Delta     = " << output2.delta << std::endl;
     std::cout << "Iteration count = " << output2.iter  << std::endl;
@@ -853,8 +845,8 @@ TYPED_TEST(firpm_issues_test, smallfir1) {
     ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
-    auto output3 = firpmAFP<T>(degree * 2u, {0.0, 0.4, 0.6, 0.64, 0.69, 0.74, 0.79, 0.83, 0.88, 1.0}, 
-            {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, 
+    auto output3 = firpmAFP<T>(degree * 2u, {0.0, 0.4, 0.6, 0.64, 0.69, 0.74, 0.79, 0.83, 0.88, 1.0},
+            {1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0},
             {1.0, 1.0, 1.0, 1.0, 1.0});
     std::cout << "Final Delta     = " << output3.delta << std::endl;
     std::cout << "Iteration count = " << output3.iter  << std::endl;
@@ -941,7 +933,7 @@ TYPED_TEST(firpm_issues_test, partition2) {
     using T = typename TestFixture::T;
     std::size_t degree = 50u;
     std::cout << "START Parks-McClellan with uniform initialization\n";
-    auto output1 = firpm<T>(degree * 2u, 
+    auto output1 = firpm<T>(degree * 2u,
                             {0.0, 0.00566667, 0.00566667, 0.008, 0.008, 0.00833333, 0.112333, 1.0},
                             {1.0, 1.00011, 1.00011, 1.00022, 1.00022, 1.00024, 0.0, 0.0},
                             {1, 1, 1, 750});
@@ -951,7 +943,7 @@ TYPED_TEST(firpm_issues_test, partition2) {
     ASSERT_LT(output1.q, 1e-2);
 
     std::cout << "START Parks-McClellan with reference scaling\n";
-    auto output2 = firpmRS<T>(degree * 2u, 
+    auto output2 = firpmRS<T>(degree * 2u,
                             {0.0, 0.00566667, 0.00566667, 0.008, 0.008, 0.00833333, 0.112333, 1.0},
                             {1.0, 1.00011, 1.00011, 1.00022, 1.00022, 1.00024, 0.0, 0.0},
                             {1, 1, 1, 750});
@@ -962,7 +954,7 @@ TYPED_TEST(firpm_issues_test, partition2) {
     ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
-    auto output3 = firpmAFP<T>(degree * 2u, 
+    auto output3 = firpmAFP<T>(degree * 2u,
                             {0.0, 0.00566667, 0.00566667, 0.008, 0.008, 0.00833333, 0.112333, 1.0},
                             {1.0, 1.00011, 1.00011, 1.00022, 1.00022, 1.00024, 0.0, 0.0},
                             {1, 1, 1, 750});
@@ -1002,8 +994,9 @@ TYPED_TEST(firpm_issues_test, partition3) {
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    if(!std::is_same<T, double>::value)
+    if(!std::is_same<T, double>::value) {
         ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    }
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u + 1u,

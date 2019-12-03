@@ -281,59 +281,6 @@ void referenceScaling(std::vector<T>& newX, std::vector<band_t<T>>& newChebyBand
     }
 }
 
-/*template<typename T>
-void split(std::vector<std::pair<T, T>>& subIntervals,
-        std::vector<band_t<T>>& chebyBands,
-        std::vector<T> &x)
-{
-    std::size_t bandOffset{0u};
-    for(std::size_t i{0u}; i < chebyBands.size(); ++i)
-    {
-        T middleValA{0.0}, middleValB{0.0};
-        if(chebyBands[i].xs == 0u) {
-            subIntervals.push_back(
-                std::make_pair(chebyBands[i].start, 
-                               chebyBands[i].stop));
-        } else {
-            if (bandOffset < x.size() 
-                && x[bandOffset] > chebyBands[i].start
-                && x[bandOffset] < chebyBands[i].stop)
-            {
-                middleValA = x[bandOffset];
-                subIntervals.push_back(
-                    std::make_pair(chebyBands[i].start, middleValA));
-                if (chebyBands[i].xs == 1u) {
-                    subIntervals.push_back(
-                        std::make_pair(middleValA, 
-                                       chebyBands[i].stop));
-                }
-            } else {
-                middleValA = chebyBands[i].start;
-                if(chebyBands[i].xs == 1u) {
-                    subIntervals.push_back(std::make_pair(
-                        middleValA, chebyBands[i].stop
-                    ));
-                }
-            }
-        }
-        if(bandOffset < x.size() 
-           && chebyBands[i].xs > 1)
-        {
-            for(std::size_t j{bandOffset};
-                j < bandOffset + chebyBands[i].xs - 1u; ++j)
-            {
-                middleValB = x[j + 1];
-                subIntervals.push_back(std::make_pair(middleValA, middleValB));
-                middleValA = middleValB;
-            }
-            if(middleValA != chebyBands[i].stop)
-                subIntervals.push_back(
-                    std::make_pair(middleValA, chebyBands[i].stop));
-        }
-        bandOffset += chebyBands[i].xs;
-    }
-}*/
-
 template<typename T>
 void split(std::vector<std::pair<T, T>>& subIntervals,
         std::vector<band_t<T>>& chebyBands,
@@ -377,10 +324,8 @@ void extremaSearch(T& convergenceOrder,
     std::pair<T, T> dom{std::make_pair(-1.0, 1.0)};
 
     split(subIntervals, chebyBands, x);
-    //std::cout << "Number of subintervals: "
-    //    << subIntervals.size() << std::endl;
 
-    // 2.   Compute the barycentric variables (i.e. weights)
+    // 2.   Compute the barycentric variables (i.e., weights)
     //      needed for the current iteration
 
     std::vector<T> w(x.size());
@@ -451,7 +396,7 @@ void extremaSearch(T& convergenceOrder,
             mpfr_prec_t prevPrec = mpfr::mpreal::get_default_prec();
             mpfr::mpreal::set_default_prec(prec);
         #endif
-        // find the Chebyshev nodes scaled to the current subinterval  
+        // find the Chebyshev nodes scaled to the current subinterval
         std::vector<T> siCN(Nmax + 1u);
         chgvar(siCN, chebyNodes, subIntervals[i].first,
                 subIntervals[i].second);
@@ -541,8 +486,6 @@ void extremaSearch(T& convergenceOrder,
         ++extremaIt;
     }
     std::vector<std::pair<T, T>> bufferExtrema;
-    //std::cout << "Alternating extrema: " << x.size() << " | "
-    //    << alternatingExtrema.size() << std::endl;
 
     if(alternatingExtrema.size() < x.size())
     {
@@ -639,7 +582,6 @@ void extremaSearch(T& convergenceOrder,
         exit(EXIT_FAILURE);
     }
 
-    //std::cout << "After removal: " << alternatingExtrema.size() << std::endl;
     for (auto& it : alternatingExtrema)
     {
         eigenExtrema.push_back(it.first);
@@ -648,10 +590,8 @@ void extremaSearch(T& convergenceOrder,
         maxError = pmmath::fmax(maxError, absError);
     }
 
-    //std::cout << "Min error = " << minError << std::endl;
-    //std::cout << "Max error = " << maxError << std::endl;
     convergenceOrder = (maxError - minError) / maxError;
-    //std::cout << "Convergence order = " << convergenceOrder << std::endl;
+
     // update the extrema count in each frequency band
     std::size_t bIndex{0u};
     for(std::size_t i{0u}; i < chebyBands.size(); ++i)
@@ -677,7 +617,7 @@ void extremaSearch(T& convergenceOrder,
 
 
 // REMARK: remember that this routine assumes that the information
-// pertaining to the reference x and the frequency bands (i.e. the
+// pertaining to the reference x and the frequency bands (i.e., the
 // number of reference values inside each band) is given at the
 // beginning of the execution
 template<typename T>
@@ -694,15 +634,14 @@ pmoutput_t<T> exchange(std::vector<T>& x,
                 return lhs < rhs;
             });
     std::vector<T> startX{x};
-    std::cout.precision(20);
     cycle = false;
-    T qp1, qp2;
+    T qp1 = 0;
+    T qp2 = 0;
 
     output.q = 1;
     output.iter = 0u;
     do {
         ++output.iter;
-        //std::cout << "*********ITERATION " << output.iter << " **********\n";
         extremaSearch(output.q, output.delta,
                 output.x, startX, chebyBands, Nmax, prec);
         startX = output.x;
@@ -711,6 +650,8 @@ pmoutput_t<T> exchange(std::vector<T>& x,
         else if(output.iter == 2u)
             qp1 = output.q;
         else {
+            // potential cycling, tweak reference update strategy (if
+            // reference set candidate is large)
             if(pmmath::fabs(qp2-output.q)/pmmath::fabs(qp2) < eps*1e-5)
                 cycle = true;
             qp2 = qp1;
@@ -739,7 +680,6 @@ pmoutput_t<T> exchange(std::vector<T>& x,
     baryweights(finalAlpha, output.x);
     T finalDelta = output.delta;
     output.delta = pmmath::fabs(output.delta);
-    //std::cout << "MINIMAX delta = " << output.delta << std::endl;
     compc(finalC, finalDelta, output.x, chebyBands);
     std::vector<T> finalChebyNodes(degree + 1);
     equipts(finalChebyNodes, degree + 1);
@@ -812,7 +752,7 @@ pmoutput_t<T> firpm(std::size_t n,
             std::size_t nmax,
             init_t strategy,
             std::size_t depth,
-            init_t rstrategy, 
+            init_t rstrategy,
             unsigned long prec)
 {
     parseSpecification(f, a, w);
@@ -868,7 +808,7 @@ pmoutput_t<T> firpm(std::size_t n,
                 for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
                     if(fbands[i].part[j]*(1.0-1e-12) <= x && x <= fbands[i].part[j+1u]*(1.0+1e-12)) {
                         if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
-                            return ((x-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] - 
+                            return ((x-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] -
                                     (x-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
                                     (fbands[i].part[j+1u] - fbands[i].part[j]);
                         } else {
@@ -909,7 +849,7 @@ pmoutput_t<T> firpm(std::size_t n,
                 for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
                     if(fbands[i].part[j]*(1.0-1e-12) <= nx && nx <= fbands[i].part[j+1u]*(1.0+1e-12)) {
                         if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
-                            return ((nx-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] - 
+                            return ((nx-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] -
                                     (nx-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
                                     (fbands[i].part[j+1u] - fbands[i].part[j]) / pmmath::cos(nx/2);
                         }
@@ -944,9 +884,9 @@ pmoutput_t<T> firpm(std::size_t n,
         strategy = init_t::AFP;
 
     switch(strategy) {
-        case init_t::UNIFORM: 
+        case init_t::UNIFORM:
         {
-            if (fbands.size() <= (deg + 2u) / 4) { 
+            if (fbands.size() <= (deg + 2u) / 4) {
                 std::vector<T> omega;
                 uniform(omega, fbands, deg + 2u);
                 cos(x, omega);
@@ -967,7 +907,7 @@ pmoutput_t<T> firpm(std::size_t n,
             }
             output = exchange(x, cbands, eps, nmax, prec);
         } break;
-        case init_t::SCALING: 
+        case init_t::SCALING:
         {
             std::vector<std::size_t> sdegs(depth+1u);
             sdegs[depth] = deg;
@@ -992,7 +932,7 @@ pmoutput_t<T> firpm(std::size_t n,
                             << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
                         exit(EXIT_FAILURE);
                     }
-                    countBand(cbands, x);                    
+                    countBand(cbands, x);
                 }
                 output = exchange(x, cbands, eps, nmax, prec);
             } else { // AFP-based strategy
@@ -1011,7 +951,7 @@ pmoutput_t<T> firpm(std::size_t n,
             }
             for(std::size_t i{1u}; i <= depth && output.q <= 0.5; ++i) {
                 x.clear();
-                referenceScaling(x, cbands, fbands, sdegs[i]+2u, 
+                referenceScaling(x, cbands, fbands, sdegs[i]+2u,
                                  output.x, cbands, fbands);
                 output = exchange(x, cbands, eps, nmax, prec);
             }
@@ -1054,8 +994,8 @@ pmoutput_t<T> firpmRS(std::size_t n,
             std::vector<T>const &a,
             std::vector<T>const &w,
             double eps,
-	        std::size_t nmax,
-            std::size_t depth, 
+            std::size_t nmax,
+            std::size_t depth,
             init_t rstrategy,
             unsigned long prec)
 {
@@ -1099,7 +1039,7 @@ pmoutput_t<T> firpm(std::size_t n,
             if(fn[1u] < 1e-5)
                 fn[0u] = fn[1u] / 2;
             else
-                fn[0u] = 1e-5;                    
+                fn[0u] = 1e-5;
         }
         if(f[f.size() - 1u] == 1.0) {
             if(f[f.size() - 2u] > 0.9999)
@@ -1121,7 +1061,7 @@ pmoutput_t<T> firpm(std::size_t n,
             fbands[0u].amplitude = [sFactor](space_t space, T x) -> T {
                 if(space == space_t::FREQ)
                     return (x / pmmath::sin(x)) * sFactor;
-                else 
+                else
                     return (pmmath::acos(x) / pmmath::sqrt(T(1.0) - x * x)) * sFactor;
             };
         } else { // FIR_HILBERT
@@ -1134,7 +1074,7 @@ pmoutput_t<T> firpm(std::size_t n,
             fbands[0u].amplitude = [&a, &fbands](space_t space, T x) -> T {
                 if(space == space_t::CHEBY)
                     x = pmmath::acos(x);
-                if(a[0u] != a[1u]) 
+                if(a[0u] != a[1u])
                     return (((x - fbands[0].start) * a[1u] -
                             (x - fbands[0].stop) * a[0u]) /
                             (fbands[0u].stop - fbands[0u].start)) / pmmath::sin(x);
@@ -1175,7 +1115,7 @@ pmoutput_t<T> firpm(std::size_t n,
                         x = pmmath::acos(x);
                     if(a[2u * i] != a[2u * i + 1u])
                         return (((x - fbands[i].start) * a[2u * i + 1u] -
-                                (x - fbands[i].stop) * a[2u * i]) / 
+                                (x - fbands[i].stop) * a[2u * i]) /
                                 (fbands[i].stop - fbands[i].start)) / pmmath::sin(x);
                     return a[2u * i] / pmmath::sin(x);
                 };
@@ -1200,9 +1140,9 @@ pmoutput_t<T> firpm(std::size_t n,
                     return (pmmath::sin(pmmath::acos(x) / 2) / pmmath::acos(x)) * w[0u];
             };
             fbands[0u].amplitude = [sFactor](space_t space, T x) -> T {
-                if(space == space_t::FREQ) 
+                if(space == space_t::FREQ)
                     return (x / pmmath::sin(x / 2)) * sFactor;
-                else 
+                else
                     return (pmmath::acos(x) / pmmath::sin(pmmath::acos(x) / 2)) * sFactor;
             };
         } else { // FIR_HILBERT
@@ -1215,7 +1155,7 @@ pmoutput_t<T> firpm(std::size_t n,
             fbands[0u].amplitude = [&fbands, &a](space_t space, T x) -> T {
                 if(space == space_t::CHEBY)
                     x = pmmath::acos(x);
-                if(a[0u] != a[1u]) 
+                if(a[0u] != a[1u])
                     return (((x - fbands[0].start) * a[1u] -
                             (x - fbands[0].stop) * a[0u]) /
                             (fbands[0].stop - fbands[0].start)) / pmmath::sin(x / 2);
@@ -1253,7 +1193,7 @@ pmoutput_t<T> firpm(std::size_t n,
                 fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
                     if(space == space_t::CHEBY)
                         x = pmmath::acos(x);
-                    if(a[2u * i] != a[2u * i + 1u]) 
+                    if(a[2u * i] != a[2u * i + 1u])
                         return (((x - fbands[i].start) * a[2u * i + 1u] -
                                 (x - fbands[i].stop) * a[2u * i]) /
                                 (fbands[i].stop - fbands[i].start)) / pmmath::sin(x / 2);
@@ -1278,9 +1218,9 @@ pmoutput_t<T> firpm(std::size_t n,
         strategy = init_t::AFP;
 
     switch(strategy) {
-        case init_t::UNIFORM: 
+        case init_t::UNIFORM:
         {
-            if (fbands.size() <= (deg + 2u) / 4) { 
+            if (fbands.size() <= (deg + 2u) / 4) {
                 std::vector<T> omega;
                 uniform(omega, fbands, deg + 2u);
                 cos(x, omega);
@@ -1301,7 +1241,7 @@ pmoutput_t<T> firpm(std::size_t n,
             }
             output = exchange(x, cbands, eps, nmax, prec);
         } break;
-        case init_t::SCALING: 
+        case init_t::SCALING:
         {
             std::vector<std::size_t> sdegs(depth+1u);
             sdegs[depth] = deg;
@@ -1326,7 +1266,7 @@ pmoutput_t<T> firpm(std::size_t n,
                             << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
                         exit(EXIT_FAILURE);
                     }
-                    countBand(cbands, x);                    
+                    countBand(cbands, x);
                 }
                 output = exchange(x, cbands, eps, nmax);
             } else { // AFP-based strategy
@@ -1345,7 +1285,7 @@ pmoutput_t<T> firpm(std::size_t n,
             }
             for(std::size_t i{1u}; i <= depth && output.q <= 0.5; ++i) {
                 x.clear();
-                referenceScaling(x, cbands, fbands, sdegs[i]+2u, 
+                referenceScaling(x, cbands, fbands, sdegs[i]+2u,
                                  output.x, cbands, fbands);
                 output = exchange(x, cbands, eps, nmax, prec);
             }
@@ -1404,7 +1344,7 @@ pmoutput_t<T> firpmRS(std::size_t n,
             std::vector<T>const &a,
             std::vector<T>const &w,
             filter_t type,
-	        double eps,
+            double eps,
             std::size_t nmax, std::size_t depth,
             init_t rstrategy,
             unsigned long prec)
@@ -1419,7 +1359,7 @@ pmoutput_t<T> firpmAFP(std::size_t n,
             std::vector<T>const &a,
             std::vector<T>const &w,
             filter_t type,
-	        double eps,
+            double eps,
             std::size_t nmax,
             unsigned long prec)
 {
@@ -1434,16 +1374,16 @@ template void uniform<double>(std::vector<double>& omega,
             std::vector<band_t<double>>& B, std::size_t n);
 
 template void referenceScaling<double>(std::vector<double>& newX,
-	        std::vector<band_t<double>>& newChebyBands,
+            std::vector<band_t<double>>& newChebyBands,
             std::vector<band_t<double>>& newFreqBands,
-	        std::size_t newXSize,
+            std::size_t newXSize,
             std::vector<double>& x,
-	        std::vector<band_t<double>>& chebyBands,
+            std::vector<band_t<double>>& chebyBands,
             std::vector<band_t<double>>& freqBands);
 
 template pmoutput_t<double> exchange<double>(std::vector<double>& x,
-            std::vector<band_t<double>>& chebyBands, 
-            double eps, 
+            std::vector<band_t<double>>& chebyBands,
+            double eps,
             std::size_t nmax,
             unsigned long prec);
 
@@ -1511,16 +1451,16 @@ template void uniform<long double>(std::vector<long double>& omega,
             std::vector<band_t<long double>>& B, std::size_t n);
 
 template void referenceScaling<long double>(std::vector<long double>& newX,
-	        std::vector<band_t<long double>>& newChebyBands,
+            std::vector<band_t<long double>>& newChebyBands,
             std::vector<band_t<long double>>& newFreqBands,
-	        std::size_t newXSize,
+            std::size_t newXSize,
             std::vector<long double>& x,
-	        std::vector<band_t<long double>>& chebyBands,
+            std::vector<band_t<long double>>& chebyBands,
             std::vector<band_t<long double>>& freqBands);
 
 template pmoutput_t<long double> exchange<long double>(std::vector<long double>& x,
-            std::vector<band_t<long double>>& chebyBands, 
-            double eps, 
+            std::vector<band_t<long double>>& chebyBands,
+            double eps,
             std::size_t nmax,
             unsigned long prec);
 
@@ -1597,8 +1537,8 @@ template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
                 std::vector<band_t<mpfr::mpreal>>& freqBands);
 
     template pmoutput_t<mpfr::mpreal> exchange<mpfr::mpreal>(std::vector<mpfr::mpreal>& x,
-                std::vector<band_t<mpfr::mpreal>>& chebyBands, 
-                double eps, 
+                std::vector<band_t<mpfr::mpreal>>& chebyBands,
+                double eps,
                 std::size_t nmax, unsigned long prec);
 
     template pmoutput_t<mpfr::mpreal> firpm<mpfr::mpreal>(std::size_t n,

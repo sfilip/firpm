@@ -28,21 +28,21 @@
 #include "util.h"
 
 /**
- * The interval type being considered (in \f$\left[0, \pi\right]\f$ 
+ * The interval type being considered (in \f$\left[0, \pi\right]\f$
  * or in \f$\left[-1, 1\right]\f$)
  */
 enum space_t {
-    FREQ,           /**< not done the change of variable 
+    FREQ,           /**< not done the change of variable
                     (i.e., we are in \f$\left[0, \pi\right]\f$) */
-    CHEBY           /**< done the change of variable 
+    CHEBY           /**< done the change of variable
                     (i.e., we are in \f$\left[-1, 1\right]\f$) */
 };
 
 /**
- * @brief A data type encapsulating information relevant to a 
+ * @brief A data type encapsulating information relevant to a
  * frequency band
  *
- * Contains important information concerning a frequency band 
+ * Contains important information concerning a frequency band
  * used during the execution of the exchange algorithm.
  */
 template<typename T>
@@ -69,7 +69,7 @@ enum convdir_t {
 /*! Performs the change of variable on the set of bands of interest
  * @param[out] out output frequency bands
  * @param[in]  in input frequency bands
- * @param[in]  direction the direction in which the change of 
+ * @param[in]  direction the direction in which the change of
  * variable is performed
  */
 template<typename T>

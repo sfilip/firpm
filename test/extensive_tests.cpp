@@ -24,15 +24,15 @@ TYPED_TEST_SUITE(firpm_extensive_test, types);
 template<typename T>
 void printInfo(pmoutput_t<T>& output, double eps)
 {
-	if(output.q < eps)
-	{
-		std::cout << "Final delta     = " << output.delta << std::endl;
-		std::cout << "Iteration count = " << output.iter << std::endl;
-	}
-	else
-	{
-		std::cout << "Iteration count = NC\n";
-	}
+    if(output.q < eps)
+    {
+        std::cout << "Final delta     = " << output.delta << std::endl;
+        std::cout << "Iteration count = " << output.iter << std::endl;
+    }
+    else
+    {
+        std::cout << "Iteration count = NC\n";
+    }
 }
 
 template<typename T>
@@ -1082,7 +1082,7 @@ TYPED_TEST(firpm_extensive_test, extensive41)
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
-    
+
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with AFP\n";
         auto output3 = firpmAFP<T>(774, {0.0, 0.24, 0.25, 0.39, 0.4, 0.57, 0.58, 0.7, 0.71, 0.8, 0.81, 0.92, 0.93, 1.0},
@@ -1219,7 +1219,7 @@ TYPED_TEST(firpm_extensive_test, extensive46)
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
     ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
-    
+
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with AFP\n";
         auto output3 = firpmAFP<T>(801, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
@@ -1236,7 +1236,7 @@ TYPED_TEST(firpm_extensive_test, extensive46)
 TYPED_TEST(firpm_extensive_test, extensive47)
 {
     using T = typename TestFixture::T;
-        
+
     std::cout << "START Parks-McClellan with reference scaling\n";
     auto output2 = firpmRS<T>(1601, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output2, 1e-2);
@@ -1257,7 +1257,7 @@ TYPED_TEST(firpm_extensive_test, extensive47)
 TYPED_TEST(firpm_extensive_test, extensive48)
 {
     using T = typename TestFixture::T;
-        
+
     std::cout << "START Parks-McClellan with reference scaling\n";
     auto output2 = firpmRS<T>(1847, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output2, 1e-2);

@@ -13,9 +13,9 @@ They have now been merged into one template version.
 
 ## Installation instructions
 
-This code has been tested on recent Mac OS X (>= 10.14) and Linux installations. 
+This code has been tested on recent Mac OS X (>= 10.14) and Linux installations.
 In order to compile and use it, a recent C++ compiler with C++11 support is necessary
-(recent g++ and clang compilers have been shown to work). An active internet 
+(recent g++ and clang compilers have been shown to work). An active internet
 connection and some external utilities and libraries must also be installed and
 available on your system search paths:
 * CMake version 3.12 or newer
@@ -26,7 +26,7 @@ available on your system search paths:
 * Google gtest framework for generating the test executables will be downloaded during CMake configuration
 
 Assuming these prerequisites are taken care of and you are located at the base
-folder, building the library can be done using the following commands 
+folder, building the library can be done using the following commands
 (with the appropriate user privileges):
 
         mkdir build
@@ -35,22 +35,22 @@ folder, building the library can be done using the following commands
         make all
         make install
 
-This series of steps will install the library on your system. Usually the default 
-location is /usr/local, but this behavior can be changed when calling CMake by 
+This series of steps will install the library on your system. Usually the default
+location is /usr/local, but this behavior can be changed when calling CMake by
 specifying an explicit install prefix:
 
         cmake -DCMAKE_INSTALL_PREFIX=/your/install/path/here ..
 
 
-With gtest downloaded in the build directory, the *make all* command should 
+With gtest downloaded in the build directory, the *make all* command should
 have generated two test executables:
 * firpmlib_scaling_test : should contain code to generate all the example filters used in [1] and tests for subsequent bugs
 * firpmlib_extensive_test : contains a more extensive set of over 50 different filters, giving an iteration count comparison for uniform initialization, reference scaling and AFP initialization, when applicable.
 
 The *make test* command will launch these two test executables on your system.
 
-The *make all* target also generates the documentation if Doxygen was found on 
-your system when running CMake. It can also be generated individually by running 
+The *make all* target also generates the documentation if Doxygen was found on
+your system when running CMake. It can also be generated individually by running
 the command
 
         make doc
@@ -58,12 +58,12 @@ the command
 after CMake was called.
 
 
-Running the test executables will print out information regarding the final reference error 
-(i.e., final delta value) obtained when executing the Parks-McClellan exchange algorithm, 
-along with iteration count information. Depending on your machine, these tests can take 
+Running the test executables will print out information regarding the final reference error
+(i.e., final delta value) obtained when executing the Parks-McClellan exchange algorithm,
+along with iteration count information. Depending on your machine, these tests can take
 some time to finish.
 
-An example output for one test case from firpm_scaling_test (using the long double 
+An example output for one test case from firpm_scaling_test (using the long double
 instantiation) of the routines looks like this:
 
         [ RUN      ] firpm_scaling_test/1.combfir

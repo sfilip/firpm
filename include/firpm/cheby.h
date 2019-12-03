@@ -95,10 +95,10 @@ void diffcoeffs(std::vector<T>& dc,
 * we want to find
 * @param[in] dom the real domain where we are looking for the roots
 * @param[in] kind the type of Chebyshev expansion (first or second)
-* @param[in] balance flag signaling if we should use balancing (in 
+* @param[in] balance flag signaling if we should use balancing (in
 * the vein of [Parlett&Reinsch1969] "Balancing a Matrix for
-* Calculation of Eigenvalues and Eigenvectors") for the resulting 
-* Chebyshev companion matrix 
+* Calculation of Eigenvalues and Eigenvectors") for the resulting
+* Chebyshev companion matrix
 */
 template<typename T>
 void roots(std::vector<T>& r, std::vector<T>& c,
