@@ -1056,3 +1056,59 @@ TYPED_TEST(firpm_issues_test, partition4) {
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
 }
+
+TYPED_TEST(firpm_issues_test, halfband1) {
+
+    using T = typename TestFixture::T;
+    std::size_t degree = 59u;
+    std::cout << "START Parks-McClellan with uniform initialization\n";
+    auto output1 = firpm<T>(degree * 2u + 1u,
+				{0.000000000000000e+00, 8.000000000000000e-03, 9.920000000000000e-01, 1.000000000000000e+00},
+				{1.000000000000000e+00, 1.000201019702234e+00, 0.000000000000000e+00, 0.000000000000000e+00},
+				{1, 1}, 1e-5, 8u);
+    std::cout << "Final Delta     = " << output1.delta << std::endl;
+    std::cout << "Iteration count = " << output1.iter  << std::endl;
+    std::cout << "FINISH Parks-McClellan with uniform initialization\n";
+    ASSERT_LT(output1.q, 1e-5);
+
+    std::cout << "START Parks-McClellan with reference scaling\n";
+    auto output2 = firpmRS<T>(degree * 2u + 1u,
+				{0.000000000000000e+00, 8.000000000000000e-03, 9.920000000000000e-01, 1.000000000000000e+00},
+				{1.000000000000000e+00, 1.000201019702234e+00, 0.000000000000000e+00, 0.000000000000000e+00},
+				{1, 1}, 1e-5, 8u);
+    std::cout << "Final Delta     = " << output2.delta << std::endl;
+    std::cout << "Iteration count = " << output2.iter  << std::endl;
+    std::cout << "FINISH Parks-McClellan with reference scaling\n";
+    ASSERT_LT(output2.q, 1e-5);
+    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-5);
+
+    std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
+}
+
+TYPED_TEST(firpm_issues_test, halfband2) {
+
+    using T = typename TestFixture::T;
+    std::size_t degree = 73u;
+    std::cout << "START Parks-McClellan with uniform initialization\n";
+    auto output1 = firpm<T>(degree * 2u + 1u,
+                             {0.000000000000000e+00, 2.393333333333333e-01, 7.606666666666667e-01, 1.000000000000000e+00},
+                             {1.000000000000000e+00, 1.050247434862705e+00, 0.000000000000000e+00, 0.000000000000000e+00},
+                             {1, 20});
+    std::cout << "Final Delta     = " << output1.delta << std::endl;
+    std::cout << "Iteration count = " << output1.iter  << std::endl;
+    std::cout << "FINISH Parks-McClellan with uniform initialization\n";
+    ASSERT_LT(output1.q, 1e-2);
+
+    std::cout << "START Parks-McClellan with reference scaling\n";
+    auto output2 = firpmRS<T>(degree * 2u + 1u,
+                             {0.000000000000000e+00, 2.393333333333333e-01, 7.606666666666667e-01, 1.000000000000000e+00},
+                             {1.000000000000000e+00, 1.050247434862705e+00, 0.000000000000000e+00, 0.000000000000000e+00},
+                             {1, 20});
+    std::cout << "Final Delta     = " << output2.delta << std::endl;
+    std::cout << "Iteration count = " << output2.iter  << std::endl;
+    std::cout << "FINISH Parks-McClellan with reference scaling\n";
+    ASSERT_LT(output2.q, 1e-2);
+    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+
+    std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
+}
