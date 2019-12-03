@@ -45,7 +45,7 @@ specifying an explicit install prefix:
 With gtest downloaded in the build directory, the *make all* command should
 have generated two test executables:
 * firpmlib_scaling_test : should contain code to generate all the example filters used in [1] and tests for subsequent bugs
-* firpmlib_extensive_test : contains a more extensive set of over 50 different filters, giving an iteration count comparison for uniform initialization, reference scaling and AFP initialization, when applicable.
+* firpmlib_extensive_test : contains a more extensive set of over 50 different filters, giving an iteration count comparison for uniform initialization, reference scaling and AFP initialization, when applicable
 
 The *make test* command will launch these two test executables on your system.
 
