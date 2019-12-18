@@ -999,7 +999,13 @@ pmoutput_t<T> firpmRS(std::size_t n,
             init_t rstrategy,
             unsigned long prec)
 {
-    return firpm<T>(n, f, a, w, eps, nmax, init_t::SCALING, depth, rstrategy, prec);
+    if( n < 2u*f.size()) {
+        std::cout << "WARNING: too small filter length to use reference scaling.\n"
+            << "Switching to a uniform initialization strategy\n";
+        return firpm<T>(n, f, a, w, eps, nmax, init_t::UNIFORM, depth, rstrategy, prec);
+    } else {
+        return firpm<T>(n, f, a, w, eps, nmax, init_t::SCALING, depth, rstrategy, prec);
+    }
 }
 
 template<typename T>
