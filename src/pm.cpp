@@ -973,6 +973,10 @@ pmoutput_t<T> firpm(std::size_t n,
     }
 
     h.resize(n+1u);
+    if (output.h.size() != deg + 1u) {
+        std::cerr << "ERROR: final filter coefficient set is incomplete, aborting computation\n";
+        exit(EXIT_FAILURE);
+    }
     if(n % 2 == 0) {
         h[deg] = output.h[0];
         for(std::size_t i{0u}; i < deg; ++i)
@@ -1313,6 +1317,10 @@ pmoutput_t<T> firpm(std::size_t n,
     }
 
     h.resize(n + 1u);
+    if (output.h.size() != deg + 1u) {
+        std::cerr << "ERROR: final filter coefficient set is incomplete, aborting computation\n";
+        exit(EXIT_FAILURE);
+    }
     if(n % 2 == 0)
     {
         h[deg + 1u] = 0;
@@ -1355,8 +1363,14 @@ pmoutput_t<T> firpmRS(std::size_t n,
             init_t rstrategy,
             unsigned long prec)
 {
-    return firpm<T>(n, f, a, w, type, eps, nmax,
-                 init_t::SCALING, depth, rstrategy, prec);
+    if( n < 2u*f.size()) {
+        std::cout << "WARNING: too small filter length to use reference scaling.\n"
+            << "Switching to a uniform initialization strategy\n";
+        return firpm<T>(n, f, a, w, type, eps, nmax, init_t::UNIFORM, depth, rstrategy, prec);
+    } else {
+        return firpm<T>(n, f, a, w, type, eps, nmax, init_t::SCALING, depth, rstrategy, prec);
+    }
+
 }
 
 template<typename T>
