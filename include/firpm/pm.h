@@ -190,7 +190,8 @@ template<typename T>
 pmoutput_t<T> exchange(std::vector<T>& x,
         std::vector<band_t<T>>& cbands,
         double eps = 0.01,
-        std::size_t nmax = 4u, unsigned long prec = 165ul);
+        std::size_t nmax = 4u, 
+        unsigned long prec = 165ul);
 
 /*! Parks-McClellan routine for implementing type I and II FIR filters.
  * This routine is the most general and can be set to use any of the three
