@@ -43,14 +43,13 @@ enum class filter_t {
 
 /** @enum init_t flag representing the
  * initialization strategies that can be used
- * at the lowest level of the scaling approach
- * */
+ * at the lowest level of the scaling approach 
+ */
 enum class init_t {
     UNIFORM,                /**< uniform initialization marker */
     SCALING,                /**< reference scaling-based initialization */
     AFP                     /**< AFP algorithm-based initialization */
 };
-
 
 /**
  * @brief The type of the object returned by the Parks-McClellan algorithm.
@@ -61,13 +60,14 @@ enum class init_t {
 template<typename T>
 struct pmoutput_t
 {
-    std::vector<T> h;         /**< the final filter coefficients*/
-    std::vector<T> x;         /**< the reference set used to generate the final
-                                filter (values are in \f$[-1,1]\f$ and NOT \f$[0,\pi]\f$)*/
-    std::size_t iter;         /**< number of iterations that were necessary to
+    std::vector<T> h;           /**< the final filter coefficients*/
+    std::vector<T> x;           /**< the reference set used to generate the final
+                                filter (values are in \f$[-1,1]\f$ and NOT 
+                                \f$[0,\pi]\f$)*/
+    std::size_t iter;           /**< number of iterations that were necessary to
                                 achieve convergence*/
-    T delta;             /**< the final reference error */
-    T q;                 /**< convergence parameter value */
+    T delta;                    /**< the final reference error */
+    T q;                        /**< convergence parameter value */
 };
 
 /*! An implementation of the uniform initialization approach for

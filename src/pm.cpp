@@ -1,5 +1,5 @@
 //    firpm_d
-//    Copyright (C) 2015-2019  S. Filip
+//    Copyright (C) 2015-2020  S. Filip
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <stdexcept>
 
 template<typename T>
 using MatrixXd = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
@@ -128,10 +129,7 @@ void uniform(std::vector<T>& omega,
         B[i].xs = 1u;
     }
     if(nonPointBands.empty())
-    {
-        std::cerr << "ERROR: All intervals are points!\n";
-        exit(EXIT_FAILURE);
-    }
+        throw std::domain_error("ERROR: All frequency band intervals are points");
 
     avgDist /= (omega.size() - B.size());
     std::size_t npSize = nonPointBands.size();
@@ -251,10 +249,8 @@ void referenceScaling(std::vector<T>& newX, std::vector<band_t<T>>& newChebyBand
         offset += chebyBands[i].xs;
     }
     if(newXSize > newX.size())
-    {
-        std::cerr << "ERROR: Failed to do reference scaling\n";
-        exit(EXIT_FAILURE);
-    }
+        throw std::runtime_error("ERROR: Failed to do reference scaling");
+
     newX.resize(newXSize);
     std::sort(newX.begin(), newX.end());
     std::size_t total = 0u;
@@ -268,11 +264,7 @@ void referenceScaling(std::vector<T>& newX, std::vector<band_t<T>>& newChebyBand
                 }
     }
     if(total != newXSize)
-    {
-        std::cout << "ERROR: Failed to find reference scaling distribution!\n";
-        exit(EXIT_FAILURE);
-    }
-
+        throw std::runtime_error("ERROR: Failed to find reference scaling distribution");
 
     for (std::size_t i{0u}; i < chebyBands.size(); ++i)
     {
@@ -327,13 +319,10 @@ void extremaSearch(T& convergenceOrder,
 
     // 2.   Compute the barycentric variables (i.e., weights)
     //      needed for the current iteration
-
     std::vector<T> w(x.size());
     baryweights(w, x);
 
-
     compdelta(delta, w, x, chebyBands);
-    //std::cout << "delta = " << delta << std::endl;
 
     std::vector<T> C(x.size());
     compc(C, delta, x, chebyBands);
@@ -353,7 +342,6 @@ void extremaSearch(T& convergenceOrder,
             delta, x, C, w, chebyBands);
     potentialExtrema.push_back(std::make_pair(
             chebyBands[0].start, extremaErrorValue));
-
 
     for (std::size_t i{0u}; i < chebyBands.size() - 1u; ++i)
     {
@@ -386,9 +374,7 @@ void extremaSearch(T& convergenceOrder,
             chebyBands[chebyBands.size() - 1u].stop,
             extremaErrorValue));
 
-
     std::vector<std::vector<T>> pExs(subIntervals.size());
-
     #pragma omp parallel for
     for (std::size_t i = 0u; i < subIntervals.size(); ++i)
     {
@@ -477,7 +463,8 @@ void extremaSearch(T& convergenceOrder,
              pmmath::signbit(potentialExtrema[extremaIt + 1u].second)))
         {
             ++extremaIt;
-            if (pmmath::fabs(maxErrorPoint.second) < pmmath::fabs(potentialExtrema[extremaIt].second))
+            if (pmmath::fabs(maxErrorPoint.second) < 
+                pmmath::fabs(potentialExtrema[extremaIt].second))
                 maxErrorPoint = potentialExtrema[extremaIt];
         }
         if (pmmath::isfinite(maxErrorPoint.second)) {
@@ -491,7 +478,7 @@ void extremaSearch(T& convergenceOrder,
     {
         std::cerr << "WARNING: The exchange algorithm did not converge.\n";
         std::cerr << "TRIGGER: Not enough alternating extrema!\n"
-            << "POSSIBLE CAUSE: Nmax too small\n";
+                  << "POSSIBLE CAUSE: nmax too small\n";
         convergenceOrder = 2.0;
         return;
     }
@@ -577,10 +564,7 @@ void extremaSearch(T& convergenceOrder,
             cycle = false;
     }
     if (alternatingExtrema.size() < x.size())
-    {
-        std::cerr << "Trouble!\n";
-        exit(EXIT_FAILURE);
-    }
+        throw std::runtime_error("ERROR: Insufficient error alternation points found");
 
     for (auto& it : alternatingExtrema)
     {
@@ -662,17 +646,16 @@ pmoutput_t<T> exchange(std::vector<T>& x,
     } while (output.q > eps && output.iter <= 100u);
 
     if(pmmath::isnan(output.delta) || pmmath::isnan(output.q))
-        std::cerr << "WARNING: The exchange algorithm did not converge.\n"
+        std::cout << "WARNING: The exchange algorithm did not converge.\n"
             << "TRIGGER: numerical instability\n"
-            << "POSSIBLE CAUSES: poor starting reference and/or "
-            << "a too small value for Nmax.\n";
+            << "POSSIBLE CAUSE: poor starting reference and/or "
+            << "a too small value for nmax.\n";
 
-    if(output.iter >= 101u)
-        std::cerr << "WARNING: The exchange algorithm did not converge.\n"
+    if(output.iter >= 101u && output.q > eps)
+        std::cout << "WARNING: The exchange algorithm did not converge.\n"
             << "TRIGGER: exceeded iteration threshold of 100\n"
-            << "POSSIBLE CAUSES: poor starting reference and/or "
-            << "a too small value for Nmax.\n";
-
+            << "POSSIBLE CAUSE: poor starting reference and/or "
+            << "a too small value for nmax.\n";
 
     output.h.resize(degree + 1u);
     std::vector<T> finalC(output.x.size());
@@ -686,9 +669,18 @@ pmoutput_t<T> exchange(std::vector<T>& x,
     cos(finalChebyNodes, finalChebyNodes);
     std::vector<T> fv(degree + 1);
 
-    for (std::size_t i{0u}; i < fv.size(); ++i)
+    for (std::size_t i{0u}; i < fv.size(); ++i) {
         approx(fv[i], finalChebyNodes[i], output.x,
                 finalC, finalAlpha);
+        if (!pmmath::isfinite(fv[i])) {
+            std::stringstream message;
+            message << "ERROR: Invalid frequency response generated.\n"
+                << "TRIGGER: infinite/NaN values in the final frequency response.\n"
+                << "POSSIBLE CAUSE: too small numerical precision and/or a too "
+                << "small value for nmax.";
+            throw std::runtime_error(message.str());
+        }
+    }
 
     chebcoeffs(output.h, fv);
 
@@ -700,47 +692,33 @@ void parseSpecification(std::vector<T> const &f,
             std::vector<T> const &a,
             std::vector<T> const &w)
 {
-    if(f.size() != a.size()) {
-        std::cerr << "ERROR: Frequency and amplitude vector sizes"
-            << " do not match!\n";
-        exit(EXIT_FAILURE);
-    }
+    if(f.size() != a.size())
+        throw std::domain_error("ERROR: Frequency and amplitude vector sizes do not match");
 
-    if(f.size() % 2 != 0) {
-        std::cerr << "ERROR: Frequency band edges must come in pairs!\n";
-        exit(EXIT_FAILURE);
-    }
+    if(f.size() % 2 != 0)
+        throw std::domain_error("ERROR: Frequency band edges must come in pairs");
 
     if(f.size() != w.size() * 2u) {
-        std::cerr << "ERROR: Weight vector size does not match the"
-            << " the number of frequency bands in the specification!\n";
-        exit(EXIT_FAILURE);
+        std::stringstream message;
+        message << "ERROR: Weight vector size does not match the"
+            << " the number of frequency bands in the specification";
+        throw std::domain_error(message.str());
     }
 
     for(std::size_t i{0u}; i < f.size() - 1u; ++i) {
-        if(f[i] == f[i + 1u] && (a[i] != a[i + 1u])) {
-            std::cerr << "ERROR: Adjacent bands with discontinuities"
-                << " are not allowed!\n";
-            exit(EXIT_FAILURE);
-        }
-        if(f[i] > f[i + 1u]) {
-            std::cerr << "ERROR: Frequency vector entries must be in "
-                << "nondecreasing order!\n";
-            exit(EXIT_FAILURE);
-        }
+        if(f[i] == f[i + 1u] && (a[i] != a[i + 1u]))
+            throw std::domain_error("ERROR: Adjacent bands with discontinuities are not allowed");
+    
+        if(f[i] > f[i + 1u]) 
+            throw std::domain_error("ERROR: Frequency vector entries must be nondecreasing");
     }
     for(std::size_t i{0u}; i < w.size(); ++i) {
-        if(w[i] <= 0.0) {
-            std::cerr << "ERROR: Band weights must be positive!\n";
-            exit(EXIT_FAILURE);
-        }
+        if(w[i] <= 0.0) 
+            throw std::domain_error("ERROR: Band weights must be positive");
     }
 
-    if(f[0u] < 0.0 || f[f.size() - 1u] > 1.0) {
-        std::cerr << "ERROR: Normalized frequency band edges must be "
-            << "between 0 and 1!\n";
-        exit(EXIT_FAILURE);
-    }
+    if(f[0u] < 0.0 || f[f.size() - 1u] > 1.0)
+        throw std::domain_error("ERROR: Normalized frequency band edges must be between 0 and 1");
 }
 
 template<typename T>
@@ -755,239 +733,262 @@ pmoutput_t<T> firpm(std::size_t n,
             init_t rstrategy,
             unsigned long prec)
 {
-    parseSpecification(f, a, w);
-    std::vector<T> h;
-    std::vector<band_t<T>> fbands;
-    std::vector<band_t<T>> cbands;
-    std::vector<std::vector<std::size_t>> bIdx;
+    pmoutput_t<T> output;
 
-    std::size_t nbands{0u};
-    bool newBand{true};
-    for(std::size_t i{0u}; i < w.size(); ++i) {
-        if(newBand) {
-            bIdx.push_back({i});
-            newBand = false;
-        }
-        if(i < w.size()-1u && f[2u*i+1u] == f[2u*i+2u]) {
-            if(w[i] != w[i+1u]) {
-                std::cerr << "ERROR: Incompatible weights for partioned band!\n";
-                exit(EXIT_FAILURE);
+    try {
+        parseSpecification(f, a, w);
+        std::vector<T> h;
+        std::vector<band_t<T>> fbands;
+        std::vector<band_t<T>> cbands;
+        std::vector<std::vector<std::size_t>> bIdx;
+
+        std::size_t nbands{0u};
+        bool newBand{true};
+        for(std::size_t i{0u}; i < w.size(); ++i) {
+            if(newBand) {
+                bIdx.push_back({i});
+                newBand = false;
             }
-            bIdx[nbands].push_back(i+1u);
-        } else {
-            ++nbands;
-            newBand = true;
-        }
-    }
-    fbands.resize(bIdx.size());
-
-    if(n % 2 != 0) {
-        if(f[f.size()-1u] == 1 && a[a.size()-1u] != 0) {
-            std::cout << "WARNING: gain at Nyquist frequency different from 0.\n"
-                << "Increasing the number of taps by one and passing to a "
-                << "type I filter" << std::endl;
-            ++n;
-        }
-    }
-    std::size_t deg = n / 2;
-    if(n % 2 == 0) {            // type I filter
-        for(std::size_t i{0u}; i < fbands.size(); ++i) {
-            fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][0u]]));
-            for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
-                fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][j]+1u]));
+            if(i < w.size()-1u && f[2u*i+1u] == f[2u*i+2u]) {
+                if(w[i] != w[i+1u])
+                    throw std::domain_error("ERROR: Incompatible weights for partioned band");
+        
+                bIdx[nbands].push_back(i+1u);
+            } else {
+                ++nbands;
+                newBand = true;
             }
         }
-        for(std::size_t i{0u}; i < fbands.size(); ++i) {
-            fbands[i].start = fbands[i].part[0u];
-            fbands[i].stop  = fbands[i].part[fbands[i].part.size()-1u];
-            fbands[i].space = space_t::FREQ;
+        fbands.resize(bIdx.size());
 
-            fbands[i].amplitude = [i, &a, &bIdx, &fbands](space_t space, T x) -> T {
-                if(space == space_t::CHEBY)
-                    x = pmmath::acos(x);
+        if(n % 2 != 0) {
+            if(f[f.size()-1u] == 1 && a[a.size()-1u] != 0) {
+                std::cout << "WARNING: gain at Nyquist frequency different from 0.\n"
+                    << "Increasing the number of taps by one and passing to a "
+                    << "type I filter" << std::endl;
+                ++n;
+            }
+        }
+        std::size_t deg = n / 2;
+        if(n % 2 == 0) {            // type I filter
+            for(std::size_t i{0u}; i < fbands.size(); ++i) {
+                fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][0u]]));
                 for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
-                    if(fbands[i].part[j]*(1.0-1e-12) <= x && x <= fbands[i].part[j+1u]*(1.0+1e-12)) {
-                        if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
-                            return ((x-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] -
-                                    (x-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
-                                    (fbands[i].part[j+1u] - fbands[i].part[j]);
-                        } else {
-                            return a[2u*bIdx[i][j]];
-                        }
-                    }
-                }
-                // this should never happen
-                return a[2u*bIdx[i][0u]];
-            };
-            fbands[i].weight = [i, &w, &bIdx](space_t, T x) -> T {
-                return w[bIdx[i][0u]];
-            };
-        }
-    } else {                    // type II filter
-        for(std::size_t i{0u}; i < fbands.size(); ++i) {
-            fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][0u]]));
-            for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
-                if(f[2u*bIdx[i][j]+1u] == 1.0) {
-                    if(f[2u*bIdx[i][j]] < 0.9999)
-                        fbands[i].part.push_back(T(pmmath::const_pi<T>() * T(0.9999)));
-                    else
-                        fbands[i].part.push_back(T(pmmath::const_pi<T>() * ((f[2u*bIdx[i][j]]+1u) / 2)));
-                } else {
                     fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][j]+1u]));
                 }
             }
-        }
-        for(std::size_t i{0u}; i < fbands.size(); ++i) {
-            fbands[i].start = fbands[i].part[0u];
-            fbands[i].stop  = fbands[i].part[fbands[i].part.size()-1u];
-            fbands[i].space = space_t::FREQ;
+            for(std::size_t i{0u}; i < fbands.size(); ++i) {
+                fbands[i].start = fbands[i].part[0u];
+                fbands[i].stop  = fbands[i].part[fbands[i].part.size()-1u];
+                fbands[i].space = space_t::FREQ;
 
-            fbands[i].amplitude = [i, &a, &bIdx, &fbands](space_t space, T x) -> T {
-                T nx = x;
-                if(space == space_t::CHEBY)
-                    nx = pmmath::acos(x);
-                for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
-                    if(fbands[i].part[j]*(1.0-1e-12) <= nx && nx <= fbands[i].part[j+1u]*(1.0+1e-12)) {
-                        if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
-                            return ((nx-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] -
-                                    (nx-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
-                                    (fbands[i].part[j+1u] - fbands[i].part[j]) / pmmath::cos(nx/2);
+                fbands[i].amplitude = [i, &a, &bIdx, &fbands](space_t space, T x) -> T {
+                    if(space == space_t::CHEBY)
+                        x = pmmath::acos(x);
+                    for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
+                        if(fbands[i].part[j]*(1.0-1e-12) <= x && 
+                           x <= fbands[i].part[j+1u]*(1.0+1e-12)) {
+                            if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
+                                return ((x-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] -
+                                        (x-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
+                                        (fbands[i].part[j+1u] - fbands[i].part[j]);
+                            } else {
+                                return a[2u*bIdx[i][j]];
+                            }
                         }
                     }
-                }
-                if(space == space_t::FREQ)
-                    return a[2u*bIdx[i][0u]] / pmmath::cos(x/2);
-                else
-                    return a[2u*bIdx[i][0u]] / pmmath::sqrt((x+1)/2);
-            };
-            fbands[i].weight = [i, &w, &bIdx](space_t space, T x) -> T {
-                if(space == space_t::FREQ)
-                    return pmmath::cos(x/2) * w[bIdx[i][0u]];
-                else
-                    return pmmath::sqrt((x+1)/2) * w[bIdx[i][0u]];
-            };
-        }
-    }
-
-    pmoutput_t<T> output;
-    std::vector<T> x;
-    bandconv(cbands, fbands, convdir_t::FROMFREQ);
-    std::function<T(T)> wf = [&cbands](T x) -> T {
-        for(std::size_t i{0u}; i < cbands.size(); ++i)
-            if(cbands[i].start <= x && x <= cbands[i].stop)
-                return cbands[i].weight(space_t::CHEBY, x);
-        // this should never execute
-        return 1.0;
-    };
-
-    if(fbands.size() > (deg + 2u) / 4)
-        strategy = init_t::AFP;
-
-    switch(strategy) {
-        case init_t::UNIFORM:
-        {
-            if (fbands.size() <= (deg + 2u) / 4) {
-                std::vector<T> omega;
-                uniform(omega, fbands, deg + 2u);
-                cos(x, omega);
-                bandconv(cbands, fbands, convdir_t::FROMFREQ);
-            } else {
-                // use AFP strategy for very small degrees (wrt nb of bands)
-                std::vector<T> mesh;
-                wam(mesh, cbands, deg);
-                MatrixXd<T> A;
-                chebvand(A, deg+1u, mesh, wf);
-                afp(x, A, mesh);
-                if(x.size() != deg + 2u) {
-                    std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
-                        << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
-                    exit(EXIT_FAILURE);
-                }
-                countBand(cbands, x);
+                    // this should never happen
+                    return a[2u*bIdx[i][0u]];
+                };
+                fbands[i].weight = [i, &w, &bIdx](space_t, T x) -> T {
+                    return w[bIdx[i][0u]];
+                };
             }
-            output = exchange(x, cbands, eps, nmax, prec);
-        } break;
-        case init_t::SCALING:
-        {
-            std::vector<std::size_t> sdegs(depth+1u);
-            sdegs[depth] = deg;
-            for(int i{(int)depth-1}; i >= 0; --i)
-                sdegs[i] = sdegs[i+1]/2;
+        } else {                    // type II filter
+            for(std::size_t i{0u}; i < fbands.size(); ++i) {
+                fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][0u]]));
+                for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
+                    if(f[2u*bIdx[i][j]+1u] == 1.0) {
+                        if(f[2u*bIdx[i][j]] < 0.9999)
+                            fbands[i].part.push_back(T(pmmath::const_pi<T>() * T(0.9999)));
+                        else
+                            fbands[i].part.push_back(T(pmmath::const_pi<T>() * 
+                                                     ((f[2u*bIdx[i][j]]+1u) / 2)));
+                    } else {
+                        fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][j]+1u]));
+                    }
+                }
+            }
+            for(std::size_t i{0u}; i < fbands.size(); ++i) {
+                fbands[i].start = fbands[i].part[0u];
+                fbands[i].stop  = fbands[i].part[fbands[i].part.size()-1u];
+                fbands[i].space = space_t::FREQ;
 
-            if(rstrategy == init_t::UNIFORM) {
-                if (fbands.size() <= (sdegs[0] + 2u) / 4) {
+                fbands[i].amplitude = [i, &a, &bIdx, &fbands](space_t space, T x) -> T {
+                    T nx = x;
+                    if(space == space_t::CHEBY)
+                        nx = pmmath::acos(x);
+                    for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
+                        if(fbands[i].part[j]*(1.0-1e-12) <= nx && 
+                           nx <= fbands[i].part[j+1u]*(1.0+1e-12)) {
+                            if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
+                                return ((nx-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] -
+                                        (nx-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
+                                        (fbands[i].part[j+1u] - fbands[i].part[j]) / 
+                                        pmmath::cos(nx/2);
+                            }
+                        }
+                    }
+                    if(space == space_t::FREQ)
+                        return a[2u*bIdx[i][0u]] / pmmath::cos(x/2);
+                    else
+                        return a[2u*bIdx[i][0u]] / pmmath::sqrt((x+1)/2);
+                };
+                fbands[i].weight = [i, &w, &bIdx](space_t space, T x) -> T {
+                    if(space == space_t::FREQ)
+                        return pmmath::cos(x/2) * w[bIdx[i][0u]];
+                    else
+                        return pmmath::sqrt((x+1)/2) * w[bIdx[i][0u]];
+                };
+            }
+        }
+
+        std::vector<T> x;
+        bandconv(cbands, fbands, convdir_t::FROMFREQ);
+        std::function<T(T)> wf = [&cbands](T x) -> T {
+            for(std::size_t i{0u}; i < cbands.size(); ++i)
+                if(cbands[i].start <= x && x <= cbands[i].stop)
+                    return cbands[i].weight(space_t::CHEBY, x);
+            // this should never execute
+            return 1.0;
+        };
+
+        if(fbands.size() > (deg + 2u) / 4)
+            strategy = init_t::AFP;
+
+        switch(strategy) {
+            case init_t::UNIFORM:
+            {
+                if (fbands.size() <= (deg + 2u) / 4) {
                     std::vector<T> omega;
-                    uniform(omega, fbands, sdegs[0]+2u);
+                    uniform(omega, fbands, deg + 2u);
                     cos(x, omega);
                     bandconv(cbands, fbands, convdir_t::FROMFREQ);
                 } else {
                     // use AFP strategy for very small degrees (wrt nb of bands)
+                    std::vector<T> mesh;
+                    wam(mesh, cbands, deg);
+                    MatrixXd<T> A;
+                    chebvand(A, deg+1u, mesh, wf);
+                    afp(x, A, mesh);
+                    if(x.size() != deg + 2u) {
+                        std::stringstream message;
+                        message << "ERROR: AFP strategy failed to produce a valid starting "
+                            << "reference\n"
+                            << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
+                        throw std::runtime_error(message.str());
+                    }
+                    countBand(cbands, x);
+                }
+                output = exchange(x, cbands, eps, nmax, prec);
+            } break;
+            case init_t::SCALING:
+            {
+                std::vector<std::size_t> sdegs(depth+1u);
+                sdegs[depth] = deg;
+                for(int i{(int)depth-1}; i >= 0; --i)
+                    sdegs[i] = sdegs[i+1]/2;
+
+                if(rstrategy == init_t::UNIFORM) {
+                    if (fbands.size() <= (sdegs[0] + 2u) / 4) {
+                        std::vector<T> omega;
+                        uniform(omega, fbands, sdegs[0]+2u);
+                        cos(x, omega);
+                        bandconv(cbands, fbands, convdir_t::FROMFREQ);
+                    } else {
+                        // use AFP strategy for very small degrees (wrt nb of bands)
+                        std::vector<T> mesh;
+                        wam(mesh, cbands, sdegs[0]);
+                        MatrixXd<T> A;
+                        chebvand(A, sdegs[0]+1u, mesh, wf);
+                        afp(x, A, mesh);
+                        if(x.size() != sdegs[0] + 2u) {
+                            std::stringstream message;
+                            message << "ERROR: AFP strategy failed to produce a valid "
+                                << "starting reference\n"
+                                << "POSSIBLE CAUSE: badly conditioned Chebyshev "
+                                << "Vandermonde matrix";
+                            throw std::runtime_error(message.str());
+                        }
+                        countBand(cbands, x);
+                    }
+                    output = exchange(x, cbands, eps, nmax, prec);
+                } else { // AFP-based strategy
                     std::vector<T> mesh;
                     wam(mesh, cbands, sdegs[0]);
                     MatrixXd<T> A;
                     chebvand(A, sdegs[0]+1u, mesh, wf);
                     afp(x, A, mesh);
                     if(x.size() != sdegs[0] + 2u) {
-                        std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
-                            << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
-                        exit(EXIT_FAILURE);
+                        std::stringstream message;
+                        message << "ERROR: AFP strategy failed to produce a valid "
+                            << "starting reference\n"
+                            << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
+                        throw std::runtime_error(message.str());
                     }
                     countBand(cbands, x);
+                    output = exchange(x, cbands, eps, nmax, prec);
                 }
-                output = exchange(x, cbands, eps, nmax, prec);
-            } else { // AFP-based strategy
+                for(std::size_t i{1u}; i <= depth && output.q <= 0.5; ++i) {
+                    x.clear();
+                    referenceScaling(x, cbands, fbands, sdegs[i]+2u,
+                                    output.x, cbands, fbands);
+                    output = exchange(x, cbands, eps, nmax, prec);
+                }
+            } break;
+            default: { // AFP-based initialization
                 std::vector<T> mesh;
-                wam(mesh, cbands, sdegs[0]);
+                wam(mesh, cbands, deg);
                 MatrixXd<T> A;
-                chebvand(A, sdegs[0]+1u, mesh, wf);
+                chebvand(A, deg+1u, mesh, wf);
                 afp(x, A, mesh);
-                if(x.size() != sdegs[0] + 2u) {
-                    std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
-                        << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
-                    exit(EXIT_FAILURE);
+                if(x.size() != deg + 2u) {
+                    std::stringstream message;
+                    message << "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                        << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
+                    throw std::runtime_error(message.str());
                 }
                 countBand(cbands, x);
                 output = exchange(x, cbands, eps, nmax, prec);
             }
-            for(std::size_t i{1u}; i <= depth && output.q <= 0.5; ++i) {
-                x.clear();
-                referenceScaling(x, cbands, fbands, sdegs[i]+2u,
-                                 output.x, cbands, fbands);
-                output = exchange(x, cbands, eps, nmax, prec);
-            }
-        } break;
-        default: { // AFP-based initialization
-            std::vector<T> mesh;
-            wam(mesh, cbands, deg);
-            MatrixXd<T> A;
-            chebvand(A, deg+1u, mesh, wf);
-            afp(x, A, mesh);
-            if(x.size() != deg + 2u) {
-                std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
-                    << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
-                exit(EXIT_FAILURE);
-            }
-            countBand(cbands, x);
-            output = exchange(x, cbands, eps, nmax, prec);
         }
-    }
 
-    h.resize(n+1u);
-    if (output.h.size() != deg + 1u) {
-        std::cerr << "ERROR: final filter coefficient set is incomplete, aborting computation\n";
-        exit(EXIT_FAILURE);
+        h.resize(n+1u);
+        if (output.h.size() != deg + 1u)
+            throw std::runtime_error("ERROR: final filter coefficient set is incomplete");
+
+        if(n % 2 == 0) {
+            h[deg] = output.h[0];
+            for(std::size_t i{0u}; i < deg; ++i)
+                h[i] = h[n-i] = output.h[deg-i] / 2u;
+        } else {
+            h[0] = h[n] = output.h[deg] / 4u;
+            h[deg] = h[deg+1u] = (output.h[0] * 2 + output.h[1]) / 4u;
+            for(std::size_t i{2u}; i < deg + 1u; ++i)
+                h[deg+1u-i] = h[deg+i] = (output.h[i-1u] + output.h[i]) / 4u;
+        }
+        output.h = h;
     }
-    if(n % 2 == 0) {
-        h[deg] = output.h[0];
-        for(std::size_t i{0u}; i < deg; ++i)
-            h[i] = h[n-i] = output.h[deg-i] / 2u;
-    } else {
-        h[0] = h[n] = output.h[deg] / 4u;
-        h[deg] = h[deg+1u] = (output.h[0] * 2 + output.h[1]) / 4u;
-        for(std::size_t i{2u}; i < deg + 1u; ++i)
-            h[deg+1u-i] = h[deg+i] = (output.h[i-1u] + output.h[i]) / 4u;
+    catch (std::domain_error &err) {
+        std::cerr << "Invalid specification detected:" << std::endl;
+        std::cerr << err.what() << std::endl;
+        output.q = 2.0;
     }
-    output.h = h;
+    catch (std::runtime_error &err) {
+        std::cerr << "Runtime error detected:" << std::endl;
+        std::cerr << err.what() << std::endl;
+        output.q = 2.0;
+    }
 
     return output;
 }
@@ -1004,8 +1005,8 @@ pmoutput_t<T> firpmRS(std::size_t n,
             unsigned long prec)
 {
     if( n < 2u*f.size()) {
-        std::cout << "WARNING: too small filter length to use reference scaling.\n"
-            << "Switching to a uniform initialization strategy\n";
+        std::cout << "WARNING: too small filter length to use reference scaling." << std::endl
+            << "Switching to a uniform initialization strategy." << std::endl;
         return firpm<T>(n, f, a, w, eps, nmax, init_t::UNIFORM, depth, rstrategy, prec);
     } else {
         return firpm<T>(n, f, a, w, eps, nmax, init_t::SCALING, depth, rstrategy, prec);
@@ -1036,319 +1037,336 @@ pmoutput_t<T> firpm(std::size_t n,
             init_t rstrategy,
             unsigned long prec)
 {
-    parseSpecification(f, a, w);
-    std::vector<T> h;
-    std::vector<band_t<T>> fbands(w.size());
-    std::vector<band_t<T>> cbands;
-    std::vector<T> fn{f};
-    std::size_t deg = n / 2u;
-    T sFactor = a[1] / (f[1] * pmmath::const_pi<T>());
+    pmoutput_t<T> output;
 
-    if(n % 2 == 0) { // TYPE III
-        if(f[0u] == 0.0) {
-            if(fn[1u] < 1e-5)
-                fn[0u] = fn[1u] / 2;
-            else
-                fn[0u] = 1e-5;
-        }
-        if(f[f.size() - 1u] == 1.0) {
-            if(f[f.size() - 2u] > 0.9999)
-                fn[f.size() - 1u] = (f[f.size() - 2u] + 1.0) / 2;
-            else
-                fn[f.size() - 1u] = 0.9999;
-        }
-        --deg;
-        fbands[0u].start = pmmath::const_pi<T>() * fn[0u];
-        fbands[0u].stop  = pmmath::const_pi<T>() * fn[1u];
-        fbands[0u].space = space_t::FREQ;
-        if(type == filter_t::FIR_DIFFERENTIATOR) {
-            fbands[0u].weight = [&w](space_t space, T x) -> T {
-                if(space == space_t::FREQ)
-                    return (pmmath::sin(x) / x) * w[0u];
+    try {
+        parseSpecification(f, a, w);
+        std::vector<T> h;
+        std::vector<band_t<T>> fbands(w.size());
+        std::vector<band_t<T>> cbands;
+        std::vector<T> fn{f};
+        std::size_t deg = n / 2u;
+        T sFactor = a[1] / (f[1] * pmmath::const_pi<T>());
+
+        if(n % 2 == 0) { // TYPE III
+            if(f[0u] == 0.0) {
+                if(fn[1u] < 1e-5)
+                    fn[0u] = fn[1u] / 2;
                 else
-                    return (pmmath::sqrt(T(1.0) - x * x) / pmmath::acos(x)) * w[0u];
-            };
-            fbands[0u].amplitude = [sFactor](space_t space, T x) -> T {
-                if(space == space_t::FREQ)
-                    return (x / pmmath::sin(x)) * sFactor;
+                    fn[0u] = 1e-5;
+            }
+            if(f[f.size() - 1u] == 1.0) {
+                if(f[f.size() - 2u] > 0.9999)
+                    fn[f.size() - 1u] = (f[f.size() - 2u] + 1.0) / 2;
                 else
-                    return (pmmath::acos(x) / pmmath::sqrt(T(1.0) - x * x)) * sFactor;
-            };
-        } else { // FIR_HILBERT
-            fbands[0u].weight = [&w](space_t space, T x) -> T {
-                if(space == space_t::FREQ)
-                    return pmmath::sin(x) * w[0u];
-                else
-                    return pmmath::sqrt(T(1.0) - x * x) * w[0u];
-            };
-            fbands[0u].amplitude = [&a, &fbands](space_t space, T x) -> T {
-                if(space == space_t::CHEBY)
-                    x = pmmath::acos(x);
-                if(a[0u] != a[1u])
-                    return (((x - fbands[0].start) * a[1u] -
-                            (x - fbands[0].stop) * a[0u]) /
-                            (fbands[0u].stop - fbands[0u].start)) / pmmath::sin(x);
-                return a[0u] / pmmath::sin(x);
-            };
-        }
-        for(std::size_t i{1u}; i < fbands.size(); ++i) {
-            fbands[i].start = pmmath::const_pi<T>() * fn[2u * i];
-            fbands[i].stop  = pmmath::const_pi<T>() * fn[2u * i + 1u];
-            fbands[i].space = space_t::FREQ;
+                    fn[f.size() - 1u] = 0.9999;
+            }
+            --deg;
+            fbands[0u].start = pmmath::const_pi<T>() * fn[0u];
+            fbands[0u].stop  = pmmath::const_pi<T>() * fn[1u];
+            fbands[0u].space = space_t::FREQ;
             if(type == filter_t::FIR_DIFFERENTIATOR) {
-                fbands[i].weight = [&w, i](space_t space, T x) -> T {
+                fbands[0u].weight = [&w](space_t space, T x) -> T {
                     if(space == space_t::FREQ)
-                        return pmmath::sin(x) * w[i];
+                        return (pmmath::sin(x) / x) * w[0u];
                     else
-                        return pmmath::sqrt(T(1.0) - x * x) * w[i];
+                        return (pmmath::sqrt(T(1.0) - x * x) / pmmath::acos(x)) * w[0u];
                 };
-                fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
-                    if(a[2u * i] != a[2u * i + 1u]) {
-                        if(space == space_t::CHEBY) {
+                fbands[0u].amplitude = [sFactor](space_t space, T x) -> T {
+                    if(space == space_t::FREQ)
+                        return (x / pmmath::sin(x)) * sFactor;
+                    else
+                        return (pmmath::acos(x) / pmmath::sqrt(T(1.0) - x * x)) * sFactor;
+                };
+            } else { // FIR_HILBERT
+                fbands[0u].weight = [&w](space_t space, T x) -> T {
+                    if(space == space_t::FREQ)
+                        return pmmath::sin(x) * w[0u];
+                    else
+                        return pmmath::sqrt(T(1.0) - x * x) * w[0u];
+                };
+                fbands[0u].amplitude = [&a, &fbands](space_t space, T x) -> T {
+                    if(space == space_t::CHEBY)
+                        x = pmmath::acos(x);
+                    if(a[0u] != a[1u])
+                        return (((x - fbands[0].start) * a[1u] -
+                                (x - fbands[0].stop) * a[0u]) /
+                                (fbands[0u].stop - fbands[0u].start)) / pmmath::sin(x);
+                    return a[0u] / pmmath::sin(x);
+                };
+            }
+            for(std::size_t i{1u}; i < fbands.size(); ++i) {
+                fbands[i].start = pmmath::const_pi<T>() * fn[2u * i];
+                fbands[i].stop  = pmmath::const_pi<T>() * fn[2u * i + 1u];
+                fbands[i].space = space_t::FREQ;
+                if(type == filter_t::FIR_DIFFERENTIATOR) {
+                    fbands[i].weight = [&w, i](space_t space, T x) -> T {
+                        if(space == space_t::FREQ)
+                            return pmmath::sin(x) * w[i];
+                        else
+                            return pmmath::sqrt(T(1.0) - x * x) * w[i];
+                    };
+                    fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
+                        if(a[2u * i] != a[2u * i + 1u]) {
+                            if(space == space_t::CHEBY) {
+                                x = pmmath::acos(x);
+                                return ((x - fbands[i].start) * a[2u * i + 1u] -
+                                        (x - fbands[i].stop) * a[2u * i]) /
+                                        (fbands[i].stop - fbands[i].start);
+                            }
+                        }
+                        return a[2u * i];
+                    };
+                } else { // FIR_HILBERT
+                    fbands[i].weight = [&w, i](space_t space, T x) -> T {
+                        if(space == space_t::FREQ)
+                            return pmmath::sin(x) * w[i];
+                        else
+                            return pmmath::sqrt(T(1.0) - x * x) * w[i];
+                    };
+                    fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
+                        if(space == space_t::CHEBY)
                             x = pmmath::acos(x);
+                        if(a[2u * i] != a[2u * i + 1u])
+                            return (((x - fbands[i].start) * a[2u * i + 1u] -
+                                    (x - fbands[i].stop) * a[2u * i]) /
+                                    (fbands[i].stop - fbands[i].start)) / pmmath::sin(x);
+                        return a[2u * i] / pmmath::sin(x);
+                    };
+                }
+            }
+        } else { // TYPE IV
+            if(f[0u] == 0.0) {
+                if(fn[1u] < 1e-5)
+                    fn[0u] = fn[1u] / 2;
+                else
+                    fn[0u] = 1e-5;
+            }
+
+            fbands[0u].start = pmmath::const_pi<T>() * fn[0u];
+            fbands[0u].stop  = pmmath::const_pi<T>() * fn[1u];
+            fbands[0u].space = space_t::FREQ;
+            if(type == filter_t::FIR_DIFFERENTIATOR) {
+                fbands[0u].weight = [&w](space_t space, T x) -> T {
+                    if(space == space_t::FREQ)
+                        return (pmmath::sin(x / 2) / x) * w[0u];
+                    else
+                        return (pmmath::sin(pmmath::acos(x) / 2) / pmmath::acos(x)) * w[0u];
+                };
+                fbands[0u].amplitude = [sFactor](space_t space, T x) -> T {
+                    if(space == space_t::FREQ)
+                        return (x / pmmath::sin(x / 2)) * sFactor;
+                    else
+                        return (pmmath::acos(x) / pmmath::sin(pmmath::acos(x) / 2)) * sFactor;
+                };
+            } else { // FIR_HILBERT
+                fbands[0u].weight = [&w](space_t space, T x) -> T {
+                    if(space == space_t::FREQ)
+                        return pmmath::sin(x / 2) * w[0u];
+                    else
+                        return pmmath::sin(pmmath::acos(x) / 2) * w[0u];
+                };
+                fbands[0u].amplitude = [&fbands, &a](space_t space, T x) -> T {
+                    if(space == space_t::CHEBY)
+                        x = pmmath::acos(x);
+                    if(a[0u] != a[1u])
+                        return (((x - fbands[0].start) * a[1u] -
+                                (x - fbands[0].stop) * a[0u]) /
+                                (fbands[0].stop - fbands[0].start)) / pmmath::sin(x / 2);
+                    return a[0u] / pmmath::sin(x / 2);
+                };
+            }
+            for(std::size_t i{1u}; i < fbands.size(); ++i) {
+                fbands[i].start = pmmath::const_pi<T>() * fn[2u * i];
+                fbands[i].stop  = pmmath::const_pi<T>() * fn[2u * i + 1u];
+                fbands[i].space = space_t::FREQ;
+                if(type == filter_t::FIR_DIFFERENTIATOR) {
+                    fbands[i].weight = [&w, i](space_t space, T x) -> T {
+                        if(space == space_t::FREQ)
+                            return pmmath::sin(x / 2) * w[i];
+                        else
+                            return (pmmath::sin(pmmath::acos(x) / 2)) * w[i];
+                    };
+                    fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
+                        if(a[2u * i] != a[2u * i + 1u]) {
+                            if(space == space_t::CHEBY)
+                                x = pmmath::acos(x);
                             return ((x - fbands[i].start) * a[2u * i + 1u] -
                                     (x - fbands[i].stop) * a[2u * i]) /
                                     (fbands[i].stop - fbands[i].start);
                         }
-                    }
-                    return a[2u * i];
-                };
-            } else { // FIR_HILBERT
-                fbands[i].weight = [&w, i](space_t space, T x) -> T {
-                    if(space == space_t::FREQ)
-                        return pmmath::sin(x) * w[i];
-                    else
-                        return pmmath::sqrt(T(1.0) - x * x) * w[i];
-                };
-                fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
-                    if(space == space_t::CHEBY)
-                        x = pmmath::acos(x);
-                    if(a[2u * i] != a[2u * i + 1u])
-                        return (((x - fbands[i].start) * a[2u * i + 1u] -
-                                (x - fbands[i].stop) * a[2u * i]) /
-                                (fbands[i].stop - fbands[i].start)) / pmmath::sin(x);
-                    return a[2u * i] / pmmath::sin(x);
-                };
-            }
-        }
-    } else { // TYPE IV
-        if(f[0u] == 0.0) {
-            if(fn[1u] < 1e-5)
-                fn[0u] = fn[1u] / 2;
-            else
-                fn[0u] = 1e-5;
-        }
-
-        fbands[0u].start = pmmath::const_pi<T>() * fn[0u];
-        fbands[0u].stop  = pmmath::const_pi<T>() * fn[1u];
-        fbands[0u].space = space_t::FREQ;
-        if(type == filter_t::FIR_DIFFERENTIATOR) {
-            fbands[0u].weight = [&w](space_t space, T x) -> T {
-                if(space == space_t::FREQ)
-                    return (pmmath::sin(x / 2) / x) * w[0u];
-                else
-                    return (pmmath::sin(pmmath::acos(x) / 2) / pmmath::acos(x)) * w[0u];
-            };
-            fbands[0u].amplitude = [sFactor](space_t space, T x) -> T {
-                if(space == space_t::FREQ)
-                    return (x / pmmath::sin(x / 2)) * sFactor;
-                else
-                    return (pmmath::acos(x) / pmmath::sin(pmmath::acos(x) / 2)) * sFactor;
-            };
-        } else { // FIR_HILBERT
-            fbands[0u].weight = [&w](space_t space, T x) -> T {
-                if(space == space_t::FREQ)
-                    return pmmath::sin(x / 2) * w[0u];
-                else
-                    return pmmath::sin(pmmath::acos(x) / 2) * w[0u];
-            };
-            fbands[0u].amplitude = [&fbands, &a](space_t space, T x) -> T {
-                if(space == space_t::CHEBY)
-                    x = pmmath::acos(x);
-                if(a[0u] != a[1u])
-                    return (((x - fbands[0].start) * a[1u] -
-                            (x - fbands[0].stop) * a[0u]) /
-                            (fbands[0].stop - fbands[0].start)) / pmmath::sin(x / 2);
-                return a[0u] / pmmath::sin(x / 2);
-            };
-        }
-        for(std::size_t i{1u}; i < fbands.size(); ++i) {
-            fbands[i].start = pmmath::const_pi<T>() * fn[2u * i];
-            fbands[i].stop  = pmmath::const_pi<T>() * fn[2u * i + 1u];
-            fbands[i].space = space_t::FREQ;
-            if(type == filter_t::FIR_DIFFERENTIATOR) {
-                fbands[i].weight = [&w, i](space_t space, T x) -> T {
-                    if(space == space_t::FREQ)
-                        return pmmath::sin(x / 2) * w[i];
-                    else
-                        return (pmmath::sin(pmmath::acos(x) / 2)) * w[i];
-                };
-                fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
-                    if(a[2u * i] != a[2u * i + 1u]) {
+                        return a[2u * i];
+                    };
+                } else { // FIR_HILBERT
+                    fbands[i].weight = [&w, i](space_t space, T x) -> T {
+                        if(space == space_t::FREQ)
+                            return pmmath::sin(x / 2) * w[i];
+                        else
+                            return pmmath::sin(pmmath::acos(x) / 2) * w[i];
+                    };
+                    fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
                         if(space == space_t::CHEBY)
                             x = pmmath::acos(x);
-                        return ((x - fbands[i].start) * a[2u * i + 1u] -
-                                (x - fbands[i].stop) * a[2u * i]) /
-                                (fbands[i].stop - fbands[i].start);
-                    }
-                    return a[2u * i];
-                };
-            } else { // FIR_HILBERT
-                fbands[i].weight = [&w, i](space_t space, T x) -> T {
-                    if(space == space_t::FREQ)
-                        return pmmath::sin(x / 2) * w[i];
-                    else
-                        return pmmath::sin(pmmath::acos(x) / 2) * w[i];
-                };
-                fbands[i].amplitude = [&fbands, &a, i](space_t space, T x) -> T {
-                    if(space == space_t::CHEBY)
-                        x = pmmath::acos(x);
-                    if(a[2u * i] != a[2u * i + 1u])
-                        return (((x - fbands[i].start) * a[2u * i + 1u] -
-                                (x - fbands[i].stop) * a[2u * i]) /
-                                (fbands[i].stop - fbands[i].start)) / pmmath::sin(x / 2);
-                    return a[2u * i] / pmmath::sin(x / 2);
-                };
+                        if(a[2u * i] != a[2u * i + 1u])
+                            return (((x - fbands[i].start) * a[2u * i + 1u] -
+                                    (x - fbands[i].stop) * a[2u * i]) /
+                                    (fbands[i].stop - fbands[i].start)) / pmmath::sin(x / 2);
+                        return a[2u * i] / pmmath::sin(x / 2);
+                    };
+                }
             }
         }
-    }
 
-    pmoutput_t<T> output;
-    std::vector<T> x;
-    bandconv(cbands, fbands, convdir_t::FROMFREQ);
-    std::function<T(T)> wf = [&cbands](T x) -> T {
-        for(std::size_t i{0u}; i < cbands.size(); ++i)
-            if(cbands[i].start <= x && x <= cbands[i].stop)
-                return cbands[i].weight(space_t::CHEBY, x);
-        // this should never execute
-        return 1.0;
-    };
+        std::vector<T> x;
+        bandconv(cbands, fbands, convdir_t::FROMFREQ);
+        std::function<T(T)> wf = [&cbands](T x) -> T {
+            for(std::size_t i{0u}; i < cbands.size(); ++i)
+                if(cbands[i].start <= x && x <= cbands[i].stop)
+                    return cbands[i].weight(space_t::CHEBY, x);
+            // this should never execute
+            return 1.0;
+        };
 
-    if(fbands.size() > (deg + 2u) / 4)
-        strategy = init_t::AFP;
+        if(fbands.size() > (deg + 2u) / 4)
+            strategy = init_t::AFP;
 
-    switch(strategy) {
-        case init_t::UNIFORM:
-        {
-            if (fbands.size() <= (deg + 2u) / 4) {
-                std::vector<T> omega;
-                uniform(omega, fbands, deg + 2u);
-                cos(x, omega);
-                bandconv(cbands, fbands, convdir_t::FROMFREQ);
-            } else {
-                // use AFP strategy for very small degrees (wrt nb of bands)
-                std::vector<T> mesh;
-                wam(mesh, cbands, deg);
-                MatrixXd<T> A;
-                chebvand(A, deg+1u, mesh, wf);
-                afp(x, A, mesh);
-                if(x.size() != deg + 2u) {
-                    std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
-                        << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
-                    exit(EXIT_FAILURE);
-                }
-                countBand(cbands, x);
-            }
-            output = exchange(x, cbands, eps, nmax, prec);
-        } break;
-        case init_t::SCALING:
-        {
-            std::vector<std::size_t> sdegs(depth+1u);
-            sdegs[depth] = deg;
-            for(int i{(int)depth-1}; i >= 0; --i)
-                sdegs[i] = sdegs[i+1]/2;
-
-            if(rstrategy == init_t::UNIFORM) {
-                if (fbands.size() <= (sdegs[0] + 2u) / 4) {
+        switch(strategy) {
+            case init_t::UNIFORM:
+            {
+                if (fbands.size() <= (deg + 2u) / 4) {
                     std::vector<T> omega;
-                    uniform(omega, fbands, sdegs[0]+2u);
+                    uniform(omega, fbands, deg + 2u);
                     cos(x, omega);
                     bandconv(cbands, fbands, convdir_t::FROMFREQ);
                 } else {
                     // use AFP strategy for very small degrees (wrt nb of bands)
+                    std::vector<T> mesh;
+                    wam(mesh, cbands, deg);
+                    MatrixXd<T> A;
+                    chebvand(A, deg+1u, mesh, wf);
+                    afp(x, A, mesh);
+                    if(x.size() != deg + 2u) {
+                        std::stringstream message;
+                        message << "ERROR: AFP strategy failed to produce a valid starting "
+                            << "reference\n"
+                            << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
+                        throw std::runtime_error(message.str());
+                    }
+                    countBand(cbands, x);
+                }
+                output = exchange(x, cbands, eps, nmax, prec);
+            } break;
+            case init_t::SCALING:
+            {
+                std::vector<std::size_t> sdegs(depth+1u);
+                sdegs[depth] = deg;
+                for(int i{(int)depth-1}; i >= 0; --i)
+                    sdegs[i] = sdegs[i+1]/2;
+
+                if(rstrategy == init_t::UNIFORM) {
+                    if (fbands.size() <= (sdegs[0] + 2u) / 4) {
+                        std::vector<T> omega;
+                        uniform(omega, fbands, sdegs[0]+2u);
+                        cos(x, omega);
+                        bandconv(cbands, fbands, convdir_t::FROMFREQ);
+                    } else {
+                        // use AFP strategy for very small degrees (wrt nb of bands)
+                        std::vector<T> mesh;
+                        wam(mesh, cbands, sdegs[0]);
+                        MatrixXd<T> A;
+                        chebvand(A, sdegs[0]+1u, mesh, wf);
+                        afp(x, A, mesh);
+                        if(x.size() != sdegs[0] + 2u) {
+                            std::stringstream message;
+                            message << "ERROR: AFP strategy failed to produce a valid starting "        << "reference\n"
+                                << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
+                            throw std::runtime_error(message.str());
+                        }
+                        countBand(cbands, x);
+                    }
+                    output = exchange(x, cbands, eps, nmax);
+                } else { // AFP-based strategy
                     std::vector<T> mesh;
                     wam(mesh, cbands, sdegs[0]);
                     MatrixXd<T> A;
                     chebvand(A, sdegs[0]+1u, mesh, wf);
                     afp(x, A, mesh);
                     if(x.size() != sdegs[0] + 2u) {
-                        std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
-                            << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
-                        exit(EXIT_FAILURE);
+                        std::stringstream message;
+                        message << "ERROR: AFP strategy failed to produce a valid starting "            << "reference\n"
+                            << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
+                        throw std::runtime_error(message.str());
                     }
                     countBand(cbands, x);
+                    output = exchange(x, cbands, eps, nmax);
                 }
-                output = exchange(x, cbands, eps, nmax);
-            } else { // AFP-based strategy
+                for(std::size_t i{1u}; i <= depth && output.q <= 0.5; ++i) {
+                    x.clear();
+                    referenceScaling(x, cbands, fbands, sdegs[i]+2u,
+                                    output.x, cbands, fbands);
+                    output = exchange(x, cbands, eps, nmax, prec);
+                }
+            } break;
+            default: { // AFP-based initialization
                 std::vector<T> mesh;
-                wam(mesh, cbands, sdegs[0]);
+                wam(mesh, cbands, deg);
                 MatrixXd<T> A;
-                chebvand(A, sdegs[0]+1u, mesh, wf);
+                chebvand(A, deg+1u, mesh, wf);
                 afp(x, A, mesh);
-                if(x.size() != sdegs[0] + 2u) {
-                    std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
-                        << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
-                    exit(EXIT_FAILURE);
+                if(x.size() != deg + 2u) {
+                    std::stringstream message;
+                    message << "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                        << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
+                    throw std::runtime_error(message.str());
                 }
                 countBand(cbands, x);
-                output = exchange(x, cbands, eps, nmax);
-            }
-            for(std::size_t i{1u}; i <= depth && output.q <= 0.5; ++i) {
-                x.clear();
-                referenceScaling(x, cbands, fbands, sdegs[i]+2u,
-                                 output.x, cbands, fbands);
                 output = exchange(x, cbands, eps, nmax, prec);
             }
-        } break;
-        default: { // AFP-based initialization
-            std::vector<T> mesh;
-            wam(mesh, cbands, deg);
-            MatrixXd<T> A;
-            chebvand(A, deg+1u, mesh, wf);
-            afp(x, A, mesh);
-            if(x.size() != deg + 2u) {
-                std::cerr << "ERROR: AFP strategy failed to produce a valid starting reference\n"
-                    << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix\n";
-                exit(EXIT_FAILURE);
+        }
+
+        h.resize(n + 1u);
+        if (output.h.size() != deg + 1u)
+            throw std::runtime_error("ERROR: final filter coefficient set is incomplete");
+
+        if(n % 2 == 0)
+        {
+            h[deg + 1u] = 0;
+            h[deg] = (output.h[0u] * 2.0 - output.h[2]) / 4u;
+            h[deg + 2u] = -h[deg];
+            h[1u] = output.h[deg - 1u] / 4;
+            h[2u * deg + 1u] = -h[1u];
+            h[0u] =  output.h[deg] / 4;
+            h[2u * (deg + 1u)] = -h[0u];
+            for(std::size_t i{2u}; i < deg; ++i)
+            {
+                h[deg + 1u - i] = (output.h[i - 1u] - output.h[i + 1u]) / 4;
+                h[deg + 1u + i] = -h[deg + 1u - i];
             }
-            countBand(cbands, x);
-            output = exchange(x, cbands, eps, nmax, prec);
+        } else {
+            ++deg;
+            h[deg - 1u] = (output.h[0u] * 2.0 - output.h[1u]) / 4;
+            h[deg] = -h[deg - 1u];
+            h[0u] = output.h[deg - 1u] / 4;
+            h[2u * deg - 1u] = -h[0u];
+            for(std::size_t i{2u}; i < deg; ++i)
+            {
+                h[deg - i] = (output.h[i - 1u] - output.h[i]) / 4;
+                h[deg + i - 1u] = -h[deg - i];
+            }
         }
+        output.h = h;
+    }
+    catch(std::domain_error &err) {
+        std::cerr << "Invalid specification detected:" << std::endl;
+        std::cerr << err.what() << std::endl;
+        output.q = 2.0;
+    }
+    catch(std::runtime_error &err) {
+        std::cerr << "Runtime error detected:" << std::endl;
+        std::cerr << err.what() << std::endl;
+        output.q = 2.0;
     }
 
-    h.resize(n + 1u);
-    if (output.h.size() != deg + 1u) {
-        std::cerr << "ERROR: final filter coefficient set is incomplete, aborting computation\n";
-        exit(EXIT_FAILURE);
-    }
-    if(n % 2 == 0)
-    {
-        h[deg + 1u] = 0;
-        h[deg] = (output.h[0u] * 2.0 - output.h[2]) / 4u;
-        h[deg + 2u] = -h[deg];
-        h[1u] = output.h[deg - 1u] / 4;
-        h[2u * deg + 1u] = -h[1u];
-        h[0u] =  output.h[deg] / 4;
-        h[2u * (deg + 1u)] = -h[0u];
-        for(std::size_t i{2u}; i < deg; ++i)
-        {
-            h[deg + 1u - i] = (output.h[i - 1u] - output.h[i + 1u]) / 4;
-            h[deg + 1u + i] = -h[deg + 1u - i];
-        }
-    } else {
-        ++deg;
-        h[deg - 1u] = (output.h[0u] * 2.0 - output.h[1u]) / 4;
-        h[deg] = -h[deg - 1u];
-        h[0u] = output.h[deg - 1u] / 4;
-        h[2u * deg - 1u] = -h[0u];
-        for(std::size_t i{2u}; i < deg; ++i)
-        {
-            h[deg - i] = (output.h[i - 1u] - output.h[i]) / 4;
-            h[deg + i - 1u] = -h[deg - i];
-        }
-    }
-
-    output.h = h;
     return output;
 }
 
@@ -1364,8 +1382,8 @@ pmoutput_t<T> firpmRS(std::size_t n,
             unsigned long prec)
 {
     if( n < 2u*f.size()) {
-        std::cout << "WARNING: too small filter length to use reference scaling.\n"
-            << "Switching to a uniform initialization strategy\n";
+        std::cout << "WARNING: too small filter length to use reference scaling." << std::endl
+            << "Switching to a uniform initialization strategy" << std::endl;
         return firpm<T>(n, f, a, w, type, eps, nmax, init_t::UNIFORM, depth, rstrategy, prec);
     } else {
         return firpm<T>(n, f, a, w, type, eps, nmax, init_t::SCALING, depth, rstrategy, prec);

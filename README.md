@@ -101,3 +101,4 @@ applications to digital filter design, Ph.D. dissertation, ENS de Lyon, France, 
 
 ## Acknowledgements
 * Graeme Smecher [@gsmecher]( https://github.com/gsmecher ) - setting up the template version of the code base
+* [@jlwehle]( https://github.com/jlwehle ) - various bug reports and fixes
