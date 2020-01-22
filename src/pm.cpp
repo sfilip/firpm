@@ -128,8 +128,6 @@ void uniform(std::vector<T>& omega,
         }
         B[i].xs = 1u;
     }
-    if(nonPointBands.empty())
-        throw std::domain_error("ERROR: All frequency band intervals are points");
 
     avgDist /= (omega.size() - B.size());
     std::size_t npSize = nonPointBands.size();
@@ -163,7 +161,8 @@ void uniform(std::vector<T>& omega,
 }
 
 template<typename T>
-void referenceScaling(std::vector<T>& newX, std::vector<band_t<T>>& newChebyBands,
+void refscaling(status_t& status,
+        std::vector<T>& newX, std::vector<band_t<T>>& newChebyBands,
         std::vector<band_t<T>>& newFreqBands, std::size_t newXSize,
         std::vector<T>& x, std::vector<band_t<T>>& chebyBands,
         std::vector<band_t<T>>& freqBands)
@@ -248,8 +247,10 @@ void referenceScaling(std::vector<T>& newX, std::vector<band_t<T>>& newChebyBand
             }
         offset += chebyBands[i].xs;
     }
-    if(newXSize > newX.size())
+    if(newXSize > newX.size()) {
+        status = status_t::STATUS_SCALING_INVALID;
         throw std::runtime_error("ERROR: Failed to do reference scaling");
+    }
 
     newX.resize(newXSize);
     std::sort(newX.begin(), newX.end());
@@ -263,8 +264,10 @@ void referenceScaling(std::vector<T>& newX, std::vector<band_t<T>>& newChebyBand
                     ++total;
                 }
     }
-    if(total != newXSize)
+    if(total != newXSize) {
+        status = status_t::STATUS_SCALING_INVALID;
         throw std::runtime_error("ERROR: Failed to find reference scaling distribution");
+    }
 
     for (std::size_t i{0u}; i < chebyBands.size(); ++i)
     {
@@ -299,7 +302,7 @@ void split(std::vector<std::pair<T, T>>& subIntervals,
 }
 
 template<typename T>
-void extremaSearch(T& convergenceOrder,
+void extrema(status_t& status, T& convergenceOrder,
         T& delta, std::vector<T>& eigenExtrema,
         std::vector<T>& x, std::vector<band_t<T>>& chebyBands,
         std::size_t Nmax, unsigned long prec)
@@ -476,11 +479,13 @@ void extremaSearch(T& convergenceOrder,
 
     if(alternatingExtrema.size() < x.size())
     {
-        std::cerr << "WARNING: The exchange algorithm did not converge.\n";
-        std::cerr << "TRIGGER: Not enough alternating extrema!\n"
-                  << "POSSIBLE CAUSE: nmax too small\n";
+        status = status_t::STATUS_EXCHANGE_FAILURE;
+        std::stringstream message;
+        message << "ERROR: The exchange algorithm did not converge\n"
+            << "TRIGGER: Not enough alternating extrema\n"
+            << "POSSIBLE CAUSE: nmax too small\n";
         convergenceOrder = 2.0;
-        return;
+        throw std::runtime_error(message.str());
     }
     else if (alternatingExtrema.size() > x.size())
     {
@@ -563,8 +568,15 @@ void extremaSearch(T& convergenceOrder,
         if(cycle)
             cycle = false;
     }
-    if (alternatingExtrema.size() < x.size())
-        throw std::runtime_error("ERROR: Insufficient error alternation points found");
+    if (alternatingExtrema.size() < x.size()) {
+        status = status_t::STATUS_EXCHANGE_FAILURE;
+        std::stringstream message;
+        message << "ERROR: The exchange algorithm did not converge\n"
+            << "TRIGGER: Not enough alternating extrema\n"
+            << "POSSIBLE CAUSE: nmax too small\n";
+        convergenceOrder = 2.0;
+        throw std::runtime_error(message.str());
+    }
 
     for (auto& it : alternatingExtrema)
     {
@@ -610,6 +622,7 @@ pmoutput_t<T> exchange(std::vector<T>& x,
         std::size_t Nmax, unsigned long prec)
 {
     pmoutput_t<T> output;
+    output.status = status_t::STATUS_UNKNOWN_FAILURE;
 
     std::size_t degree = x.size() - 2u;
     std::sort(x.begin(), x.end(),
@@ -626,7 +639,7 @@ pmoutput_t<T> exchange(std::vector<T>& x,
     output.iter = 0u;
     do {
         ++output.iter;
-        extremaSearch(output.q, output.delta,
+        extrema(output.status, output.q, output.delta,
                 output.x, startX, chebyBands, Nmax, prec);
         startX = output.x;
         if(output.iter == 1u)
@@ -644,18 +657,23 @@ pmoutput_t<T> exchange(std::vector<T>& x,
         if(output.q > 1.0)
             break;
     } while (output.q > eps && output.iter <= 100u);
+    output.status = status_t::STATUS_SUCCESS;
 
-    if(pmmath::isnan(output.delta) || pmmath::isnan(output.q))
+    if(pmmath::isnan(output.delta) || pmmath::isnan(output.q)) {
+        output.status = status_t::STATUS_CONVERGENCE_WARNING;
         std::cout << "WARNING: The exchange algorithm did not converge.\n"
             << "TRIGGER: numerical instability\n"
             << "POSSIBLE CAUSE: poor starting reference and/or "
             << "a too small value for nmax.\n";
+    }
 
-    if(output.iter >= 101u && output.q > eps)
+    if(output.iter >= 101u && output.q > eps) {
+        output.status = status_t::STATUS_CONVERGENCE_WARNING;
         std::cout << "WARNING: The exchange algorithm did not converge.\n"
             << "TRIGGER: exceeded iteration threshold of 100\n"
             << "POSSIBLE CAUSE: poor starting reference and/or "
             << "a too small value for nmax.\n";
+    }
 
     output.h.resize(degree + 1u);
     std::vector<T> finalC(output.x.size());
@@ -673,6 +691,7 @@ pmoutput_t<T> exchange(std::vector<T>& x,
         approx(fv[i], finalChebyNodes[i], output.x,
                 finalC, finalAlpha);
         if (!pmmath::isfinite(fv[i])) {
+            output.status = status_t::STATUS_COEFFICIENT_SET_INVALID;
             std::stringstream message;
             message << "ERROR: Invalid frequency response generated.\n"
                 << "TRIGGER: infinite/NaN values in the final frequency response.\n"
@@ -688,17 +707,23 @@ pmoutput_t<T> exchange(std::vector<T>& x,
 }
 
 template<typename T>
-void parseSpecification(std::vector<T> const &f,
+void parseSpecification(status_t &status,
+            std::vector<T> const &f,
             std::vector<T> const &a,
             std::vector<T> const &w)
 {
-    if(f.size() != a.size())
+    if(f.size() != a.size()) {
+        status = status_t::STATUS_AMPLITUDE_VECTOR_MISMATCH;
         throw std::domain_error("ERROR: Frequency and amplitude vector sizes do not match");
+    }
 
-    if(f.size() % 2 != 0)
+    if(f.size() % 2 != 0) {
+        status = status_t::STATUS_FREQUENCY_INVALID_INTERVAL;
         throw std::domain_error("ERROR: Frequency band edges must come in pairs");
+    }
 
     if(f.size() != w.size() * 2u) {
+        status = status_t::STATUS_WEIGHT_VECTOR_MISMATCH;
         std::stringstream message;
         message << "ERROR: Weight vector size does not match the"
             << " the number of frequency bands in the specification";
@@ -706,19 +731,37 @@ void parseSpecification(std::vector<T> const &f,
     }
 
     for(std::size_t i{0u}; i < f.size() - 1u; ++i) {
-        if(f[i] == f[i + 1u] && (a[i] != a[i + 1u]))
+        if(f[i] == f[i + 1u] && (a[i] != a[i + 1u])) {
+            status = status_t::STATUS_AMPLITUDE_DISCONTINUITY;
             throw std::domain_error("ERROR: Adjacent bands with discontinuities are not allowed");
+        }
     
-        if(f[i] > f[i + 1u]) 
+        if(f[i] > f[i + 1u]) {
+            status = status_t::STATUS_FREQUENCY_INVALID_INTERVAL;
             throw std::domain_error("ERROR: Frequency vector entries must be nondecreasing");
+        }
     }
     for(std::size_t i{0u}; i < w.size(); ++i) {
-        if(w[i] <= 0.0) 
+        if(w[i] <= 0.0) {
+            status = status_t::STATUS_WEIGHT_NEGATIVE;
             throw std::domain_error("ERROR: Band weights must be positive");
+        }
     }
 
-    if(f[0u] < 0.0 || f[f.size() - 1u] > 1.0)
+    if(f[0u] < 0.0 || f[f.size() - 1u] > 1.0) {
+        status = status_t::STATUS_FREQUENCY_INVALID_INTERVAL;
         throw std::domain_error("ERROR: Normalized frequency band edges must be between 0 and 1");
+    }
+
+    bool pointBands{true};
+    for(std::size_t i{0u}; i < f.size() && pointBands; i += 2u)
+        if(f[i] != f[i+1u])
+            pointBands = false;
+
+    if(pointBands) {
+        status = status_t::STATUS_FREQUENCY_INVALID_INTERVAL;
+        throw std::domain_error("ERROR: All frequency band intervals are points");
+    }
 }
 
 template<typename T>
@@ -734,9 +777,10 @@ pmoutput_t<T> firpm(std::size_t n,
             unsigned long prec)
 {
     pmoutput_t<T> output;
+    output.status = status_t::STATUS_UNKNOWN_FAILURE;
 
     try {
-        parseSpecification(f, a, w);
+        parseSpecification(output.status, f, a, w);
         std::vector<T> h;
         std::vector<band_t<T>> fbands;
         std::vector<band_t<T>> cbands;
@@ -750,8 +794,10 @@ pmoutput_t<T> firpm(std::size_t n,
                 newBand = false;
             }
             if(i < w.size()-1u && f[2u*i+1u] == f[2u*i+2u]) {
-                if(w[i] != w[i+1u])
+                if(w[i] != w[i+1u]) {
+                    output.status = status_t::STATUS_WEIGHT_DISCONTINUITY;
                     throw std::domain_error("ERROR: Incompatible weights for partioned band");
+                }
         
                 bIdx[nbands].push_back(i+1u);
             } else {
@@ -882,6 +928,7 @@ pmoutput_t<T> firpm(std::size_t n,
                     chebvand(A, deg+1u, mesh, wf);
                     afp(x, A, mesh);
                     if(x.size() != deg + 2u) {
+                        output.status = status_t::STATUS_AFP_INVALID;
                         std::stringstream message;
                         message << "ERROR: AFP strategy failed to produce a valid starting "
                             << "reference\n"
@@ -913,6 +960,7 @@ pmoutput_t<T> firpm(std::size_t n,
                         chebvand(A, sdegs[0]+1u, mesh, wf);
                         afp(x, A, mesh);
                         if(x.size() != sdegs[0] + 2u) {
+                            output.status = status_t::STATUS_AFP_INVALID;
                             std::stringstream message;
                             message << "ERROR: AFP strategy failed to produce a valid "
                                 << "starting reference\n"
@@ -930,6 +978,7 @@ pmoutput_t<T> firpm(std::size_t n,
                     chebvand(A, sdegs[0]+1u, mesh, wf);
                     afp(x, A, mesh);
                     if(x.size() != sdegs[0] + 2u) {
+                        output.status = status_t::STATUS_AFP_INVALID;
                         std::stringstream message;
                         message << "ERROR: AFP strategy failed to produce a valid "
                             << "starting reference\n"
@@ -941,7 +990,7 @@ pmoutput_t<T> firpm(std::size_t n,
                 }
                 for(std::size_t i{1u}; i <= depth && output.q <= 0.5; ++i) {
                     x.clear();
-                    referenceScaling(x, cbands, fbands, sdegs[i]+2u,
+                    refscaling(output.status, x, cbands, fbands, sdegs[i]+2u,
                                     output.x, cbands, fbands);
                     output = exchange(x, cbands, eps, nmax, prec);
                 }
@@ -953,6 +1002,7 @@ pmoutput_t<T> firpm(std::size_t n,
                 chebvand(A, deg+1u, mesh, wf);
                 afp(x, A, mesh);
                 if(x.size() != deg + 2u) {
+                    output.status = status_t::STATUS_AFP_INVALID;
                     std::stringstream message;
                     message << "ERROR: AFP strategy failed to produce a valid starting reference\n"
                         << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
@@ -964,8 +1014,10 @@ pmoutput_t<T> firpm(std::size_t n,
         }
 
         h.resize(n+1u);
-        if (output.h.size() != deg + 1u)
+        if (output.h.size() != deg + 1u) {
+            output.status = status_t::STATUS_COEFFICIENT_SET_INVALID;
             throw std::runtime_error("ERROR: final filter coefficient set is incomplete");
+        }
 
         if(n % 2 == 0) {
             h[deg] = output.h[0];
@@ -988,6 +1040,10 @@ pmoutput_t<T> firpm(std::size_t n,
         std::cerr << "Runtime error detected:" << std::endl;
         std::cerr << err.what() << std::endl;
         output.q = 2.0;
+    }
+    catch (...) {
+        std::cerr << "Unknown exception" << std::endl;
+        output.status = status_t::STATUS_UNKNOWN_FAILURE;
     }
 
     return output;
@@ -1038,9 +1094,10 @@ pmoutput_t<T> firpm(std::size_t n,
             unsigned long prec)
 {
     pmoutput_t<T> output;
+    output.status = status_t::STATUS_UNKNOWN_FAILURE;
 
     try {
-        parseSpecification(f, a, w);
+        parseSpecification(output.status, f, a, w);
         std::vector<T> h;
         std::vector<band_t<T>> fbands(w.size());
         std::vector<band_t<T>> cbands;
@@ -1246,6 +1303,7 @@ pmoutput_t<T> firpm(std::size_t n,
                     chebvand(A, deg+1u, mesh, wf);
                     afp(x, A, mesh);
                     if(x.size() != deg + 2u) {
+                        output.status = status_t::STATUS_AFP_INVALID;
                         std::stringstream message;
                         message << "ERROR: AFP strategy failed to produce a valid starting "
                             << "reference\n"
@@ -1277,6 +1335,7 @@ pmoutput_t<T> firpm(std::size_t n,
                         chebvand(A, sdegs[0]+1u, mesh, wf);
                         afp(x, A, mesh);
                         if(x.size() != sdegs[0] + 2u) {
+                            output.status = status_t::STATUS_AFP_INVALID;
                             std::stringstream message;
                             message << "ERROR: AFP strategy failed to produce a valid starting "        << "reference\n"
                                 << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
@@ -1292,6 +1351,7 @@ pmoutput_t<T> firpm(std::size_t n,
                     chebvand(A, sdegs[0]+1u, mesh, wf);
                     afp(x, A, mesh);
                     if(x.size() != sdegs[0] + 2u) {
+                        output.status = status_t::STATUS_AFP_INVALID;
                         std::stringstream message;
                         message << "ERROR: AFP strategy failed to produce a valid starting "            << "reference\n"
                             << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
@@ -1302,7 +1362,7 @@ pmoutput_t<T> firpm(std::size_t n,
                 }
                 for(std::size_t i{1u}; i <= depth && output.q <= 0.5; ++i) {
                     x.clear();
-                    referenceScaling(x, cbands, fbands, sdegs[i]+2u,
+                    refscaling(output.status, x, cbands, fbands, sdegs[i]+2u,
                                     output.x, cbands, fbands);
                     output = exchange(x, cbands, eps, nmax, prec);
                 }
@@ -1314,6 +1374,7 @@ pmoutput_t<T> firpm(std::size_t n,
                 chebvand(A, deg+1u, mesh, wf);
                 afp(x, A, mesh);
                 if(x.size() != deg + 2u) {
+                    output.status = status_t::STATUS_AFP_INVALID;
                     std::stringstream message;
                     message << "ERROR: AFP strategy failed to produce a valid starting reference\n"
                         << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
@@ -1325,8 +1386,10 @@ pmoutput_t<T> firpm(std::size_t n,
         }
 
         h.resize(n + 1u);
-        if (output.h.size() != deg + 1u)
+        if (output.h.size() != deg + 1u) {
+            output.status = status_t::STATUS_COEFFICIENT_SET_INVALID;
             throw std::runtime_error("ERROR: final filter coefficient set is incomplete");
+        }
 
         if(n % 2 == 0)
         {
@@ -1356,15 +1419,19 @@ pmoutput_t<T> firpm(std::size_t n,
         }
         output.h = h;
     }
-    catch(std::domain_error &err) {
+    catch (const std::domain_error& err) {
         std::cerr << "Invalid specification detected:" << std::endl;
         std::cerr << err.what() << std::endl;
         output.q = 2.0;
     }
-    catch(std::runtime_error &err) {
+    catch (const std::runtime_error& err) {
         std::cerr << "Runtime error detected:" << std::endl;
         std::cerr << err.what() << std::endl;
         output.q = 2.0;
+    }
+    catch (...) {
+        std::cerr << "Unknown exception" << std::endl;
+        output.status = status_t::STATUS_UNKNOWN_FAILURE;
     }
 
     return output;
@@ -1411,7 +1478,8 @@ pmoutput_t<T> firpmAFP(std::size_t n,
 template void uniform<double>(std::vector<double>& omega,
             std::vector<band_t<double>>& B, std::size_t n);
 
-template void referenceScaling<double>(std::vector<double>& newX,
+template void refscaling<double>(status_t& status,
+            std::vector<double>& newX,
             std::vector<band_t<double>>& newChebyBands,
             std::vector<band_t<double>>& newFreqBands,
             std::size_t newXSize,
@@ -1488,7 +1556,8 @@ template pmoutput_t<double> firpmAFP<double>(std::size_t n,
 template void uniform<long double>(std::vector<long double>& omega,
             std::vector<band_t<long double>>& B, std::size_t n);
 
-template void referenceScaling<long double>(std::vector<long double>& newX,
+template void refscaling<long double>(status_t& status,
+            std::vector<long double>& newX,
             std::vector<band_t<long double>>& newChebyBands,
             std::vector<band_t<long double>>& newFreqBands,
             std::size_t newXSize,
@@ -1566,7 +1635,8 @@ template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
     template void uniform<mpfr::mpreal>(std::vector<mpfr::mpreal>& omega,
                 std::vector<band_t<mpfr::mpreal>>& B, std::size_t n);
 
-    template void referenceScaling<mpfr::mpreal>(std::vector<mpfr::mpreal>& newX,
+    template void refscaling<mpfr::mpreal>(status_t& status,
+                std::vector<mpfr::mpreal>& newX,
                 std::vector<band_t<mpfr::mpreal>>& newChebyBands,
                 std::vector<band_t<mpfr::mpreal>>& newFreqBands,
                 std::size_t newXSize,

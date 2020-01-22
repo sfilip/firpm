@@ -9,7 +9,7 @@
 
 
 //    firpm_d
-//    Copyright (C) 2015-2019  S. Filip
+//    Copyright (C) 2015-2020  S. Filip
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -51,6 +51,25 @@ enum class init_t {
     AFP                     /**< AFP algorithm-based initialization */
 };
 
+/** @enum status_t code to distinguish the
+ * various states in which the Parks-McClellan
+ * algorithm execution finished in. */
+enum class status_t {
+    STATUS_SUCCESS,                     /**< successful execution */
+    STATUS_FREQUENCY_INVALID_INTERVAL,  /**< invalid frequency inputs */
+    STATUS_AMPLITUDE_VECTOR_MISMATCH,   /**< amplitude/frequency vector sizes mismatch */
+    STATUS_AMPLITUDE_DISCONTINUITY,     /**< discontinuous amplitude values detected */
+    STATUS_WEIGHT_NEGATIVE,             /**< negative weight value detected */
+    STATUS_WEIGHT_VECTOR_MISMATCH,      /**< weight/frequency vector sizes mismatch */
+    STATUS_WEIGHT_DISCONTINUITY,        /**< discontinuous weight value detected */
+    STATUS_SCALING_INVALID,             /**< failure in performing valid reference scaling */
+    STATUS_AFP_INVALID,                 /**< numerical failure in performing AFP initialization */ 
+    STATUS_COEFFICIENT_SET_INVALID,     /**< invalid final coefficient set */
+    STATUS_EXCHANGE_FAILURE,            /**< runtime error in producing a valid reference set */
+    STATUS_CONVERGENCE_WARNING,         /**< successful execution, but with convengence warnings */
+    STATUS_UNKNOWN_FAILURE              /**< unknown runtime failure */
+};
+
 /**
  * @brief The type of the object returned by the Parks-McClellan algorithm.
  *
@@ -68,6 +87,7 @@ struct pmoutput_t
                                 achieve convergence*/
     T delta;                    /**< the final reference error */
     T q;                        /**< convergence parameter value */
+    status_t status;            /**< status code for the output object */
 };
 
 /*! An implementation of the uniform initialization approach for
@@ -84,6 +104,8 @@ void uniform(std::vector<T>& omega,
 
 /*! An implementation of the reference scaling approach mentioned
  * in section 4 of the article.
+ * @param[out] status saves diagnostic information in case the routine does not
+ * complete successfully
  * @param[out] nx the reference set obtained from scaling the initial set x
  * @param[out] ncbands contains information about the bands of interest 
  * corresponding to the new reference (i.e., how many reference points are 
@@ -102,7 +124,8 @@ void uniform(std::vector<T>& omega,
  * band space)
  */
 template<typename T>
-void referenceScaling(std::vector<T>& nx, std::vector<band_t<T>>& ncbands,
+void refscaling(status_t& status,
+        std::vector<T>& nx, std::vector<band_t<T>>& ncbands,
         std::vector<band_t<T>>& nfbands, std::size_t nxs,
         std::vector<T>& x, std::vector<band_t<T>>& cbands,
         std::vector<band_t<T>>& fbands);
