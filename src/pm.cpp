@@ -661,7 +661,7 @@ pmoutput_t<T> exchange(std::vector<T>& x,
 
     if(pmmath::isnan(output.delta) || pmmath::isnan(output.q)) {
         output.status = status_t::STATUS_CONVERGENCE_WARNING;
-        std::cout << "WARNING: The exchange algorithm did not converge.\n"
+        std::cerr << "WARNING: The exchange algorithm did not converge.\n"
             << "TRIGGER: numerical instability\n"
             << "POSSIBLE CAUSE: poor starting reference and/or "
             << "a too small value for nmax.\n";
@@ -669,7 +669,7 @@ pmoutput_t<T> exchange(std::vector<T>& x,
 
     if(output.iter >= 101u && output.q > eps) {
         output.status = status_t::STATUS_CONVERGENCE_WARNING;
-        std::cout << "WARNING: The exchange algorithm did not converge.\n"
+        std::cerr << "WARNING: The exchange algorithm did not converge.\n"
             << "TRIGGER: exceeded iteration threshold of 100\n"
             << "POSSIBLE CAUSE: poor starting reference and/or "
             << "a too small value for nmax.\n";
@@ -809,7 +809,7 @@ pmoutput_t<T> firpm(std::size_t n,
 
         if(n % 2 != 0) {
             if(f[f.size()-1u] == 1 && a[a.size()-1u] != 0) {
-                std::cout << "WARNING: gain at Nyquist frequency different from 0.\n"
+                std::cerr << "WARNING: gain at Nyquist frequency different from 0.\n"
                     << "Increasing the number of taps by one and passing to a "
                     << "type I filter" << std::endl;
                 ++n;
@@ -1061,7 +1061,7 @@ pmoutput_t<T> firpmRS(std::size_t n,
             unsigned long prec)
 {
     if( n < 2u*f.size()) {
-        std::cout << "WARNING: too small filter length to use reference scaling." << std::endl
+        std::cerr << "WARNING: too small filter length to use reference scaling." << std::endl
             << "Switching to a uniform initialization strategy." << std::endl;
         return firpm<T>(n, f, a, w, eps, nmax, init_t::UNIFORM, depth, rstrategy, prec);
     } else {
@@ -1449,7 +1449,7 @@ pmoutput_t<T> firpmRS(std::size_t n,
             unsigned long prec)
 {
     if( n < 2u*f.size()) {
-        std::cout << "WARNING: too small filter length to use reference scaling." << std::endl
+        std::cerr << "WARNING: too small filter length to use reference scaling." << std::endl
             << "Switching to a uniform initialization strategy" << std::endl;
         return firpm<T>(n, f, a, w, type, eps, nmax, init_t::UNIFORM, depth, rstrategy, prec);
     } else {
