@@ -619,7 +619,7 @@ void extrema(status_t& status, T& convergenceOrder,
 template<typename T>
 pmoutput_t<T> exchange(std::vector<T>& x,
         std::vector<band_t<T>>& chebyBands, double eps,
-        std::size_t Nmax, unsigned long prec, std::ostream &errlog)
+        std::size_t Nmax, unsigned long prec)
 {
     pmoutput_t<T> output;
     output.status = status_t::STATUS_UNKNOWN_FAILURE;
