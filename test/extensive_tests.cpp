@@ -2,13 +2,14 @@
 #include <fstream>
 #include <chrono>
 #include <type_traits>
-#include "firpm/barycentric.h"
-#include "firpm/pm.h"
-#include "firpm/cheby.h"
-#include "firpm/pmmath.h"
+#include "firpm.h"
 #include "gtest/gtest.h"
 
 using testing::Types;
+using pm::firpm;
+using pm::firpmRS;
+using pm::firpmAFP;
+using pm::filter_t;
 
 #ifdef HAVE_MPFR
     #include <unsupported/Eigen/MPRealSupport>
@@ -22,7 +23,7 @@ struct firpm_extensive_test : public testing::Test { using T = _T; };
 TYPED_TEST_SUITE(firpm_extensive_test, types);
 
 template<typename T>
-void printInfo(pmoutput_t<T>& output, double eps)
+void printInfo(pm::pmoutput_t<T>& output, double eps)
 {
     if(output.q < eps)
     {
@@ -36,7 +37,7 @@ void printInfo(pmoutput_t<T>& output, double eps)
 }
 
 template<typename T>
-void compareInfoRS(pmoutput_t<T>& output1, pmoutput_t<T>& output2, double eps)
+void compareInfoRS(pm::pmoutput_t<T>& output1, pm::pmoutput_t<T>& output2, double eps)
 {
     if(output1.q < eps)
     {
@@ -45,7 +46,7 @@ void compareInfoRS(pmoutput_t<T>& output1, pmoutput_t<T>& output2, double eps)
 }
 
 template<typename T>
-void compareInfoAFP(pmoutput_t<T>& output1, pmoutput_t<T>& output2, double eps)
+void compareInfoAFP(pm::pmoutput_t<T>& output1, pm::pmoutput_t<T>& output2, double eps)
 {
     if(output1.q < eps)
     {
@@ -77,7 +78,7 @@ TYPED_TEST(firpm_extensive_test, extensive1)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoAFP(output2, output3, 1e-2);
 
@@ -98,7 +99,7 @@ TYPED_TEST(firpm_extensive_test, extensive2)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoAFP(output2, output3, 1e-2);
 }
@@ -118,7 +119,7 @@ TYPED_TEST(firpm_extensive_test, extensive3)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoAFP(output2, output3, 1e-2);
 }
@@ -138,7 +139,7 @@ TYPED_TEST(firpm_extensive_test, extensive4)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoAFP(output2, output3, 1e-2);
 }
@@ -162,7 +163,7 @@ TYPED_TEST(firpm_extensive_test, extensive5)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoAFP(output2, output3, 1e-2);
 }
@@ -181,7 +182,7 @@ TYPED_TEST(firpm_extensive_test, extensive6)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoAFP(output2, output3, 1e-2);
 }
@@ -200,7 +201,7 @@ TYPED_TEST(firpm_extensive_test, extensive7)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoAFP(output2, output3, 1e-2);
 }
@@ -219,7 +220,7 @@ TYPED_TEST(firpm_extensive_test, extensive8)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoAFP(output2, output3, 1e-2);
 }
@@ -238,7 +239,7 @@ TYPED_TEST(firpm_extensive_test, extensive9)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoAFP(output2, output3, 1e-2);
 
@@ -263,7 +264,7 @@ TYPED_TEST(firpm_extensive_test, extensive10)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoAFP(output2, output3, 1e-2);
 }
@@ -282,7 +283,7 @@ TYPED_TEST(firpm_extensive_test, extensive11)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoAFP(output2, output3, 1e-2);
 }
@@ -301,7 +302,7 @@ TYPED_TEST(firpm_extensive_test, extensive12)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoAFP(output2, output3, 1e-2);
 }
@@ -322,7 +323,7 @@ TYPED_TEST(firpm_extensive_test, extensive13)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
 
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with AFP\n";
@@ -330,7 +331,7 @@ TYPED_TEST(firpm_extensive_test, extensive13)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output1, output3, 1e-2);
     }
     compareInfoRS(output1, output2, 1e-2);
@@ -351,7 +352,7 @@ TYPED_TEST(firpm_extensive_test, extensive14)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 
@@ -372,7 +373,7 @@ TYPED_TEST(firpm_extensive_test, extensive15)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -400,7 +401,7 @@ TYPED_TEST(firpm_extensive_test, extensive16)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 
@@ -422,7 +423,7 @@ TYPED_TEST(firpm_extensive_test, extensive17)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -442,7 +443,7 @@ TYPED_TEST(firpm_extensive_test, extensive18)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -467,7 +468,7 @@ TYPED_TEST(firpm_extensive_test, extensive19)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output1, output3, 1e-2);
     }
 
@@ -489,7 +490,7 @@ TYPED_TEST(firpm_extensive_test, extensive20)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -509,7 +510,7 @@ TYPED_TEST(firpm_extensive_test, extensive21)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -532,7 +533,7 @@ TYPED_TEST(firpm_extensive_test, extensive22)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -550,7 +551,7 @@ TYPED_TEST(firpm_extensive_test, extensive23)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
 
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with AFP\n";
@@ -558,7 +559,7 @@ TYPED_TEST(firpm_extensive_test, extensive23)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 
@@ -582,7 +583,7 @@ TYPED_TEST(firpm_extensive_test, extensive24)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -602,14 +603,14 @@ TYPED_TEST(firpm_extensive_test, extensive25)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(362, {0.0, 0.3, 0.35, 0.7, 0.75, 1.0}, {1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, {1.0, 10.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     compareInfoRS(output1, output2, 1e-2);
     compareInfoAFP(output1, output3, 1e-2);
@@ -632,14 +633,14 @@ TYPED_TEST(firpm_extensive_test, extensive26)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(200, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     compareInfoRS(output1, output2, 1e-2);
     compareInfoAFP(output1, output3, 1e-2);
@@ -661,14 +662,14 @@ TYPED_TEST(firpm_extensive_test, extensive27)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(202, {0.0, 0.4, 0.5, 0.7, 0.8, 1.0}, {0.0, 0.0, 1.0, 1.0, 0.0, 0.0}, {10.0, 1.0, 10.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     compareInfoRS(output1, output2, 1e-2);
     compareInfoAFP(output1, output3, 1e-2);
@@ -689,7 +690,7 @@ TYPED_TEST(firpm_extensive_test, extensive28)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoAFP(output2, output3, 1e-2);
 }
@@ -715,7 +716,7 @@ TYPED_TEST(firpm_extensive_test, extensive29)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(140, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
@@ -724,7 +725,7 @@ TYPED_TEST(firpm_extensive_test, extensive29)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoRS(output1, output2, 1e-2);
     compareInfoAFP(output1, output3, 1e-2);
@@ -749,7 +750,7 @@ TYPED_TEST(firpm_extensive_test, extensive30)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(290, {0.0, 0.2, 0.25, 0.4, 0.45, 0.5, 0.55, 0.7, 0.75, 1.0},
@@ -758,7 +759,7 @@ TYPED_TEST(firpm_extensive_test, extensive30)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output3.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output3.delta), 2e-2);
 
     compareInfoRS(output1, output2, 1e-2);
     compareInfoAFP(output1, output3, 1e-2);
@@ -784,7 +785,7 @@ TYPED_TEST(firpm_extensive_test, extensive31)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoAFP(output2, output3, 1e-2);
 }
@@ -809,7 +810,7 @@ TYPED_TEST(firpm_extensive_test, extensive32)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
 
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with AFP\n";
@@ -819,7 +820,7 @@ TYPED_TEST(firpm_extensive_test, extensive32)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output1, output3, 1e-2);
     }
 
@@ -843,7 +844,7 @@ TYPED_TEST(firpm_extensive_test, extensive33)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
 
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with AFP\n";
@@ -853,7 +854,7 @@ TYPED_TEST(firpm_extensive_test, extensive33)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output1, output3, 1e-2);
     }
 
@@ -880,7 +881,7 @@ TYPED_TEST(firpm_extensive_test, extensive34)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
 
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with AFP\n";
@@ -890,7 +891,7 @@ TYPED_TEST(firpm_extensive_test, extensive34)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output1, output3, 1e-2);
     }
 
@@ -918,7 +919,7 @@ TYPED_TEST(firpm_extensive_test, extensive35)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -943,7 +944,7 @@ TYPED_TEST(firpm_extensive_test, extensive36)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -968,7 +969,7 @@ TYPED_TEST(firpm_extensive_test, extensive37)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -992,7 +993,7 @@ TYPED_TEST(firpm_extensive_test, extensive38)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
 
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with AFP\n";
@@ -1002,7 +1003,7 @@ TYPED_TEST(firpm_extensive_test, extensive38)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output1, output3, 1e-2);
     }
 
@@ -1032,7 +1033,7 @@ TYPED_TEST(firpm_extensive_test, extensive39)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -1057,7 +1058,7 @@ TYPED_TEST(firpm_extensive_test, extensive40)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -1081,7 +1082,7 @@ TYPED_TEST(firpm_extensive_test, extensive41)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
 
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with AFP\n";
@@ -1091,7 +1092,7 @@ TYPED_TEST(firpm_extensive_test, extensive41)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output1, output3, 1e-2);
     }
 
@@ -1116,14 +1117,14 @@ TYPED_TEST(firpm_extensive_test, extensive42)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(161, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoRS(output1, output2, 1e-2);
     compareInfoAFP(output1, output3, 1e-2);
@@ -1142,14 +1143,14 @@ TYPED_TEST(firpm_extensive_test, extensive43)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(201, {0.0, 0.4, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoRS(output1, output2, 1e-2);
     compareInfoAFP(output1, output3, 1e-2);
@@ -1170,7 +1171,7 @@ TYPED_TEST(firpm_extensive_test, extensive44)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoAFP(output2, output3, 1e-2);
 }
@@ -1191,14 +1192,14 @@ TYPED_TEST(firpm_extensive_test, extensive45)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(401, {0.0, 0.7, 0.71, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0});
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     compareInfoRS(output1, output2, 1e-2);
     compareInfoAFP(output1, output3, 1e-2);
@@ -1218,7 +1219,7 @@ TYPED_TEST(firpm_extensive_test, extensive46)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
 
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with AFP\n";
@@ -1226,7 +1227,7 @@ TYPED_TEST(firpm_extensive_test, extensive46)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output1, output3, 1e-2);
     }
 
@@ -1249,7 +1250,7 @@ TYPED_TEST(firpm_extensive_test, extensive47)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -1270,7 +1271,7 @@ TYPED_TEST(firpm_extensive_test, extensive48)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -1296,7 +1297,7 @@ TYPED_TEST(firpm_extensive_test, extensive49)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -1321,7 +1322,7 @@ TYPED_TEST(firpm_extensive_test, extensive50)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output2, output3, 1e-2);
     }
 }
@@ -1343,7 +1344,7 @@ TYPED_TEST(firpm_extensive_test, extensive51)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
 
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with AFP\n";
@@ -1351,7 +1352,7 @@ TYPED_TEST(firpm_extensive_test, extensive51)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
         compareInfoAFP(output1, output3, 1e-2);
     }
 
@@ -1373,7 +1374,7 @@ TYPED_TEST(firpm_extensive_test, extensive52)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output1.delta)/output2.delta), 2e-2);
 
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with AFP\n";
@@ -1381,7 +1382,7 @@ TYPED_TEST(firpm_extensive_test, extensive52)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
         compareInfoAFP(output1, output3, 1e-2);
     }
 
@@ -1404,7 +1405,7 @@ TYPED_TEST(firpm_extensive_test, extensive53)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
 
     std::cout << "START Parks-McClellan with AFP\n";
@@ -1412,7 +1413,7 @@ TYPED_TEST(firpm_extensive_test, extensive53)
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     compareInfoRS(output1, output2, 1e-2);
     compareInfoAFP(output1, output3, 1e-2);
@@ -1432,14 +1433,14 @@ TYPED_TEST(firpm_extensive_test, extensive54)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(101, {0.1, 0.9}, {1.0, 1.0}, {1.0}, filter_t::FIR_HILBERT);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     compareInfoRS(output1, output2, 1e-2);
     compareInfoAFP(output1, output3, 1e-2);
@@ -1462,14 +1463,14 @@ TYPED_TEST(firpm_extensive_test, extensive55)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(100, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     compareInfoRS(output1, output2, 1e-2);
     compareInfoAFP(output1, output3, 1e-2);
@@ -1489,14 +1490,14 @@ TYPED_TEST(firpm_extensive_test, extensive56)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(101, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     compareInfoRS(output1, output2, 1e-2);
     compareInfoAFP(output1, output3, 1e-2);
@@ -1517,14 +1518,14 @@ TYPED_TEST(firpm_extensive_test, extensive57)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(200, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     compareInfoRS(output1, output2, 1e-2);
     compareInfoAFP(output1, output3, 1e-2);
@@ -1545,14 +1546,14 @@ TYPED_TEST(firpm_extensive_test, extensive58)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(201, {0, 0.5, 0.55, 1.0}, {0.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, filter_t::FIR_DIFFERENTIATOR);
     printInfo(output3, 1e-2);
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     compareInfoRS(output1, output2, 1e-2);
     compareInfoAFP(output1, output3, 1e-2);
@@ -1574,7 +1575,7 @@ TYPED_TEST(firpm_extensive_test, extensive59)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with AFP\n";
@@ -1582,7 +1583,7 @@ TYPED_TEST(firpm_extensive_test, extensive59)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
         compareInfoAFP(output1, output3, 1e-2);
     }
 
@@ -1602,7 +1603,7 @@ TYPED_TEST(firpm_extensive_test, extensive60)
     printInfo(output2, 1e-2);
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with AFP\n";
@@ -1610,7 +1611,7 @@ TYPED_TEST(firpm_extensive_test, extensive60)
         printInfo(output3, 1e-2);
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
         compareInfoAFP(output1, output3, 1e-2);
     }
 

@@ -2,14 +2,15 @@
 #include <fstream>
 #include <chrono>
 #include <type_traits>
-#include "firpm/barycentric.h"
-#include "firpm/pm.h"
-#include "firpm/cheby.h"
-#include "firpm/band.h"
-#include "firpm/pmmath.h"
+#include "firpm.h"
 #include "gtest/gtest.h"
 
 using testing::Types;
+using pm::firpm;
+using pm::firpmRS;
+using pm::firpmAFP;
+using pm::pmoutput_t;
+using pm::filter_t;
 
 #ifdef HAVE_MPFR
     #include <unsupported/Eigen/MPRealSupport>
@@ -43,19 +44,19 @@ TYPED_TEST(firpm_scaling_test, lowpass50a)
 
     using T = typename TestFixture::T;
 
-    std::vector<band_t<T>> freqBands(2);
+    std::vector<pm::band_t<T>> freqBands(2);
 
     freqBands[0].start = 0;
-    freqBands[0].stop = pmmath::const_pi<T>() * 0.4;
-    freqBands[0].weight = [] (space_t, T) -> T {return 1; };
-    freqBands[0].space = space_t::FREQ;
-    freqBands[0].amplitude = [](space_t, T) -> T { return 1; };
+    freqBands[0].stop = pm::pmmath::const_pi<T>() * 0.4;
+    freqBands[0].weight = [] (pm::space_t, T) -> T {return 1; };
+    freqBands[0].space = pm::space_t::FREQ;
+    freqBands[0].amplitude = [](pm::space_t, T) -> T { return 1; };
 
-    freqBands[1].start = pmmath::const_pi<T>() * 0.5;
-    freqBands[1].stop = pmmath::const_pi<T>();
-    freqBands[1].weight = [] (space_t, T) -> T {return 1; };
-    freqBands[1].space = space_t::FREQ;
-    freqBands[1].amplitude = [](space_t, T) -> T { return 0; };
+    freqBands[1].start = pm::pmmath::const_pi<T>() * 0.5;
+    freqBands[1].stop = pm::pmmath::const_pi<T>();
+    freqBands[1].weight = [] (pm::space_t, T) -> T {return 1; };
+    freqBands[1].space = pm::space_t::FREQ;
+    freqBands[1].amplitude = [](pm::space_t, T) -> T { return 0; };
 
 
 
@@ -63,23 +64,23 @@ TYPED_TEST(firpm_scaling_test, lowpass50a)
 
     std::size_t degree = 50;
     std::vector<T> a;
-    std::vector<band_t<T>> chebyBands;
+    std::vector<pm::band_t<T>> chebyBands;
     std::vector<T> omega(degree + 2u);
     std::vector<T> x(degree + 2u);
-    uniform(omega, freqBands, degree + 2u);
-    cos(x, omega);
-    bandconv(chebyBands, freqBands, convdir_t::FROMFREQ);
+    pm::uniform(omega, freqBands, degree + 2u);
+    pm::cos(x, omega);
+    pm::bandconv(chebyBands, freqBands, pm::convdir_t::FROMFREQ);
 
-    auto output = exchange(x, chebyBands);
+    auto output = pm::exchange(x, chebyBands);
     ASSERT_LT(output.q, 1e-2);
 
     for(std::size_t counter = 0; counter < 1; ++counter) {
         std::vector<T> newX;
-        refscaling(output.status, newX, chebyBands, freqBands, 2 * degree + 2,
+        pm::refscaling(output.status, newX, chebyBands, freqBands, 2 * degree + 2,
                 output.x, chebyBands, freqBands);
         degree = 2 * degree;
 
-        output = exchange(newX, chebyBands);
+        output = pm::exchange(newX, chebyBands);
         ASSERT_LT(output.q, 1e-2);
     }
         auto stop  = std::chrono::steady_clock::now();
@@ -124,7 +125,7 @@ TYPED_TEST(firpm_scaling_test, lowpass50)
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     start = std::chrono::steady_clock::now();
@@ -138,7 +139,7 @@ TYPED_TEST(firpm_scaling_test, lowpass50)
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -167,7 +168,7 @@ TYPED_TEST(firpm_scaling_test, lowpass80)
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u, f, a, w);
@@ -176,7 +177,7 @@ TYPED_TEST(firpm_scaling_test, lowpass80)
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -205,7 +206,7 @@ TYPED_TEST(firpm_scaling_test, lowpass100)
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u, f, a, w);
@@ -214,7 +215,7 @@ TYPED_TEST(firpm_scaling_test, lowpass100)
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -244,7 +245,7 @@ TYPED_TEST(firpm_scaling_test, bandstop50)
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u, f, a, w);
@@ -253,7 +254,7 @@ TYPED_TEST(firpm_scaling_test, bandstop50)
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -281,7 +282,7 @@ TYPED_TEST(firpm_scaling_test, bandstop80)
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u, f, a, w);
@@ -290,7 +291,7 @@ TYPED_TEST(firpm_scaling_test, bandstop80)
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -305,7 +306,7 @@ TYPED_TEST(firpm_scaling_test, bandstop100)
     std::vector<T> w = {1.0, 1.0, 1.0};
 
     std::size_t degree = 100;
-    pmoutput_t<T> output1;
+    pm::pmoutput_t<T> output1;
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with uniform initialization\n";
         output1 = firpm<T>(degree * 2u, f, a, w);
@@ -329,12 +330,12 @@ TYPED_TEST(firpm_scaling_test, bandstop100)
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
         std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
-        ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
     }
 
 }
@@ -361,7 +362,7 @@ TYPED_TEST(firpm_scaling_test, combfir)
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u, f, a, w);
@@ -370,7 +371,7 @@ TYPED_TEST(firpm_scaling_test, combfir)
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -425,7 +426,7 @@ TYPED_TEST(firpm_lebesgue_test, lowpass500)
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u, f, a, w);
@@ -434,7 +435,7 @@ TYPED_TEST(firpm_lebesgue_test, lowpass500)
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -458,7 +459,7 @@ TYPED_TEST(firpm_lebesgue_test, lowpass1000)
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
 
-    pmoutput_t<T> output3;
+    pm::pmoutput_t<T> output3;
     // takes way too long with the mpfr version of the code to generate
     // the AFP initialization (AFP is meant to be used in conjunction with
     // double/long double versions of the code for filter lengths that
@@ -470,7 +471,7 @@ TYPED_TEST(firpm_lebesgue_test, lowpass1000)
         std::cout << "Iteration count = " << output3.iter  << std::endl;
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-2);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
     }
 }
 
@@ -496,7 +497,7 @@ TYPED_TEST(firpm_lebesgue_test, bandpass60)
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u, f, a, w);
@@ -505,7 +506,7 @@ TYPED_TEST(firpm_lebesgue_test, bandpass60)
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -536,7 +537,7 @@ TYPED_TEST(firpm_lebesgue_test, bandpass70)
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u, f, a, w);
@@ -544,7 +545,7 @@ TYPED_TEST(firpm_lebesgue_test, bandpass70)
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -574,7 +575,7 @@ TYPED_TEST(firpm_lebesgue_test, bandpass80)
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u, f, a, w);
@@ -582,7 +583,7 @@ TYPED_TEST(firpm_lebesgue_test, bandpass80)
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -612,7 +613,7 @@ TYPED_TEST(firpm_lebesgue_test, bandpass100)
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u, f, a, w);
@@ -620,7 +621,7 @@ TYPED_TEST(firpm_lebesgue_test, bandpass100)
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -649,7 +650,7 @@ TYPED_TEST(firpm_lebesgue_test, multiband100)
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u, f, a, w);
@@ -657,7 +658,7 @@ TYPED_TEST(firpm_lebesgue_test, multiband100)
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -686,7 +687,7 @@ TYPED_TEST(firpm_lebesgue_test, multiband200)
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u, f, a, w);
@@ -694,7 +695,7 @@ TYPED_TEST(firpm_lebesgue_test, multiband200)
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -723,7 +724,7 @@ TYPED_TEST(firpm_lebesgue_test, multiband300)
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u, f, a, w);
@@ -732,7 +733,7 @@ TYPED_TEST(firpm_lebesgue_test, multiband300)
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -757,7 +758,7 @@ TYPED_TEST(firpm_lebesgue_test, multiband600)
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-5);
 
-    pmoutput_t<T> output3;
+    pm::pmoutput_t<T> output3;
     // idem to lowpass1000
     if(!std::is_same<T, mpfr::mpreal>::value) {
         std::cout << "START Parks-McClellan with AFP\n";
@@ -766,7 +767,7 @@ TYPED_TEST(firpm_lebesgue_test, multiband600)
         std::cout << "Iteration count = " << output3.iter  << std::endl;
         std::cout << "FINISH Parks-McClellan with AFP\n";
         ASSERT_LT(output3.q, 1e-5);
-        ASSERT_LE(pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
+        ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
     }
 }
 
@@ -807,7 +808,7 @@ TYPED_TEST(firpm_cic_test, cic119) {
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(2u*deg+1u, cf_freq, cf_mag, cf_weight);
@@ -815,7 +816,7 @@ TYPED_TEST(firpm_cic_test, cic119) {
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -842,7 +843,7 @@ TYPED_TEST(firpm_issues_test, smallfir1) {
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u, {0.0, 0.4, 0.6, 0.64, 0.69, 0.74, 0.79, 0.83, 0.88, 1.0},
@@ -852,7 +853,7 @@ TYPED_TEST(firpm_issues_test, smallfir1) {
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -874,7 +875,7 @@ TYPED_TEST(firpm_issues_test, smallfir2) {
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u, {0.0, 0.4, 0.6, 0.6089285714285714, 0.6178571428571429, 0.6267857142857143, 0.6357142857142857, 0.6446428571428571, 0.6535714285714286, 0.6625, 0.6714285714285714, 0.6803571428571428, 0.6892857142857143, 0.6982142857142857, 0.7071428571428571, 0.7160714285714285, 0.725, 0.7339285714285714, 0.7428571428571429, 0.7517857142857143, 0.7607142857142857, 0.7696428571428571, 0.7785714285714285, 0.7874999999999999, 0.7964285714285714, 0.8053571428571428, 0.8142857142857143, 0.8232142857142857, 0.8321428571428571, 0.8410714285714285, 0.85, 0.8589285714285714, 0.8678571428571429, 0.8767857142857143, 0.8857142857142857, 0.8946428571428571, 0.9035714285714285, 0.9124999999999999, 0.9214285714285714, 0.9303571428571428, 0.9392857142857143, 0.9482142857142857, 0.9571428571428571, 0.9660714285714285, 0.975, 1.0}, {1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, {87.35985578898647, 1000.0, 1029.7619047619048, 1059.5238095238094, 1089.2857142857144, 1119.047619047619, 1148.8095238095239, 1178.5714285714284, 1208.3333333333333, 1238.0952380952383, 1267.857142857143, 1297.6190476190475, 1327.3809523809523, 1357.142857142857, 1386.904761904762, 1416.6666666666667, 1446.4285714285716, 1476.1904761904761, 1505.952380952381, 1535.7142857142858, 1565.4761904761906, 1595.2380952380952, 1625.0});
@@ -882,7 +883,7 @@ TYPED_TEST(firpm_issues_test, smallfir2) {
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -911,7 +912,7 @@ TYPED_TEST(firpm_issues_test, partition1) {
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpm<T>(degree * 2u + 1u,
@@ -922,7 +923,7 @@ TYPED_TEST(firpm_issues_test, partition1) {
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
@@ -951,7 +952,7 @@ TYPED_TEST(firpm_issues_test, partition2) {
     std::cout << "Iteration count = " << output2.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
     auto output3 = firpmAFP<T>(degree * 2u,
@@ -962,7 +963,7 @@ TYPED_TEST(firpm_issues_test, partition2) {
     std::cout << "Iteration count = " << output3.iter  << std::endl;
     std::cout << "FINISH Parks-McClellan with AFP\n";
     ASSERT_LT(output3.q, 1e-2);
-    ASSERT_LE(pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
+    ASSERT_LE(pm::pmmath::fabs((output1.delta-output3.delta)/output1.delta), 2e-2);
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;

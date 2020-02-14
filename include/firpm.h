@@ -1,13 +1,12 @@
 /**
- * @file util.h
+ * @file firpm.h
  * @author Silviu Filip
- * @date 12 March 2015
- * @brief Utility header file containing common includes used by the rest of the library
- *
- */
+ * @date 14 February 2020
+ * @brief Wrapper file that should be included in order to use the library
+ * */
 
 //    firpm
-//    Copyright (C) 2015 - 2019  S. Filip
+//    Copyright (C) 2015 - 2020  S. Filip
 //
 //    This program is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -23,24 +22,13 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 
-#ifndef __PMUTIL_H__
-#define __PMUTIL_H__
+#ifndef __PMFIRPM_H__
+#define __PMFIRPM_H__
 
-#include <utility>
-#include <vector>
-#include <list>
-#include <cstdlib>
-#include <cstdio>
-#include <iostream>
-#include <sstream>
-#include <climits>
-#include <algorithm>
-#include <functional>
-#include <cmath>
-#include <Eigen/Dense>
-#include <Eigen/Eigenvalues>
-#if HAVE_MPFR
-    #include "mpreal.h"
+#include "firpm/band.h"
+#include "firpm/barycentric.h"
+#include "firpm/cheby.h"
+#include "firpm/pm.h"
+#include "firpm/pmmath.h"
+
 #endif
-
-#endif /* UTIL_H_ */
