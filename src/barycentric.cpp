@@ -62,8 +62,8 @@ namespace pm {
 
 
     template<typename T>
-    void idealvals(T &D, T &W,
-            const T &x, std::vector<band_t<T>> &bands)
+    void idealvals(T& D, T& W,
+            T const& x, std::vector<band_t<T>>& bands)
     {
         for (auto &it : bands) {
             if (x >= it.start && x <= it.stop) {
@@ -75,8 +75,8 @@ namespace pm {
     }
 
     template<typename T>
-    void compdelta(T &delta, std::vector<T>& x,
-            std::vector<band_t<T>> &bands)
+    void compdelta(T& delta, std::vector<T>& x,
+            std::vector<band_t<T>>& bands)
     {
         std::vector<T> w(x.size());
         baryweights(w, x);
@@ -98,8 +98,8 @@ namespace pm {
     }
 
     template<typename T>
-    void compdelta(T &delta, std::vector<T>& w,
-            std::vector<T>& x, std::vector<band_t<T>> &bands)
+    void compdelta(T& delta, std::vector<T>& w,
+            std::vector<T>& x, std::vector<band_t<T>>& bands)
     {
         T num, denom, D, W, buffer;
         num = denom = D = W = 0;
@@ -118,8 +118,8 @@ namespace pm {
 
 
     template<typename T>
-    void compc(std::vector<T> &C, T &delta,
-            std::vector<T> &omega, std::vector<band_t<T>> &bands)
+    void compc(std::vector<T>& C, T& delta,
+            std::vector<T>& omega, std::vector<band_t<T>>& bands)
     {
         T D, W;
         D = W = 0;
@@ -133,9 +133,9 @@ namespace pm {
     }
 
     template<typename T>
-    void approx(T &Pc, const T &omega,
-            std::vector<T> &x, std::vector<T> &C,
-            std::vector<T> &w)
+    void approx(T& Pc, T const& omega,
+            std::vector<T>& x, std::vector<T>& C,
+            std::vector<T>& w)
     {
         T num, denom;
         T buff;
@@ -157,10 +157,10 @@ namespace pm {
     }
 
     template<typename T>
-    void comperror(T &error, const T &xVal,
-            T &delta, std::vector<T> &x,
-            std::vector<T> &C, std::vector<T> &w,
-            std::vector<band_t<T>> &bands)
+    void comperror(T& error, T const& xVal,
+            T& delta, std::vector<T>& x,
+            std::vector<T>& C, std::vector<T>& w,
+            std::vector<band_t<T>>& bands)
     {
         for (std::size_t i{0u}; i < x.size(); ++i)
         {
@@ -188,48 +188,48 @@ namespace pm {
     template void baryweights<double>(std::vector<double>& w,
             std::vector<double>& x);
 
-    template void compdelta<double>(double &delta,
-            std::vector<double>& x, std::vector<band_t<double>> &bands);
+    template void compdelta<double>(double& delta,
+            std::vector<double>& x, std::vector<band_t<double>>& bands);
 
-    template void compdelta<double>(double &delta,
+    template void compdelta<double>(double& delta,
             std::vector<double>& w, std::vector<double>& x,
-            std::vector<band_t<double>> &bands);
+            std::vector<band_t<double>>& bands);
 
-    template void compc<double>(std::vector<double> &C, double &delta,
-            std::vector<double> &x, std::vector<band_t<double>> &bands);
+    template void compc<double>(std::vector<double>& C, double& delta,
+            std::vector<double>& x, std::vector<band_t<double>>& bands);
 
-    template void approx<double>(double &Pc, const double &xVal,
-            std::vector<double> &x, std::vector<double> &C,
-            std::vector<double> & w);
+    template void approx<double>(double& Pc, double const& xVal,
+            std::vector<double>& x, std::vector<double>& C,
+            std::vector<double>& w);
 
-    template void comperror<double>(double &error, const double &xVal,
-            double &delta, std::vector<double> &x,
-            std::vector<double> &C, std::vector<double> &w,
-            std::vector<band_t<double>> &bands);
+    template void comperror<double>(double& error, double const& xVal,
+            double& delta, std::vector<double>& x,
+            std::vector<double>& C, std::vector<double>& w,
+            std::vector<band_t<double>>& bands);
 
     /* long double precision */
 
     template void baryweights<long double>(std::vector<long double>& w,
             std::vector<long double>& x);
 
-    template void compdelta<long double>(long double &delta,
-            std::vector<long double>& x, std::vector<band_t<long double>> &bands);
+    template void compdelta<long double>(long double& delta,
+            std::vector<long double>& x, std::vector<band_t<long double>>& bands);
 
-    template void compdelta<long double>(long double &delta,
+    template void compdelta<long double>(long double& delta,
             std::vector<long double>& w, std::vector<long double>& x,
-            std::vector<band_t<long double>> &bands);
+            std::vector<band_t<long double>>& bands);
 
-    template void compc<long double>(std::vector<long double> &C, long double &delta,
-            std::vector<long double> &x, std::vector<band_t<long double>> &bands);
+    template void compc<long double>(std::vector<long double>& C, long double& delta,
+            std::vector<long double> &x, std::vector<band_t<long double>>& bands);
 
-    template void approx<long double>(long double &Pc, const long double &xVal,
-            std::vector<long double> &x, std::vector<long double> &C,
-            std::vector<long double> & w);
+    template void approx<long double>(long double& Pc, long double const& xVal,
+            std::vector<long double>& x, std::vector<long double>& C,
+            std::vector<long double>& w);
 
-    template void comperror<long double>(long double &error, const long double &xVal,
-            long double &delta, std::vector<long double> &x,
-            std::vector<long double> &C, std::vector<long double> &w,
-            std::vector<band_t<long double>> &bands);
+    template void comperror<long double>(long double& error, long double const& xVal,
+            long double& delta, std::vector<long double>& x,
+            std::vector<long double>& C, std::vector<long double>& w,
+            std::vector<band_t<long double>>& bands);
 
 #ifdef HAVE_MPFR
     // separate implementation for the MPFR version; it is much faster and
@@ -253,24 +253,24 @@ namespace pm {
             w[i] = one / denom;
         }
     }
-    template void compdelta<mpfr::mpreal>(mpfr::mpreal &delta,
-            std::vector<mpfr::mpreal>& x, std::vector<band_t<mpfr::mpreal>> &bands);
+    template void compdelta<mpfr::mpreal>(mpfr::mpreal& delta,
+            std::vector<mpfr::mpreal>& x, std::vector<band_t<mpfr::mpreal>>& bands);
 
-    template void compdelta<mpfr::mpreal>(mpfr::mpreal &delta,
+    template void compdelta<mpfr::mpreal>(mpfr::mpreal& delta,
             std::vector<mpfr::mpreal>& w, std::vector<mpfr::mpreal>& x,
-            std::vector<band_t<mpfr::mpreal>> &bands);
+            std::vector<band_t<mpfr::mpreal>>& bands);
 
-    template void compc<mpfr::mpreal>(std::vector<mpfr::mpreal> &C, mpfr::mpreal &delta,
-            std::vector<mpfr::mpreal> &x, std::vector<band_t<mpfr::mpreal>> &bands);
+    template void compc<mpfr::mpreal>(std::vector<mpfr::mpreal>& C, mpfr::mpreal& delta,
+            std::vector<mpfr::mpreal>& x, std::vector<band_t<mpfr::mpreal>>& bands);
 
-    template void approx<mpfr::mpreal>(mpfr::mpreal &Pc, const mpfr::mpreal &xVal,
-            std::vector<mpfr::mpreal> &x, std::vector<mpfr::mpreal> &C,
-            std::vector<mpfr::mpreal> & w);
+    template void approx<mpfr::mpreal>(mpfr::mpreal& Pc, mpfr::mpreal const& xVal,
+            std::vector<mpfr::mpreal>& x, std::vector<mpfr::mpreal>& C,
+            std::vector<mpfr::mpreal>& w);
 
-    template void comperror<mpfr::mpreal>(mpfr::mpreal &error, const mpfr::mpreal &xVal,
-            mpfr::mpreal &delta, std::vector<mpfr::mpreal> &x,
-            std::vector<mpfr::mpreal> &C, std::vector<mpfr::mpreal> &w,
-            std::vector<band_t<mpfr::mpreal>> &bands);
+    template void comperror<mpfr::mpreal>(mpfr::mpreal& error, mpfr::mpreal const& xVal,
+            mpfr::mpreal& delta, std::vector<mpfr::mpreal>& x,
+            std::vector<mpfr::mpreal>& C, std::vector<mpfr::mpreal>& w,
+            std::vector<band_t<mpfr::mpreal>>& bands);
 #endif
 
 } // namespace pm

@@ -26,7 +26,7 @@ namespace pm {
     using VectorXcd = Eigen::Matrix<std::complex<T>, Eigen::Dynamic, 1>;
 
     template<typename T>
-    void balance(MatrixXd<T> &A)
+    void balance(MatrixXd<T>& A)
     {
         std::size_t n = A.rows();
 
@@ -85,7 +85,7 @@ namespace pm {
     }
 
     template<typename T>
-    MatrixXd<T> colleague(std::vector<T> const &c,
+    MatrixXd<T> colleague(std::vector<T> const& c,
                     chebkind_t kind,
                     bool bal)
     {
@@ -139,8 +139,8 @@ namespace pm {
     }
 
     template<typename T>
-    void clenshaw(T &result, const std::vector<T> &p,
-            const T &x, const T &a, const T &b)
+    void clenshaw(T& result, const std::vector<T>& p,
+            T const& x, T const& a, T const& b)
     {
         T bn1, bn2, bn;
         T buffer;
@@ -167,9 +167,9 @@ namespace pm {
     }
 
     template<typename T>
-    void clenshaw(T &result,
-                const std::vector<T> &p,
-                const T &x,
+    void clenshaw(T& result,
+                std::vector<T> const& p,
+                T const& x,
                 chebkind_t kind)
     {
         T bn1, bn2, bn;
@@ -270,7 +270,7 @@ namespace pm {
 
     template<typename T>
     void roots(std::vector<T>& r, std::vector<T>& c,
-            std::pair<T, T> const &dom,
+            std::pair<T, T> const& dom,
             chebkind_t kind,
             bool balance)
     {
@@ -327,7 +327,7 @@ namespace pm {
                     chebkind_t kind);
 
     template void roots<double>(std::vector<double>& r, std::vector<double>& c,
-            std::pair<double, double> const &dom,
+            std::pair<double, double> const& dom,
             chebkind_t kind, bool balance);
 
     /* long double precision */
@@ -350,7 +350,7 @@ namespace pm {
                     chebkind_t kind);
 
     template void roots<long double>(std::vector<long double>& r, std::vector<long double>& c,
-            std::pair<long double, long double> const &dom,
+            std::pair<long double, long double> const& dom,
             chebkind_t kind, bool balance);
 
 #ifdef HAVE_MPFR
@@ -372,7 +372,7 @@ namespace pm {
                     chebkind_t kind);
 
     template void roots<mpfr::mpreal>(std::vector<mpfr::mpreal>& r, std::vector<mpfr::mpreal>& c,
-            std::pair<mpfr::mpreal, mpfr::mpreal> const &dom,
+            std::pair<mpfr::mpreal, mpfr::mpreal> const& dom,
             chebkind_t kind, bool balance);
 #endif
 

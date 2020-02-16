@@ -236,9 +236,9 @@ namespace pm {
 
     template<typename T>
     pmoutput_t<T> firpm(std::size_t n,
-                std::vector<T>const &f,
-                std::vector<T>const &a,
-                std::vector<T>const &w,
+                std::vector<T>const& f,
+                std::vector<T>const& a,
+                std::vector<T>const& w,
                 double eps = 0.01,
                 std::size_t nmax = 4u,
                 init_t strategy = init_t::UNIFORM,
@@ -271,9 +271,9 @@ namespace pm {
 
     template<typename T>
     pmoutput_t<T> firpmRS(std::size_t n,
-                std::vector<T>const &f,
-                std::vector<T>const &a,
-                std::vector<T>const &w,
+                std::vector<T>const& f,
+                std::vector<T>const& a,
+                std::vector<T>const& w,
                 double eps = 0.01,
                 std::size_t nmax = 4u,
                 std::size_t depth = 1u,
@@ -301,9 +301,9 @@ namespace pm {
 
     template<typename T>
     pmoutput_t<T> firpmAFP(std::size_t n,
-                std::vector<T>const &f,
-                std::vector<T>const &a,
-                std::vector<T>const &w,
+                std::vector<T>const& f,
+                std::vector<T>const& a,
+                std::vector<T>const& w,
                 double eps = 0.01,
                 std::size_t nmax = 4u,
                 unsigned long prec = 165ul);
@@ -376,9 +376,9 @@ namespace pm {
 
     template<typename T>
     pmoutput_t<T> firpmRS(std::size_t n,
-                std::vector<T>const &f,
-                std::vector<T>const &a,
-                std::vector<T>const &w,
+                std::vector<T>const& f,
+                std::vector<T>const& a,
+                std::vector<T>const& w,
                 filter_t type,
                 double eps = 0.01,
                 std::size_t nmax = 4u,
@@ -409,9 +409,9 @@ namespace pm {
 
     template<typename T>
     pmoutput_t<T> firpmAFP(std::size_t n,
-                std::vector<T>const &f,
-                std::vector<T>const &a,
-                std::vector<T>const &w,
+                std::vector<T>const& f,
+                std::vector<T>const& a,
+                std::vector<T>const& w,
                 filter_t type,
                 double eps = 0.01,
                 std::size_t nmax = 4u,

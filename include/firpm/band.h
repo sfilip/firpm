@@ -74,7 +74,7 @@ namespace pm {
     * variable is performed
     */
     template<typename T>
-    void bandconv(std::vector<band_t<T>> &out, std::vector<band_t<T>> &in,
+    void bandconv(std::vector<band_t<T>>& out, std::vector<band_t<T>>& in,
             convdir_t direction);
 
 } // namespace pm

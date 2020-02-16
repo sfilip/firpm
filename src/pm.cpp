@@ -709,10 +709,10 @@ namespace pm {
     }
 
     template<typename T>
-    void parseSpecification(status_t &status,
-                std::vector<T> const &f,
-                std::vector<T> const &a,
-                std::vector<T> const &w)
+    void parseSpecification(status_t& status,
+                std::vector<T> const& f,
+                std::vector<T> const& a,
+                std::vector<T> const& w)
     {
         if(f.size() != a.size()) {
             status = status_t::STATUS_AMPLITUDE_VECTOR_MISMATCH;
@@ -768,9 +768,9 @@ namespace pm {
 
     template<typename T>
     pmoutput_t<T> firpm(std::size_t n,
-                std::vector<T>const &f,
-                std::vector<T>const &a,
-                std::vector<T>const &w,
+                std::vector<T>const& f,
+                std::vector<T>const& a,
+                std::vector<T>const& w,
                 double eps,
                 std::size_t nmax,
                 init_t strategy,
@@ -1053,9 +1053,9 @@ namespace pm {
 
     template<typename T>
     pmoutput_t<T> firpmRS(std::size_t n,
-                std::vector<T>const &f,
-                std::vector<T>const &a,
-                std::vector<T>const &w,
+                std::vector<T>const& f,
+                std::vector<T>const& a,
+                std::vector<T>const& w,
                 double eps,
                 std::size_t nmax,
                 std::size_t depth,
@@ -1073,9 +1073,9 @@ namespace pm {
 
     template<typename T>
     pmoutput_t<T> firpmAFP(std::size_t n,
-                std::vector<T>const &f,
-                std::vector<T>const &a,
-                std::vector<T>const &w,
+                std::vector<T>const& f,
+                std::vector<T>const& a,
+                std::vector<T>const& w,
                 double eps, std::size_t nmax,
                 unsigned long prec)
     {
@@ -1441,9 +1441,9 @@ namespace pm {
 
     template<typename T>
     pmoutput_t<T> firpmRS(std::size_t n,
-                std::vector<T>const &f,
-                std::vector<T>const &a,
-                std::vector<T>const &w,
+                std::vector<T>const& f,
+                std::vector<T>const& a,
+                std::vector<T>const& w,
                 filter_t type,
                 double eps,
                 std::size_t nmax, std::size_t depth,
@@ -1462,9 +1462,9 @@ namespace pm {
 
     template<typename T>
     pmoutput_t<T> firpmAFP(std::size_t n,
-                std::vector<T>const &f,
-                std::vector<T>const &a,
-                std::vector<T>const &w,
+                std::vector<T>const& f,
+                std::vector<T>const& a,
+                std::vector<T>const& w,
                 filter_t type,
                 double eps,
                 std::size_t nmax,
@@ -1496,9 +1496,9 @@ namespace pm {
                 unsigned long prec);
 
     template pmoutput_t<double> firpm<double>(std::size_t n,
-                std::vector<double>const &f,
-                std::vector<double>const &a,
-                std::vector<double>const &w,
+                std::vector<double>const& f,
+                std::vector<double>const& a,
+                std::vector<double>const& w,
                 double eps,
                 std::size_t nmax,
                 init_t strategy,
@@ -1519,18 +1519,18 @@ namespace pm {
                 unsigned long prec);
 
     template pmoutput_t<double> firpmRS<double>(std::size_t n,
-                std::vector<double>const &f,
-                std::vector<double>const &a,
-                std::vector<double>const &w,
+                std::vector<double>const& f,
+                std::vector<double>const& a,
+                std::vector<double>const& w,
                 double eps, std::size_t nmax,
                 std::size_t depth,
                 init_t rstrategy,
                 unsigned long prec);
 
     template pmoutput_t<double> firpmRS<double>(std::size_t n,
-                std::vector<double>const &f,
-                std::vector<double>const &a,
-                std::vector<double>const &w,
+                std::vector<double>const& f,
+                std::vector<double>const& a,
+                std::vector<double>const& w,
                 filter_t type,
                 double eps,
                 std::size_t nmax,
@@ -1539,16 +1539,16 @@ namespace pm {
                 unsigned long prec);
 
     template pmoutput_t<double> firpmAFP<double>(std::size_t n,
-                std::vector<double>const &f,
-                std::vector<double>const &a,
-                std::vector<double>const &w,
+                std::vector<double>const& f,
+                std::vector<double>const& a,
+                std::vector<double>const& w,
                 double eps, std::size_t nmax,
                 unsigned long prec);
 
     template pmoutput_t<double> firpmAFP<double>(std::size_t n,
-                std::vector<double>const &f,
-                std::vector<double>const &a,
-                std::vector<double>const &w,
+                std::vector<double>const& f,
+                std::vector<double>const& a,
+                std::vector<double>const& w,
                 filter_t type,
                 double eps,
                 std::size_t nmax,
@@ -1574,9 +1574,9 @@ namespace pm {
                 unsigned long prec);
 
     template pmoutput_t<long double> firpm<long double>(std::size_t n,
-                std::vector<long double>const &f,
-                std::vector<long double>const &a,
-                std::vector<long double>const &w,
+                std::vector<long double>const& f,
+                std::vector<long double>const& a,
+                std::vector<long double>const& w,
                 double eps,
                 std::size_t nmax,
                 init_t strategy,
@@ -1597,18 +1597,18 @@ namespace pm {
                 unsigned long prec);
 
     template pmoutput_t<long double> firpmRS<long double>(std::size_t n,
-                std::vector<long double>const &f,
-                std::vector<long double>const &a,
-                std::vector<long double>const &w,
+                std::vector<long double>const& f,
+                std::vector<long double>const& a,
+                std::vector<long double>const& w,
                 double eps, std::size_t nmax,
                 std::size_t depth,
                 init_t rstrategy,
                 unsigned long prec);
 
     template pmoutput_t<long double> firpmRS<long double>(std::size_t n,
-                std::vector<long double>const &f,
-                std::vector<long double>const &a,
-                std::vector<long double>const &w,
+                std::vector<long double>const& f,
+                std::vector<long double>const& a,
+                std::vector<long double>const& w,
                 filter_t type,
                 double eps,
                 std::size_t nmax,
@@ -1617,16 +1617,16 @@ namespace pm {
                 unsigned long prec);
 
     template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
-                std::vector<long double>const &f,
-                std::vector<long double>const &a,
-                std::vector<long double>const &w,
+                std::vector<long double>const& f,
+                std::vector<long double>const& a,
+                std::vector<long double>const& w,
                 double eps, std::size_t nmax,
                 unsigned long prec);
 
     template pmoutput_t<long double> firpmAFP<long double>(std::size_t n,
-                std::vector<long double>const &f,
-                std::vector<long double>const &a,
-                std::vector<long double>const &w,
+                std::vector<long double>const& f,
+                std::vector<long double>const& a,
+                std::vector<long double>const& w,
                 filter_t type,
                 double eps,
                 std::size_t nmax,
@@ -1652,9 +1652,9 @@ namespace pm {
                 std::size_t nmax, unsigned long prec);
 
     template pmoutput_t<mpfr::mpreal> firpm<mpfr::mpreal>(std::size_t n,
-                std::vector<mpfr::mpreal>const &f,
-                std::vector<mpfr::mpreal>const &a,
-                std::vector<mpfr::mpreal>const &w,
+                std::vector<mpfr::mpreal>const& f,
+                std::vector<mpfr::mpreal>const& a,
+                std::vector<mpfr::mpreal>const& w,
                 double eps,
                 std::size_t nmax,
                 init_t strategy,
@@ -1675,18 +1675,18 @@ namespace pm {
                 unsigned long prec);
 
     template pmoutput_t<mpfr::mpreal> firpmRS<mpfr::mpreal>(std::size_t n,
-                std::vector<mpfr::mpreal>const &f,
-                std::vector<mpfr::mpreal>const &a,
-                std::vector<mpfr::mpreal>const &w,
+                std::vector<mpfr::mpreal>const& f,
+                std::vector<mpfr::mpreal>const& a,
+                std::vector<mpfr::mpreal>const& w,
                 double eps, std::size_t nmax,
                 std::size_t depth,
                 init_t rstrategy,
                 unsigned long prec);
 
     template pmoutput_t<mpfr::mpreal> firpmRS<mpfr::mpreal>(std::size_t n,
-                std::vector<mpfr::mpreal>const &f,
-                std::vector<mpfr::mpreal>const &a,
-                std::vector<mpfr::mpreal>const &w,
+                std::vector<mpfr::mpreal>const& f,
+                std::vector<mpfr::mpreal>const& a,
+                std::vector<mpfr::mpreal>const& w,
                 filter_t type,
                 double eps,
                 std::size_t nmax,
@@ -1695,16 +1695,16 @@ namespace pm {
                 unsigned long prec);
 
     template pmoutput_t<mpfr::mpreal> firpmAFP<mpfr::mpreal>(std::size_t n,
-                std::vector<mpfr::mpreal>const &f,
-                std::vector<mpfr::mpreal>const &a,
-                std::vector<mpfr::mpreal>const &w,
+                std::vector<mpfr::mpreal>const& f,
+                std::vector<mpfr::mpreal>const& a,
+                std::vector<mpfr::mpreal>const& w,
                 double eps, std::size_t nmax,
                 unsigned long prec);
 
     template pmoutput_t<mpfr::mpreal> firpmAFP<mpfr::mpreal>(std::size_t n,
-                std::vector<mpfr::mpreal>const &f,
-                std::vector<mpfr::mpreal>const &a,
-                std::vector<mpfr::mpreal>const &w,
+                std::vector<mpfr::mpreal>const& f,
+                std::vector<mpfr::mpreal>const& a,
+                std::vector<mpfr::mpreal>const& w,
                 filter_t type,
                 double eps,
                 std::size_t nmax,

@@ -104,7 +104,7 @@ namespace pm {
         */
         template<typename T>
         void roots(std::vector<T>& r, std::vector<T>& c,
-                std::pair<T, T> const &dom,
+                std::pair<T, T> const& dom,
                 chebkind_t kind = SECOND,
                 bool balance = true);
 

@@ -51,8 +51,8 @@ namespace pm {
         * the filter
         */
         template<typename T>
-        void compdelta(T &delta, std::vector<T>& x,
-                std::vector<band_t<T>> &bands);
+        void compdelta(T& delta, std::vector<T>& x,
+                std::vector<band_t<T>>& bands);
 
         /*! Determines the current reference error according to the
         * barycentric formula
@@ -65,8 +65,8 @@ namespace pm {
         */
 
         template<typename T>
-        void compdelta(T &delta, std::vector<T>& w,
-                std::vector<T>& x, std::vector<band_t<T>> &bands);
+        void compdelta(T& delta, std::vector<T>& w,
+                std::vector<T>& x, std::vector<band_t<T>>& bands);
 
         /*! Computes the filter response at the current reference set
         * @param[out] C the vector of frequency responses at the reference set
@@ -75,8 +75,8 @@ namespace pm {
         * @param[in] bands frequency band information for the ideal filter
         */
         template<typename T>
-        void compc(std::vector<T> &C, T &delta,
-                std::vector<T> &x, std::vector<band_t<T>> &bands);
+        void compc(std::vector<T>& C, T& delta,
+                std::vector<T>& x, std::vector<band_t<T>>& bands);
 
         /*! Computes the frequency response of the current filter
         * @param[out] Pc the frequency response amplitude value at the current node
@@ -88,9 +88,9 @@ namespace pm {
         * @param[in] w the current barycentric weights
         */
         template<typename T>
-        void approx(T &Pc, const T &xVal,
-                std::vector<T> &x, std::vector<T> &C,
-                std::vector<T> & w);
+        void approx(T& Pc, T const& xVal,
+                std::vector<T>& x, std::vector<T>& C,
+                std::vector<T>& w);
 
         /*! Computes the approximation error at a given node using the current set of
         * reference points
@@ -103,10 +103,10 @@ namespace pm {
         * @param[in] bands frequency band information for the ideal filter
         */
         template<typename T>
-        void comperror(T &error, const T &xVal,
-                T &delta, std::vector<T> &x,
-                std::vector<T> &C, std::vector<T> &w,
-                std::vector<band_t<T>> &bands);
+        void comperror(T& error, T const& xVal,
+                T& delta, std::vector<T>& x,
+                std::vector<T>& C, std::vector<T>& w,
+                std::vector<band_t<T>>& bands);
 
         /*! The ideal frequency response and weight information at the given frequency
         * node (it can be in the \f$\left[-1,1\right]\f$ interval,
@@ -118,8 +118,8 @@ namespace pm {
         * @param[in] bands frequency band information for the ideal filter
         */
         template<typename T>
-        void idealvals(T &D, T &W,
-                const T &xVal, std::vector<band_t<T>> &bands);
+        void idealvals(T& D, T& W,
+                T const& xVal, std::vector<band_t<T>>& bands);
 
 } // namespace pm
 
