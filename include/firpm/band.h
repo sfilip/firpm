@@ -68,13 +68,13 @@ namespace pm {
     };
 
     /*! Performs the change of variable on the set of bands of interest
-    * @param[out] out output frequency bands
     * @param[in]  in input frequency bands
     * @param[in]  direction the direction in which the change of
     * variable is performed
+    * @return output frequency bands
     */
     template<typename T>
-    void bandconv(std::vector<band_t<T>>& out, std::vector<band_t<T>>& in,
+    std::vector<band_t<T>> bandconv(std::vector<band_t<T>> const &in,
             convdir_t direction);
 
 } // namespace pm

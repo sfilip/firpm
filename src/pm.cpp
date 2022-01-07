@@ -37,7 +37,7 @@ namespace pm {
 
     template<typename T>
     MatrixXd<T> chebvand(std::size_t degree,
-            std::vector<T>& meshPoints,
+            std::vector<T> const &meshPoints,
             std::function<T(T)>& weightFunction)
     {
         MatrixXd<T> A(degree + 1u, meshPoints.size());
@@ -57,7 +57,7 @@ namespace pm {
 
     // approximate Fekete points
     template<typename T>
-    std::vector<T> afp(MatrixXd<T>& A, std::vector<T>& mesh)
+    std::vector<T> afp(MatrixXd<T> const &A, std::vector<T>& mesh)
     {
         std::vector<T> points;
         VectorXd<T> b = VectorXd<T>::Ones(A.rows());
@@ -90,7 +90,7 @@ namespace pm {
     }
 
     template<typename T>
-    std::vector<T> wam(std::vector<band_t<T>>& cb, std::size_t deg)
+    std::vector<T> wam(std::vector<band_t<T>> const &cb, std::size_t deg)
     {
         std::vector<T> wam;
         std::vector<T> cp = equipts<T>(deg + 2u);

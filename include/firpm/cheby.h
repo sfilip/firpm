@@ -52,7 +52,7 @@ namespace pm {
         * @return the vector of elements after the change of variable
         */
         template<typename T>
-        std::vector<T> chgvar(std::vector<T> const& in, T& a, T& b);
+        std::vector<T> chgvar(std::vector<T> const& in, T const& a, T const& b);
 
         /*! Function that generates equidistant nodes inside the
         * \f$\left[0,\pi\right]\f$ interval, meaning values of the

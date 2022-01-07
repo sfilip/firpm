@@ -131,7 +131,7 @@ namespace pm {
     }
 
     template<typename T>
-    std::vector<T> chgvar(std::vector<T> const& in, T& a, T& b)
+    std::vector<T> chgvar(std::vector<T> const& in, T const&a, T const& b)
     {
         std::vector<T> out(in.size());
 
@@ -319,7 +319,7 @@ namespace pm {
     template std::vector<double> cos<double>(std::vector<double> const &in);
 
     template std::vector<double> chgvar<double>(std::vector<double> const& in,
-            double& a, double& b);
+            double const& a, double const& b);
 
     template std::vector<double> equipts<double>(std::size_t n);
 
@@ -338,7 +338,7 @@ namespace pm {
     template std::vector<long double> cos<long double>(std::vector<long double> const &in);
 
     template std::vector<long double> chgvar<long double>(std::vector<long double> const& in,
-            long double& a, long double& b);
+            long double const& a, long double const& b);
 
     template std::vector<long double> equipts<long double>(std::size_t n);
 
@@ -356,7 +356,7 @@ namespace pm {
     template std::vector<mpfr::mpreal> cos<mpfr::mpreal>(std::vector<mpfr::mpreal> const &in);
 
     template std::vector<mpfr::mpreal> chgvar<mpfr::mpreal>(std::vector<mpfr::mpreal> const& in,
-            mpfr::mpreal& a, mpfr::mpreal& b);
+            mpfr::mpreal const& a, mpfr::mpreal const& b);
 
     template std::vector<mpfr::mpreal> equipts<mpfr::mpreal>(std::size_t n);
 
