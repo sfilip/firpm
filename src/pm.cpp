@@ -779,7 +779,6 @@ namespace pm {
             parseSpecification(output.status, f, a, w);
             std::vector<T> h;
             std::vector<band_t<T>> fbands;
-            std::vector<band_t<T>> cbands;
             std::vector<std::vector<std::size_t>> bIdx;
 
             std::size_t nbands{0u};
@@ -895,7 +894,7 @@ namespace pm {
                 }
             }
 
-            bandconv(cbands, fbands, convdir_t::FROMFREQ);
+            std::vector<band_t<T>> cbands = bandconv(fbands, convdir_t::FROMFREQ);
             std::function<T(T)> wf = [&cbands](T x) -> T {
                 for(std::size_t i{0u}; i < cbands.size(); ++i)
                     if(cbands[i].start <= x && x <= cbands[i].stop)
@@ -914,7 +913,7 @@ namespace pm {
                     if (fbands.size() <= (deg + 2u) / 4) {
                         std::vector<T> omega = uniform(fbands, deg + 2u);
                         x = cos(omega);
-                        bandconv(cbands, fbands, convdir_t::FROMFREQ);
+                        cbands = bandconv(fbands, convdir_t::FROMFREQ);
                     } else {
                         // use AFP strategy for very small degrees (wrt nb of bands)
                         std::vector<T> mesh = wam(cbands, deg);
@@ -944,7 +943,7 @@ namespace pm {
                         if (fbands.size() <= (sdegs[0] + 2u) / 4) {
                             std::vector<T> omega = uniform(fbands, sdegs[0]+2u);
                             x = cos(omega);
-                            bandconv(cbands, fbands, convdir_t::FROMFREQ);
+                            cbands = bandconv(fbands, convdir_t::FROMFREQ);
                         } else {
                             // use AFP strategy for very small degrees (wrt nb of bands)
                             std::vector<T> mesh = wam(cbands, sdegs[0]);
@@ -1087,7 +1086,6 @@ namespace pm {
             parseSpecification(output.status, f, a, w);
             std::vector<T> h;
             std::vector<band_t<T>> fbands(w.size());
-            std::vector<band_t<T>> cbands;
             std::vector<T> fn{f};
             std::size_t deg = n / 2u;
             T sFactor = a[1] / (f[1] * pmmath::const_pi<T>());
@@ -1261,7 +1259,7 @@ namespace pm {
                 }
             }
 
-            bandconv(cbands, fbands, convdir_t::FROMFREQ);
+            std::vector<band_t<T>> cbands = bandconv(fbands, convdir_t::FROMFREQ);
             std::function<T(T)> wf = [&cbands](T x) -> T {
                 for(std::size_t i{0u}; i < cbands.size(); ++i)
                     if(cbands[i].start <= x && x <= cbands[i].stop)
@@ -1280,7 +1278,7 @@ namespace pm {
                     if (fbands.size() <= (deg + 2u) / 4) {
                         std::vector<T> omega = uniform(fbands, deg + 2u);
                         x = cos(omega);
-                        bandconv(cbands, fbands, convdir_t::FROMFREQ);
+                        cbands = bandconv(fbands, convdir_t::FROMFREQ);
                     } else {
                         // use AFP strategy for very small degrees (wrt nb of bands)
                         std::vector<T> mesh = wam(cbands, deg);
@@ -1310,7 +1308,7 @@ namespace pm {
                         if (fbands.size() <= (sdegs[0] + 2u) / 4) {
                             std::vector<T> omega = uniform(fbands, sdegs[0]+2u);
                             x = cos(omega);
-                            bandconv(cbands, fbands, convdir_t::FROMFREQ);
+                            cbands = bandconv(fbands, convdir_t::FROMFREQ);
                         } else {
                             // use AFP strategy for very small degrees (wrt nb of bands)
                             std::vector<T> mesh = wam(cbands, sdegs[0]);

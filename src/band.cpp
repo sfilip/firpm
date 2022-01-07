@@ -20,10 +20,10 @@
 namespace pm {
 
     template<typename T>
-    void bandconv(std::vector<band_t<T>>& out, std::vector<band_t<T>>& in,
+    std::vector<band_t<T>> bandconv(std::vector<band_t<T>>& in,
             convdir_t direction)
     {
-        out.resize(in.size());
+        std::vector<band_t<T>> out(in.size());
         std::size_t n = in.size() - 1u;
         for (std::size_t i{0u}; i < in.size(); ++i)
         {
@@ -48,22 +48,20 @@ namespace pm {
                 std::sort(begin(out[i].part), end(out[i].part));
             }
         }
+        return out;
     }
 
     /* Template instantiation */
-    template void bandconv<double>(
-        std::vector<band_t<double>>& out,
+    template std::vector<band_t<double>> bandconv<double>(
         std::vector<band_t<double>>& in,
             convdir_t direction);
 
-    template void bandconv<long double>(
-        std::vector<band_t<long double>>& out,
+    template std::vector<band_t<long double>> bandconv<long double>(
         std::vector<band_t<long double>>& in,
             convdir_t direction);
 
 #ifdef HAVE_MPFR
-    template void bandconv<mpfr::mpreal>(
-        std::vector<band_t<mpfr::mpreal>>& out,
+    template std::vector<band_t<mpfr::mpreal>> bandconv<mpfr::mpreal>(
         std::vector<band_t<mpfr::mpreal>>& in,
             convdir_t direction);
 #endif

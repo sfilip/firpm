@@ -58,16 +58,12 @@ TYPED_TEST(firpm_scaling_test, lowpass50a)
     freqBands[1].space = pm::space_t::FREQ;
     freqBands[1].amplitude = [](pm::space_t, T) -> T { return 0; };
 
-
-
     auto start = std::chrono::steady_clock::now();
 
     std::size_t degree = 50;
-    std::vector<T> a;
-    std::vector<pm::band_t<T>> chebyBands;
     std::vector<T> omega = pm::uniform(freqBands, degree + 2u);
     std::vector<T> x = pm::cos(omega);
-    pm::bandconv(chebyBands, freqBands, pm::convdir_t::FROMFREQ);
+    std::vector<pm::band_t<T>> chebyBands = pm::bandconv(freqBands, pm::convdir_t::FROMFREQ);
 
     auto output = pm::exchange(x, chebyBands);
     ASSERT_LT(output.q, 1e-2);
