@@ -815,7 +815,7 @@ namespace pm {
                             x = pmmath::acos(x);
                         for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
                             if(fbands[i].part[j]*(1.0-1e-12) <= x && 
-                            x <= fbands[i].part[j+1u]*(1.0+1e-12)) {
+                                        x <= fbands[i].part[j+1u]*(1.0+1e-12)) {
                                 if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
                                     return ((x-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] -
                                             (x-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
@@ -858,7 +858,7 @@ namespace pm {
                             nx = pmmath::acos(x);
                         for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
                             if(fbands[i].part[j]*(1.0-1e-12) <= nx && 
-                            nx <= fbands[i].part[j+1u]*(1.0+1e-12)) {
+                                        nx <= fbands[i].part[j+1u]*(1.0+1e-12)) {
                                 if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
                                     return ((nx-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] -
                                             (nx-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
