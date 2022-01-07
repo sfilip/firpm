@@ -65,10 +65,8 @@ TYPED_TEST(firpm_scaling_test, lowpass50a)
     std::size_t degree = 50;
     std::vector<T> a;
     std::vector<pm::band_t<T>> chebyBands;
-    std::vector<T> omega(degree + 2u);
-    std::vector<T> x(degree + 2u);
-    pm::uniform(omega, freqBands, degree + 2u);
-    pm::cos(x, omega);
+    std::vector<T> omega = pm::uniform(freqBands, degree + 2u);
+    std::vector<T> x = pm::cos(omega);
     pm::bandconv(chebyBands, freqBands, pm::convdir_t::FROMFREQ);
 
     auto output = pm::exchange(x, chebyBands);

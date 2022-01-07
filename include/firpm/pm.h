@@ -93,15 +93,14 @@ namespace pm {
 
     /*! An implementation of the uniform initialization approach for
     * starting the Parks-McClellan algorithm
-    * @param[out] omega the initial set of references to be computed
     * @param[in] B the frequency bands of interest (i.e., stopbands and
     * passbands for example)
     * @param[in] n the size of the reference set
+    * @return the initial set of references to be computed
     */
 
     template<typename T>
-    void uniform(std::vector<T>& omega,
-            std::vector<band_t<T>>& B, std::size_t n);
+    std::vector<T> uniform(std::vector<band_t<T>>& B, std::size_t n);
 
     /*! An implementation of the reference scaling approach mentioned
     * in section 4 of the article.

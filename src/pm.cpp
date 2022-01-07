@@ -36,12 +36,12 @@ namespace pm {
     bool cycle;
 
     template<typename T>
-    void chebvand(MatrixXd<T>& A, std::size_t degree,
+    MatrixXd<T> chebvand(std::size_t degree,
             std::vector<T>& meshPoints,
             std::function<T(T)>& weightFunction)
     {
+        MatrixXd<T> A(degree + 1u, meshPoints.size());
 
-        A.resize(degree + 1u, meshPoints.size());
         for(std::size_t i{0u}; i < meshPoints.size(); ++i)
         {
             T pointWeight = weightFunction(meshPoints[i]);
@@ -52,17 +52,17 @@ namespace pm {
             for(std::size_t j{0u}; j <= degree; ++j)
                 A(j, i) *= pointWeight;
         }
+        return A;
     }
 
     // approximate Fekete points
     template<typename T>
-    void afp(std::vector<T>& points, MatrixXd<T>& A,
-            std::vector<T>& mesh)
+    std::vector<T> afp(MatrixXd<T>& A, std::vector<T>& mesh)
     {
+        std::vector<T> points;
         VectorXd<T> b = VectorXd<T>::Ones(A.rows());
         b(0) = 2;
         VectorXd<T> y = A.colPivHouseholderQr().solve(b);
-        points.clear();
 
         for(Eigen::Index i{0}; i < y.rows(); ++i)
             if(y(i) != 0.0)
@@ -72,6 +72,7 @@ namespace pm {
                 const T& rhs) {
                     return lhs < rhs;
                 });
+        return points;
     }
 
     template<typename T>
@@ -89,9 +90,9 @@ namespace pm {
     }
 
     template<typename T>
-    void wam(std::vector<T>& wam, std::vector<band_t<T>>& cb,
-            std::size_t deg)
+    std::vector<T> wam(std::vector<band_t<T>>& cb, std::size_t deg)
     {
+        std::vector<T> wam;
         std::vector<T> cp = equipts<T>(deg + 2u);
         cp = cos(cp);
         std::sort(begin(cp), end(cp));
@@ -108,14 +109,14 @@ namespace pm {
             else
                 wam.push_back(cb[i].start);
         }
+        return wam;
     }
 
     template<typename T>
-    void uniform(std::vector<T>& omega,
-            std::vector<band_t<T>>& B, std::size_t n)
+    std::vector<T> uniform(std::vector<band_t<T>>& B, std::size_t n)
     {
+        std::vector<T> omega(n);
         T avgDist = 0;
-        omega.resize(n);
 
         std::vector<T> bandwidths(B.size());
         std::vector<std::size_t> nonPointBands;
@@ -158,6 +159,7 @@ namespace pm {
                 omega[startIndex + j] = omega[startIndex + j - 1] + buffer;
             startIndex += B[i].xs;
         }
+        return omega;
     }
 
     template<typename T>
@@ -893,7 +895,6 @@ namespace pm {
                 }
             }
 
-            std::vector<T> x;
             bandconv(cbands, fbands, convdir_t::FROMFREQ);
             std::function<T(T)> wf = [&cbands](T x) -> T {
                 for(std::size_t i{0u}; i < cbands.size(); ++i)
@@ -909,18 +910,16 @@ namespace pm {
             switch(strategy) {
                 case init_t::UNIFORM:
                 {
+                    std::vector<T> x;
                     if (fbands.size() <= (deg + 2u) / 4) {
-                        std::vector<T> omega;
-                        uniform(omega, fbands, deg + 2u);
+                        std::vector<T> omega = uniform(fbands, deg + 2u);
                         x = cos(omega);
                         bandconv(cbands, fbands, convdir_t::FROMFREQ);
                     } else {
                         // use AFP strategy for very small degrees (wrt nb of bands)
-                        std::vector<T> mesh;
-                        wam(mesh, cbands, deg);
-                        MatrixXd<T> A;
-                        chebvand(A, deg+1u, mesh, wf);
-                        afp(x, A, mesh);
+                        std::vector<T> mesh = wam(cbands, deg);
+                        MatrixXd<T> A = chebvand(deg+1u, mesh, wf);
+                        x = afp(A, mesh);
                         if(x.size() != deg + 2u) {
                             output.status = status_t::STATUS_AFP_INVALID;
                             std::stringstream message;
@@ -935,6 +934,7 @@ namespace pm {
                 } break;
                 case init_t::SCALING:
                 {
+                    std::vector<T> x;
                     std::vector<std::size_t> sdegs(depth+1u);
                     sdegs[depth] = deg;
                     for(int i{(int)depth-1}; i >= 0; --i)
@@ -942,17 +942,14 @@ namespace pm {
 
                     if(rstrategy == init_t::UNIFORM) {
                         if (fbands.size() <= (sdegs[0] + 2u) / 4) {
-                            std::vector<T> omega;
-                            uniform(omega, fbands, sdegs[0]+2u);
+                            std::vector<T> omega = uniform(fbands, sdegs[0]+2u);
                             x = cos(omega);
                             bandconv(cbands, fbands, convdir_t::FROMFREQ);
                         } else {
                             // use AFP strategy for very small degrees (wrt nb of bands)
-                            std::vector<T> mesh;
-                            wam(mesh, cbands, sdegs[0]);
-                            MatrixXd<T> A;
-                            chebvand(A, sdegs[0]+1u, mesh, wf);
-                            afp(x, A, mesh);
+                            std::vector<T> mesh = wam(cbands, sdegs[0]);
+                            MatrixXd<T> A = chebvand(sdegs[0]+1u, mesh, wf);
+                            x = afp(A, mesh);
                             if(x.size() != sdegs[0] + 2u) {
                                 output.status = status_t::STATUS_AFP_INVALID;
                                 std::stringstream message;
@@ -966,11 +963,9 @@ namespace pm {
                         }
                         output = exchange(x, cbands, eps, nmax, prec);
                     } else { // AFP-based strategy
-                        std::vector<T> mesh;
-                        wam(mesh, cbands, sdegs[0]);
-                        MatrixXd<T> A;
-                        chebvand(A, sdegs[0]+1u, mesh, wf);
-                        afp(x, A, mesh);
+                        std::vector<T> mesh = wam(cbands, sdegs[0]);
+                        MatrixXd<T> A = chebvand(sdegs[0]+1u, mesh, wf);
+                        x = afp(A, mesh);
                         if(x.size() != sdegs[0] + 2u) {
                             output.status = status_t::STATUS_AFP_INVALID;
                             std::stringstream message;
@@ -990,11 +985,9 @@ namespace pm {
                     }
                 } break;
                 default: { // AFP-based initialization
-                    std::vector<T> mesh;
-                    wam(mesh, cbands, deg);
-                    MatrixXd<T> A;
-                    chebvand(A, deg+1u, mesh, wf);
-                    afp(x, A, mesh);
+                    std::vector<T> mesh = wam(cbands, deg);
+                    MatrixXd<T> A = chebvand(deg+1u, mesh, wf);
+                    std::vector<T> x = afp(A, mesh);
                     if(x.size() != deg + 2u) {
                         output.status = status_t::STATUS_AFP_INVALID;
                         std::stringstream message;
@@ -1268,7 +1261,6 @@ namespace pm {
                 }
             }
 
-            std::vector<T> x;
             bandconv(cbands, fbands, convdir_t::FROMFREQ);
             std::function<T(T)> wf = [&cbands](T x) -> T {
                 for(std::size_t i{0u}; i < cbands.size(); ++i)
@@ -1284,18 +1276,16 @@ namespace pm {
             switch(strategy) {
                 case init_t::UNIFORM:
                 {
+                    std::vector<T> x;
                     if (fbands.size() <= (deg + 2u) / 4) {
-                        std::vector<T> omega;
-                        uniform(omega, fbands, deg + 2u);
+                        std::vector<T> omega = uniform(fbands, deg + 2u);
                         x = cos(omega);
                         bandconv(cbands, fbands, convdir_t::FROMFREQ);
                     } else {
                         // use AFP strategy for very small degrees (wrt nb of bands)
-                        std::vector<T> mesh;
-                        wam(mesh, cbands, deg);
-                        MatrixXd<T> A;
-                        chebvand(A, deg+1u, mesh, wf);
-                        afp(x, A, mesh);
+                        std::vector<T> mesh = wam(cbands, deg);
+                        MatrixXd<T> A = chebvand(deg+1u, mesh, wf);
+                        x = afp(A, mesh);
                         if(x.size() != deg + 2u) {
                             output.status = status_t::STATUS_AFP_INVALID;
                             std::stringstream message;
@@ -1310,6 +1300,7 @@ namespace pm {
                 } break;
                 case init_t::SCALING:
                 {
+                    std::vector<T> x;
                     std::vector<std::size_t> sdegs(depth+1u);
                     sdegs[depth] = deg;
                     for(int i{(int)depth-1}; i >= 0; --i)
@@ -1317,17 +1308,14 @@ namespace pm {
 
                     if(rstrategy == init_t::UNIFORM) {
                         if (fbands.size() <= (sdegs[0] + 2u) / 4) {
-                            std::vector<T> omega;
-                            uniform(omega, fbands, sdegs[0]+2u);
+                            std::vector<T> omega = uniform(fbands, sdegs[0]+2u);
                             x = cos(omega);
                             bandconv(cbands, fbands, convdir_t::FROMFREQ);
                         } else {
                             // use AFP strategy for very small degrees (wrt nb of bands)
-                            std::vector<T> mesh;
-                            wam(mesh, cbands, sdegs[0]);
-                            MatrixXd<T> A;
-                            chebvand(A, sdegs[0]+1u, mesh, wf);
-                            afp(x, A, mesh);
+                            std::vector<T> mesh = wam(cbands, sdegs[0]);
+                            MatrixXd<T> A = chebvand(sdegs[0]+1u, mesh, wf);
+                            x = afp(A, mesh);
                             if(x.size() != sdegs[0] + 2u) {
                                 output.status = status_t::STATUS_AFP_INVALID;
                                 std::stringstream message;
@@ -1339,11 +1327,9 @@ namespace pm {
                         }
                         output = exchange(x, cbands, eps, nmax);
                     } else { // AFP-based strategy
-                        std::vector<T> mesh;
-                        wam(mesh, cbands, sdegs[0]);
-                        MatrixXd<T> A;
-                        chebvand(A, sdegs[0]+1u, mesh, wf);
-                        afp(x, A, mesh);
+                        std::vector<T> mesh = wam(cbands, sdegs[0]);
+                        MatrixXd<T> A = chebvand(sdegs[0]+1u, mesh, wf);
+                        x = afp(A, mesh);
                         if(x.size() != sdegs[0] + 2u) {
                             output.status = status_t::STATUS_AFP_INVALID;
                             std::stringstream message;
@@ -1362,11 +1348,9 @@ namespace pm {
                     }
                 } break;
                 default: { // AFP-based initialization
-                    std::vector<T> mesh;
-                    wam(mesh, cbands, deg);
-                    MatrixXd<T> A;
-                    chebvand(A, deg+1u, mesh, wf);
-                    afp(x, A, mesh);
+                    std::vector<T> mesh = wam(cbands, deg);
+                    MatrixXd<T> A = chebvand(deg+1u, mesh, wf);
+                    std::vector<T> x = afp(A, mesh);
                     if(x.size() != deg + 2u) {
                         output.status = status_t::STATUS_AFP_INVALID;
                         std::stringstream message;
@@ -1469,8 +1453,9 @@ namespace pm {
     /* Explicit instantiations, since template code is not in header */
 
     /* double precision */
-    template void uniform<double>(std::vector<double>& omega,
-                std::vector<band_t<double>>& B, std::size_t n);
+    template std::vector<double> uniform<double>(
+                std::vector<band_t<double>>& B,
+                std::size_t n);
 
     template void refscaling<double>(status_t& status,
                 std::vector<double>& newX,
@@ -1547,7 +1532,7 @@ namespace pm {
                 unsigned long prec);
 
     /* long double precision */
-    template void uniform<long double>(std::vector<long double>& omega,
+    template std::vector<long double> uniform<long double>(
                 std::vector<band_t<long double>>& B, std::size_t n);
 
     template void refscaling<long double>(status_t& status,
@@ -1626,7 +1611,7 @@ namespace pm {
 
 /* multiple precision mpreal */
 #ifdef HAVE_MPFR
-    template void uniform<mpfr::mpreal>(std::vector<mpfr::mpreal>& omega,
+    template std::vector<mpfr::mpreal> uniform<mpfr::mpreal>(
                 std::vector<band_t<mpfr::mpreal>>& B, std::size_t n);
 
     template void refscaling<mpfr::mpreal>(status_t& status,
