@@ -23,11 +23,12 @@ if( MPFR_FOUND AND GMP_FOUND)
     add_definitions(-DHAVE_MPFR)
 endif( MPFR_FOUND AND GMP_FOUND)
 
+
 #-----------------------------------------------------------------------
 # build configuration
 #-----------------------------------------------------------------------
 set(CMAKE_BUILD_TYPE Release)
-add_definitions(-std=c++11 -Wall)
+add_definitions(-std=c++17 -Wall)
 
 #-----------------------------------------------------------------------
 # common include directories

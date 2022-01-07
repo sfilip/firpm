@@ -279,9 +279,8 @@ namespace pm {
     }
 
     template<typename T>
-    void split(std::vector<std::pair<T, T>>& subIntervals,
-            std::vector<band_t<T>>& chebyBands,
-            std::vector<T> &x) {
+    std::vector<std::pair<T, T>> split(std::vector<band_t<T>>& chebyBands, std::vector<T> &x) {
+        std::vector<std::pair<T, T>> subIntervals;
         std::vector<T> splitpts = x;
         for(std::size_t i{0u}; i < chebyBands.size(); ++i) {
             splitpts.push_back(chebyBands[i].start);
@@ -301,6 +300,7 @@ namespace pm {
                 subIntervals.push_back(std::make_pair(splitpts[i], splitpts[i+1u]));
             }
         }
+        return subIntervals;
     }
 
     template<typename T>
@@ -317,20 +317,17 @@ namespace pm {
         // 1.   Split the initial [-1, 1] interval in subintervals
         //      in order that we can use a reasonable size matrix
         //      eigenvalue solver on the subintervals
-        std::vector<std::pair<T, T>> subIntervals;
+        std::vector<std::pair<T, T>> subIntervals = split(chebyBands, x);
         std::pair<T, T> dom{std::make_pair(-1.0, 1.0)};
 
-        split(subIntervals, chebyBands, x);
 
         // 2.   Compute the barycentric variables (i.e., weights)
         //      needed for the current iteration
-        std::vector<T> w(x.size());
-        baryweights(w, x);
+        std::vector<T> w = baryweights(x);
 
-        compdelta(delta, w, x, chebyBands);
+        delta = compdelta(w, x, chebyBands);
 
-        std::vector<T> C(x.size());
-        compc(C, delta, x, chebyBands);
+        std::vector<T> C = compc(delta, x, chebyBands);
 
         // 3.   Use an eigenvalue solver on each subinterval to find the
         //      local extrema that are located inside the frequency bands
@@ -339,19 +336,16 @@ namespace pm {
 
         std::vector<std::pair<T, T>> potentialExtrema;
         std::vector<T> pEx;
-        T extremaErrorValueLeft;
-        T extremaErrorValueRight;
-        T extremaErrorValue;
-        comperror(extremaErrorValue, chebyBands[0].start,
+        T extremaErrorValue = comperror(chebyBands[0].start,
                 delta, x, C, w, chebyBands);
         potentialExtrema.push_back(std::make_pair(
                 chebyBands[0].start, extremaErrorValue));
 
         for (std::size_t i{0u}; i < chebyBands.size() - 1u; ++i)
         {
-            comperror(extremaErrorValueLeft, chebyBands[i].stop,
+            T extremaErrorValueLeft = comperror(chebyBands[i].stop,
                     delta, x, C, w, chebyBands);
-            comperror(extremaErrorValueRight, chebyBands[i + 1].start,
+            T extremaErrorValueRight = comperror(chebyBands[i + 1].start,
                     delta, x, C, w, chebyBands);
             bool sgnLeft = pmmath::signbit(extremaErrorValueLeft);
             bool sgnRight = pmmath::signbit(extremaErrorValueRight);
@@ -371,8 +365,7 @@ namespace pm {
                             chebyBands[i + 1u].start, extremaErrorValueRight));
             }
         }
-        comperror(extremaErrorValue,
-                chebyBands[chebyBands.size() - 1u].stop,
+        extremaErrorValue = comperror(chebyBands[chebyBands.size() - 1u].stop,
                 delta, x, C, w, chebyBands);
         potentialExtrema.push_back(std::make_pair(
                 chebyBands[chebyBands.size() - 1u].stop,
@@ -394,8 +387,7 @@ namespace pm {
             // current subinterval
             std::vector<T> fx(Nmax + 1u);
             for (std::size_t j{0u}; j < fx.size(); ++j)
-                comperror(fx[j], siCN[j], delta, x, C, w,
-                        chebyBands);
+                fx[j] = comperror(siCN[j], delta, x, C, w, chebyBands);
 
             // compute the values of the CI coefficients and those of its
             // derivative
@@ -431,8 +423,7 @@ namespace pm {
                 mpfr_prec_t prevPrec = mpfr::mpreal::get_default_prec();
                 mpfr::mpreal::set_default_prec(prec);
             #endif
-            T valBuffer;
-            comperror(valBuffer, pEx[i],
+            T valBuffer = comperror(pEx[i],
                     delta, x, C, w, chebyBands);
             potentialExtrema[startingOffset + i] = std::make_pair(pEx[i], valBuffer);
             #ifdef HAVE_MPFR
@@ -499,9 +490,8 @@ namespace pm {
                         x2.push_back(alternatingExtrema[i].first);
                     }
                     x2.push_back(alternatingExtrema[alternatingExtrema.size() - 1u].first);
-                    T delta1, delta2;
-                    compdelta(delta1, x1, chebyBands);
-                    compdelta(delta2, x2, chebyBands);
+                    T delta1 = compdelta(x1, chebyBands);
+                    T delta2 = compdelta(x2, chebyBands);
                     delta1 = pmmath::fabs(delta1);
                     delta2 = pmmath::fabs(delta2);
                     std::size_t sIndex{1u};
@@ -673,19 +663,16 @@ namespace pm {
         }
 
         output.h.resize(degree + 1u);
-        std::vector<T> finalC(output.x.size());
-        std::vector<T> finalAlpha(output.x.size());
-        baryweights(finalAlpha, output.x);
+        std::vector<T> finalAlpha = baryweights(output.x);
         T finalDelta = output.delta;
         output.delta = pmmath::fabs(output.delta);
-        compc(finalC, finalDelta, output.x, chebyBands);
+        std::vector<T> finalC = compc(finalDelta, output.x, chebyBands);
         std::vector<T> finalChebyNodes = equipts<T>(degree + 1);
         finalChebyNodes = cos(finalChebyNodes);
         std::vector<T> fv(degree + 1);
 
         for (std::size_t i{0u}; i < fv.size(); ++i) {
-            approx(fv[i], finalChebyNodes[i], output.x,
-                    finalC, finalAlpha);
+            fv[i] = approx(finalChebyNodes[i], output.x, finalC, finalAlpha);
             if (!pmmath::isfinite(fv[i])) {
                 output.status = status_t::STATUS_COEFFICIENT_SET_INVALID;
                 std::stringstream message;
