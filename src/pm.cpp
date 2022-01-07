@@ -92,16 +92,14 @@ namespace pm {
     void wam(std::vector<T>& wam, std::vector<band_t<T>>& cb,
             std::size_t deg)
     {
-        std::vector<T> cp;
-        equipts(cp, deg + 2u);
-        cos(cp, cp);
+        std::vector<T> cp = equipts<T>(deg + 2u);
+        cp = cos(cp);
         std::sort(begin(cp), end(cp));
         for(std::size_t i{0u}; i < cb.size(); ++i)
         {
             if(cb[i].start != cb[i].stop)
             {
-                std::vector<T> bufferNodes;
-                chgvar(bufferNodes, cp, cb[i].start, cb[i].stop);
+                std::vector<T> bufferNodes = chgvar(cp, cb[i].start, cb[i].stop);
                 bufferNodes[0] = cb[i].start;
                 bufferNodes[bufferNodes.size()-1u] = cb[i].stop;
                 for(auto& it : bufferNodes)
@@ -334,9 +332,8 @@ namespace pm {
 
         // 3.   Use an eigenvalue solver on each subinterval to find the
         //      local extrema that are located inside the frequency bands
-        std::vector<T> chebyNodes(Nmax + 1u);
-        equipts(chebyNodes, Nmax + 1u);
-        cos(chebyNodes, chebyNodes);
+        std::vector<T> chebyNodes = equipts<T>(Nmax + 1u);
+        chebyNodes = cos(chebyNodes);
 
         std::vector<std::pair<T, T>> potentialExtrema;
         std::vector<T> pEx;
@@ -388,8 +385,7 @@ namespace pm {
                 mpfr::mpreal::set_default_prec(prec);
             #endif
             // find the Chebyshev nodes scaled to the current subinterval
-            std::vector<T> siCN(Nmax + 1u);
-            chgvar(siCN, chebyNodes, subIntervals[i].first,
+            std::vector<T> siCN = chgvar(chebyNodes, subIntervals[i].first,
                     subIntervals[i].second);
 
             // compute the Chebyshev interpolation function values on the
@@ -401,17 +397,14 @@ namespace pm {
 
             // compute the values of the CI coefficients and those of its
             // derivative
-            std::vector<T> c(Nmax + 1u);
-            chebcoeffs(c, fx);
-            std::vector<T> dc(Nmax);
-            diffcoeffs(dc, c);
+            std::vector<T> c = chebcoeffs(fx);
+            std::vector<T> dc = diffcoeffs(c);
 
             // solve the corresponding eigenvalue problem and determine the
             // local extrema situated in the current subinterval
-            std::vector<T> eigenRoots;
-            roots(eigenRoots, dc, dom);
+            std::vector<T> eigenRoots = roots(dc, dom);
             if(!eigenRoots.empty()) {
-                chgvar(eigenRoots, eigenRoots,
+                eigenRoots = chgvar(eigenRoots,
                         subIntervals[i].first, subIntervals[i].second);
                 for (std::size_t j{0u}; j < eigenRoots.size(); ++j)
                     pExs[i].push_back(eigenRoots[j]);
@@ -684,9 +677,8 @@ namespace pm {
         T finalDelta = output.delta;
         output.delta = pmmath::fabs(output.delta);
         compc(finalC, finalDelta, output.x, chebyBands);
-        std::vector<T> finalChebyNodes(degree + 1);
-        equipts(finalChebyNodes, degree + 1);
-        cos(finalChebyNodes, finalChebyNodes);
+        std::vector<T> finalChebyNodes = equipts<T>(degree + 1);
+        finalChebyNodes = cos(finalChebyNodes);
         std::vector<T> fv(degree + 1);
 
         for (std::size_t i{0u}; i < fv.size(); ++i) {
@@ -703,7 +695,7 @@ namespace pm {
             }
         }
 
-        chebcoeffs(output.h, fv);
+        output.h = chebcoeffs(fv);
 
         return output;
     }
@@ -920,7 +912,7 @@ namespace pm {
                     if (fbands.size() <= (deg + 2u) / 4) {
                         std::vector<T> omega;
                         uniform(omega, fbands, deg + 2u);
-                        cos(x, omega);
+                        x = cos(omega);
                         bandconv(cbands, fbands, convdir_t::FROMFREQ);
                     } else {
                         // use AFP strategy for very small degrees (wrt nb of bands)
@@ -952,7 +944,7 @@ namespace pm {
                         if (fbands.size() <= (sdegs[0] + 2u) / 4) {
                             std::vector<T> omega;
                             uniform(omega, fbands, sdegs[0]+2u);
-                            cos(x, omega);
+                            x = cos(omega);
                             bandconv(cbands, fbands, convdir_t::FROMFREQ);
                         } else {
                             // use AFP strategy for very small degrees (wrt nb of bands)
@@ -1295,7 +1287,7 @@ namespace pm {
                     if (fbands.size() <= (deg + 2u) / 4) {
                         std::vector<T> omega;
                         uniform(omega, fbands, deg + 2u);
-                        cos(x, omega);
+                        x = cos(omega);
                         bandconv(cbands, fbands, convdir_t::FROMFREQ);
                     } else {
                         // use AFP strategy for very small degrees (wrt nb of bands)
@@ -1327,7 +1319,7 @@ namespace pm {
                         if (fbands.size() <= (sdegs[0] + 2u) / 4) {
                             std::vector<T> omega;
                             uniform(omega, fbands, sdegs[0]+2u);
-                            cos(x, omega);
+                            x = cos(omega);
                             bandconv(cbands, fbands, convdir_t::FROMFREQ);
                         } else {
                             // use AFP strategy for very small degrees (wrt nb of bands)
