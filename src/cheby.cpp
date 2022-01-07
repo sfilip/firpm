@@ -246,7 +246,7 @@ namespace pm {
     // function that generates the coefficients of the 
     // derivative of a given CI
     template<typename T>
-    std::vector<T> diffcoeffs(std::vector<T>& c,
+    std::vector<T> diffcoeffs(std::vector<T> const& c,
                     chebkind_t kind)
     {
         std::vector<T> dc(c.size()-1);
@@ -326,7 +326,7 @@ namespace pm {
 
     template std::vector<double> chebcoeffs<double>(std::vector<double>& fv);
 
-    template std::vector<double> diffcoeffs<double>(std::vector<double>& c,
+    template std::vector<double> diffcoeffs<double>(std::vector<double> const& c,
                     chebkind_t kind);
 
     template std::vector<double> roots<double>(std::vector<double>& c,
@@ -345,7 +345,7 @@ namespace pm {
 
     template std::vector<long double> chebcoeffs<long double>(std::vector<long double>& fv);
 
-    template std::vector<long double> diffcoeffs<long double>(std::vector<long double>& c,
+    template std::vector<long double> diffcoeffs<long double>(std::vector<long double> const& c,
                     chebkind_t kind);
 
     template std::vector<long double> roots<long double>(std::vector<long double>& c,
@@ -363,7 +363,7 @@ namespace pm {
 
     template std::vector<mpfr::mpreal> chebcoeffs<mpfr::mpreal>(std::vector<mpfr::mpreal>& fv);
 
-    template std::vector<mpfr::mpreal> diffcoeffs<mpfr::mpreal>(std::vector<mpfr::mpreal>& c,
+    template std::vector<mpfr::mpreal> diffcoeffs<mpfr::mpreal>(std::vector<mpfr::mpreal> const& c,
                     chebkind_t kind);
 
     template std::vector<mpfr::mpreal> roots<mpfr::mpreal>(std::vector<mpfr::mpreal>& c,

@@ -82,7 +82,7 @@ namespace pm {
         *  @return the vector of coefficients of the derivative of the CI
         */
         template<typename T>
-        std::vector<T> diffcoeffs(std::vector<T>& c,
+        std::vector<T> diffcoeffs(std::vector<T> const& c,
                         chebkind_t kind = SECOND);
 
         /*! Chebyshev proxy rootfinding method for a given CI
