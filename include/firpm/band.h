@@ -59,23 +59,12 @@ namespace pm {
         std::vector<T> part;    /**< partition points (if any) inside the band */
     };
 
-    /**
-     * Gives the direction in which the change of variable is performed
-     */
-    enum convdir_t {
-        FROMFREQ,               /**< apply the change of variable \f$y=\cos(x)\f$*/
-        TOFREQ                  /**< apply the change of variable \f$y=\arccos(x)\f$*/
-    };
-
     /*! Performs the change of variable on the set of bands of interest
     * @param[in]  in input frequency bands
-    * @param[in]  direction the direction in which the change of
-    * variable is performed
     * @return output frequency bands
     */
     template<typename T>
-    std::vector<band_t<T>> bandconv(std::vector<band_t<T>> const &in,
-            convdir_t direction);
+    std::vector<band_t<T>> bandconv(std::vector<band_t<T>> const &in);
 
 } // namespace pm
 
