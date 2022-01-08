@@ -889,25 +889,9 @@ namespace pm {
             switch(strategy) {
                 case init_t::UNIFORM:
                 {
-                    std::vector<T> x;
-                    if (fbands.size() <= (deg + 2u) / 4) {
-                        std::vector<T> omega = uniform(fbands, deg + 2u);
-                        x = cos(omega);
-                        cbands = bandconv(fbands);
-                    } else {
-                        // use AFP strategy for very small degrees (wrt nb of bands)
-                        std::vector<T> mesh = wam(cbands, deg);
-                        MatrixXd<T> A = chebvand(deg+1u, mesh, wf);
-                        x = afp(A, mesh);
-                        if(x.size() != deg + 2u) {
-                            output.status = status_t::STATUS_AFP_INVALID;
-                            throw std::runtime_error("ERROR: AFP strategy "
-                                    "failed to produce a valid starting "
-                                    "reference.\nPOSSIBLE CAUSE: badly "
-                                    "conditioned Chebyshev Vandermonde matrix");
-                        }
-                        countBand(cbands, x);
-                    }
+                    std::vector<T> omega = uniform(fbands, deg + 2u);
+                    std::vector<T> x = cos(omega);
+                    cbands = bandconv(fbands);
                     output = exchange(x, cbands, eps, nmax, prec);
                 } break;
                 case init_t::SCALING:
@@ -1249,24 +1233,9 @@ namespace pm {
             switch(strategy) {
                 case init_t::UNIFORM:
                 {
-                    std::vector<T> x;
-                    if (fbands.size() <= (deg + 2u) / 4) {
-                        std::vector<T> omega = uniform(fbands, deg + 2u);
-                        x = cos(omega);
-                        cbands = bandconv(fbands);
-                    } else {
-                        // use AFP strategy for very small degrees (wrt nb of bands)
-                        std::vector<T> mesh = wam(cbands, deg);
-                        MatrixXd<T> A = chebvand(deg+1u, mesh, wf);
-                        x = afp(A, mesh);
-                        if(x.size() != deg + 2u) {
-                            output.status = status_t::STATUS_AFP_INVALID;
-                            throw std::runtime_error(
-                                    "ERROR: AFP strategy failed to produce a valid starting reference\n"
-                                    "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
-                        }
-                        countBand(cbands, x);
-                    }
+                    std::vector<T> omega = uniform(fbands, deg + 2u);
+                    std::vector<T> x = cos(omega);
+                    cbands = bandconv(fbands);
                     output = exchange(x, cbands, eps, nmax, prec);
                 } break;
                 case init_t::SCALING:
