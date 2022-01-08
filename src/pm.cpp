@@ -873,7 +873,7 @@ namespace pm {
                 }
             }
 
-            std::vector<band_t<T>> cbands = bandconv(fbands);
+            std::vector<band_t<T>> cbands;
             std::function<T(T)> wf = [&cbands](T x) -> T {
                 for(std::size_t i{0u}; i < cbands.size(); ++i)
                     if(cbands[i].start <= x && x <= cbands[i].stop)
@@ -924,6 +924,7 @@ namespace pm {
                         }
                         output = exchange(x, cbands, eps, nmax, prec);
                     } else { // AFP-based strategy
+                        cbands = bandconv(fbands);
                         std::vector<T> mesh = wam(cbands, sdegs[0]);
                         MatrixXd<T> A = chebvand(sdegs[0]+1u, mesh, wf);
                         x = afp(A, mesh);
@@ -944,7 +945,8 @@ namespace pm {
                         output = exchange(x, cbands, eps, nmax, prec);
                     }
                 } break;
-                default: { // AFP-based initialization
+                case init_t::AFP: { // AFP-based initialization
+                    cbands = bandconv(fbands);
                     std::vector<T> mesh = wam(cbands, deg);
                     MatrixXd<T> A = chebvand(deg+1u, mesh, wf);
                     std::vector<T> x = afp(A, mesh);
@@ -956,7 +958,9 @@ namespace pm {
                     }
                     countBand(cbands, x);
                     output = exchange(x, cbands, eps, nmax, prec);
-                }
+                } break;
+                default:
+                    throw std::runtime_error("Unknown strategy!");
             }
 
             if (output.h.size() != deg + 1u) {
@@ -1218,7 +1222,7 @@ namespace pm {
                 }
             }
 
-            std::vector<band_t<T>> cbands = bandconv(fbands);
+            std::vector<band_t<T>> cbands;
             std::function<T(T)> wf = [&cbands](T x) -> T {
                 for(std::size_t i{0u}; i < cbands.size(); ++i)
                     if(cbands[i].start <= x && x <= cbands[i].stop)
@@ -1253,6 +1257,7 @@ namespace pm {
                             cbands = bandconv(fbands);
                         } else {
                             // use AFP strategy for very small degrees (wrt nb of bands)
+                            cbands = bandconv(fbands);
                             std::vector<T> mesh = wam(cbands, sdegs[0]);
                             MatrixXd<T> A = chebvand(sdegs[0]+1u, mesh, wf);
                             x = afp(A, mesh);
@@ -1266,6 +1271,7 @@ namespace pm {
                         }
                         output = exchange(x, cbands, eps, nmax);
                     } else { // AFP-based strategy
+                        cbands = bandconv(fbands);
                         std::vector<T> mesh = wam(cbands, sdegs[0]);
                         MatrixXd<T> A = chebvand(sdegs[0]+1u, mesh, wf);
                         x = afp(A, mesh);
@@ -1285,7 +1291,8 @@ namespace pm {
                         output = exchange(x, cbands, eps, nmax, prec);
                     }
                 } break;
-                default: { // AFP-based initialization
+                case init_t::AFP: { // AFP-based initialization
+                    cbands = bandconv(fbands);
                     std::vector<T> mesh = wam(cbands, deg);
                     MatrixXd<T> A = chebvand(deg+1u, mesh, wf);
                     std::vector<T> x = afp(A, mesh);
@@ -1297,7 +1304,9 @@ namespace pm {
                     }
                     countBand(cbands, x);
                     output = exchange(x, cbands, eps, nmax, prec);
-                }
+                } break;
+                default:
+                    throw std::runtime_error("Unknown strategy!");
             }
 
             if (output.h.size() != deg + 1u) {
