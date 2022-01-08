@@ -164,8 +164,8 @@ namespace pm {
     void refscaling(status_t& status,
             std::vector<T>& newX, std::vector<band_t<T>>& newChebyBands,
             std::vector<band_t<T>>& newFreqBands, std::size_t newXSize,
-            std::vector<T>& x, std::vector<band_t<T>>& chebyBands,
-            std::vector<band_t<T>>& freqBands)
+            std::vector<T>& x, std::vector<band_t<T>> const& chebyBands,
+            std::vector<band_t<T>> const& freqBands)
     {
         std::vector<std::size_t> newDistribution(chebyBands.size());
         for(std::size_t i{0u}; i < chebyBands.size(); ++i)
@@ -277,7 +277,7 @@ namespace pm {
     }
 
     template<typename T>
-    std::vector<std::pair<T, T>> split(std::vector<band_t<T>>& chebyBands, std::vector<T> &x) {
+    std::vector<std::pair<T, T>> split(std::vector<band_t<T>> const& chebyBands, std::vector<T> &x) {
         std::vector<std::pair<T, T>> subIntervals;
         std::vector<T> splitpts = x;
         for(std::size_t i{0u}; i < chebyBands.size(); ++i) {
@@ -1400,8 +1400,8 @@ namespace pm {
                 std::vector<band_t<double>>& newFreqBands,
                 std::size_t newXSize,
                 std::vector<double>& x,
-                std::vector<band_t<double>>& chebyBands,
-                std::vector<band_t<double>>& freqBands);
+                std::vector<band_t<double>> const& chebyBands,
+                std::vector<band_t<double>> const& freqBands);
 
     template pmoutput_t<double> exchange<double>(std::vector<double>& x,
                 std::vector<band_t<double>>& chebyBands,
@@ -1478,8 +1478,8 @@ namespace pm {
                 std::vector<band_t<long double>>& newFreqBands,
                 std::size_t newXSize,
                 std::vector<long double>& x,
-                std::vector<band_t<long double>>& chebyBands,
-                std::vector<band_t<long double>>& freqBands);
+                std::vector<band_t<long double>> const& chebyBands,
+                std::vector<band_t<long double>> const& freqBands);
 
     template pmoutput_t<long double> exchange<long double>(std::vector<long double>& x,
                 std::vector<band_t<long double>>& chebyBands,
@@ -1557,11 +1557,11 @@ namespace pm {
                 std::vector<band_t<mpfr::mpreal>>& newFreqBands,
                 std::size_t newXSize,
                 std::vector<mpfr::mpreal>& x,
-                std::vector<band_t<mpfr::mpreal>>& chebyBands,
-                std::vector<band_t<mpfr::mpreal>>& freqBands);
+                std::vector<band_t<mpfr::mpreal>> const& chebyBands,
+                std::vector<band_t<mpfr::mpreal>> const& freqBands);
 
     template pmoutput_t<mpfr::mpreal> exchange<mpfr::mpreal>(std::vector<mpfr::mpreal>& x,
-                std::vector<band_t<mpfr::mpreal>>& chebyBands,
+                std::vector<band_t<mpfr::mpreal>>&chebyBands,
                 double eps,
                 std::size_t nmax, unsigned long prec);
 

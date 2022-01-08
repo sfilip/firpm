@@ -127,8 +127,8 @@ namespace pm {
     void refscaling(status_t& status,
             std::vector<T>& nx, std::vector<band_t<T>>& ncbands,
             std::vector<band_t<T>>& nfbands, std::size_t nxs,
-            std::vector<T>& x, std::vector<band_t<T>>& cbands,
-            std::vector<band_t<T>>& fbands);
+            std::vector<T>& x, std::vector<band_t<T>> const& cbands,
+            std::vector<band_t<T>> const& fbands);
 
     /*! An internal routine which implements the exchange algorithm for designing 
     * FIR filters
