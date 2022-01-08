@@ -758,7 +758,6 @@ namespace pm {
 
         try {
             parseSpecification(output.status, f, a, w);
-            std::vector<T> h;
             std::vector<band_t<T>> fbands;
             std::vector<std::vector<std::size_t>> bIdx;
 
@@ -791,7 +790,6 @@ namespace pm {
                     ++n;
                 }
             }
-            std::size_t deg = n / 2;
             if(n % 2 == 0) {            // type I filter
                 for(std::size_t i{0u}; i < fbands.size(); ++i) {
                     fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][0u]]));
@@ -884,6 +882,7 @@ namespace pm {
                 return 1.0;
             };
 
+            std::size_t deg = n / 2;
             if(fbands.size() > (deg + 2u) / 4)
                 strategy = init_t::AFP;
 
@@ -976,12 +975,12 @@ namespace pm {
                 }
             }
 
-            h.resize(n+1u);
             if (output.h.size() != deg + 1u) {
                 output.status = status_t::STATUS_COEFFICIENT_SET_INVALID;
                 throw std::runtime_error("ERROR: final filter coefficient set is incomplete");
             }
 
+            std::vector<T> h(n + 1u);
             if(n % 2 == 0) {
                 h[deg] = output.h[0];
                 for(std::size_t i{0u}; i < deg; ++i)
@@ -1061,7 +1060,6 @@ namespace pm {
 
         try {
             parseSpecification(output.status, f, a, w);
-            std::vector<T> h;
             std::vector<band_t<T>> fbands(w.size());
             std::vector<T> fn{f};
             std::size_t deg = n / 2u;
@@ -1333,12 +1331,12 @@ namespace pm {
                 }
             }
 
-            h.resize(n + 1u);
             if (output.h.size() != deg + 1u) {
                 output.status = status_t::STATUS_COEFFICIENT_SET_INVALID;
                 throw std::runtime_error("ERROR: final filter coefficient set is incomplete");
             }
 
+            std::vector<T> h(n + 1u);
             if(n % 2 == 0)
             {
                 h[deg + 1u] = 0;
