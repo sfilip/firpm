@@ -19,6 +19,7 @@ find_package(GMP 6.0.0)
 find_package(MPFR 4.0.0)
 find_package(Doxygen)
 find_package(pybind11)
+find_package(Python3)
 
 if( MPFR_FOUND AND GMP_FOUND)
     add_definitions(-DHAVE_MPFR)
@@ -137,3 +138,7 @@ endif()
 
 add_test(ScalingTests ${PROJECT_TEST_SCALING})
 add_test(ExtensiveTests ${PROJECT_TEST_EXTENSIVE})
+
+if( pybind11_FOUND AND Python3_FOUND )
+	add_test(NAME PythonTests COMMAND ${Python3_EXECUTABLE} -m pytest test/firpm_tests.py)
+endif()
