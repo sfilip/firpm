@@ -18,6 +18,8 @@ find_package(Eigen3 3.3 REQUIRED)
 find_package(GMP 6.0.0)
 find_package(MPFR 4.0.0)
 find_package(Doxygen)
+find_package(pybind11)
+find_package(Python3)
 
 if( MPFR_FOUND AND GMP_FOUND)
     add_definitions(-DHAVE_MPFR)
@@ -41,6 +43,15 @@ endif( MPFR_FOUND AND GMP_FOUND )
 add_subdirectory(${PROJECT_SOURCE_DIR}/src)
 if(DOXYGEN_FOUND)
     add_subdirectory(${PROJECT_SOURCE_DIR}/doc)
+endif()
+
+#-----------------------------------------------------------------------
+# Python bindings
+#-----------------------------------------------------------------------
+
+if( pybind11_FOUND )
+	pybind11_add_module(pyfirpm py/bindings.cpp)
+	target_link_libraries(pyfirpm PRIVATE firpm)
 endif()
 
 #-----------------------------------------------------------------------
@@ -127,3 +138,7 @@ endif()
 
 add_test(ScalingTests ${PROJECT_TEST_SCALING})
 add_test(ExtensiveTests ${PROJECT_TEST_EXTENSIVE})
+
+if( pybind11_FOUND AND Python3_FOUND )
+	add_test(NAME PythonTests COMMAND ${Python3_EXECUTABLE} -m pytest test/firpm_tests.py)
+endif()
