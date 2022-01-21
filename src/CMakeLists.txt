@@ -3,7 +3,7 @@ set(PROJECT_NAME_STR firpmlib-build)
 project(${PROJECT_NAME_STR})
 
 set(CMAKE_BUILD_TYPE Release)
-add_definitions("-std=c++11")
+add_definitions("-std=c++17")
 
 file(GLOB PROJECT_SRC_FILES ${PROJECT_SOURCE_DIR}/*.cpp)
 set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../include/)

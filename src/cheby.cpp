@@ -120,26 +120,29 @@ namespace pm {
     }
 
     template<typename T>
-    void cos(std::vector<T>& out,
-            std::vector<T> const& in)
+    std::vector<T> cos(std::vector<T> const &in)
     {
-        out.resize(in.size());
+        std::vector<T> out(in.size());
+
         for(std::size_t i{0u}; i < in.size(); ++i)
             out[i] = pmmath::cos(in[i]);
+
+        return out;
     }
 
     template<typename T>
-    void chgvar(std::vector<T>& out,
-            std::vector<T> const& in,
-            T& a, T& b)
+    std::vector<T> chgvar(std::vector<T> const& in, T const&a, T const& b)
     {
-        out.resize(in.size());
+        std::vector<T> out(in.size());
+
         for(std::size_t i{0u}; i < in.size(); ++i)
             out[i] = (b + a) / 2 + in[i] * (b - a) / 2;
+
+        return out;
     }
 
     template<typename T>
-    void clenshaw(T& result, const std::vector<T>& p,
+    T clenshaw(const std::vector<T>& p,
             T const& x, T const& a, T const& b)
     {
         T bn1, bn2, bn;
@@ -163,12 +166,11 @@ namespace pm {
 
         // set the value for the result
         // (i.e., the CI value at x)
-        result = bn1 - buffer * bn2;
+        return bn1 - buffer * bn2;
     }
 
     template<typename T>
-    void clenshaw(T& result,
-                std::vector<T> const& p,
+    T clenshaw(std::vector<T> const& p,
                 T const& x,
                 chebkind_t kind)
     {
@@ -186,32 +188,33 @@ namespace pm {
         }
 
         if(kind == FIRST)
-            result = x * bn1 - bn2 + p[0];
+            return x * bn1 - bn2 + p[0];
         else
-            result = (x * 2) * bn1 - bn2 + p[0];
+            return (x * 2) * bn1 - bn2 + p[0];
     }
 
     template<typename T>
-    void equipts(std::vector<T>& v, std::size_t n)
+    std::vector<T> equipts(std::size_t n)
     {
-        v.resize(n);
+        std::vector<T> v(n);
         // store the points in the vector v as 
         // v[i] = i * pi / (n-1)
         for(std::size_t i{0u}; i < n; ++i) {
             v[i] = pmmath::const_pi<T>() * i;
             v[i] /= (n-1);
         }
+
+        return v;
     }
 
     // this function computes the values of the coefficients of 
     // the CI when Chebyshev nodes of the second kind are used
     template<typename T>
-    void chebcoeffs(std::vector<T>& c,
-            std::vector<T>& fv)
+    std::vector<T> chebcoeffs(std::vector<T>& fv)
     {
         std::size_t n = fv.size();
-        std::vector<T> v(n);
-        equipts(v, n);
+        std::vector<T> c(n);
+        std::vector<T> v = equipts<T>(n);
 
         T buffer;
 
@@ -225,7 +228,7 @@ namespace pm {
             // compute the actual value at the Chebyshev
             // node cos(i * pi / n)
             buffer = pmmath::cos(v[i]);
-            clenshaw(c[i], fv, buffer, FIRST);
+            c[i] = clenshaw(fv, buffer, FIRST);
 
             if(i == 0u || i == n-1u) {
                 c[i] /= (n-1u);
@@ -237,16 +240,17 @@ namespace pm {
         fv[0] = oldValue1;
         fv[n-1u] = oldValue2;
 
+        return c;
     }
 
     // function that generates the coefficients of the 
     // derivative of a given CI
     template<typename T>
-    void diffcoeffs(std::vector<T>& dc,
-                    std::vector<T>& c,
+    std::vector<T> diffcoeffs(std::vector<T> const& c,
                     chebkind_t kind)
     {
-        dc.resize(c.size()-1);
+        std::vector<T> dc(c.size()-1);
+
         switch(kind) {
             case FIRST: {
                 int n = c.size() - 2;
@@ -266,18 +270,20 @@ namespace pm {
             }
             break;
         }
+
+        return dc;
     }
 
     template<typename T>
-    void roots(std::vector<T>& r, std::vector<T>& c,
+    std::vector<T> roots(std::vector<T>& c,
             std::pair<T, T> const& dom,
             chebkind_t kind,
             bool balance)
     {
-        r.clear();
+        std::vector<T> r;
         for(auto &it : c)
             if(!pmmath::isfinite(it))
-                return;
+                return {};
 
         // preprocess c and remove all the high order
         // zero coefficients
@@ -303,75 +309,64 @@ namespace pm {
         } else if(idx == 1) {
             r.push_back(-c[0u] / c[1u]);
         }
+        return r;
     }
 
     /* Explicit instantiation */
 
     /* double precision */
 
-    template void cos<double>(std::vector<double>& out,
-            std::vector<double> const& in);
+    template std::vector<double> cos<double>(std::vector<double> const &in);
 
-    template void chgvar<double>(std::vector<double>& out,
-            std::vector<double> const& in,
-            double& a, double& b);
+    template std::vector<double> chgvar<double>(std::vector<double> const& in,
+            double const& a, double const& b);
 
-    template void equipts<double>(std::vector<double>& v, std::size_t n);
+    template std::vector<double> equipts<double>(std::size_t n);
 
 
-    template void chebcoeffs<double>(std::vector<double>& c,
-                    std::vector<double>& fv);
+    template std::vector<double> chebcoeffs<double>(std::vector<double>& fv);
 
-    template void diffcoeffs<double>(std::vector<double>& dc,
-                    std::vector<double>& c,
+    template std::vector<double> diffcoeffs<double>(std::vector<double> const& c,
                     chebkind_t kind);
 
-    template void roots<double>(std::vector<double>& r, std::vector<double>& c,
+    template std::vector<double> roots<double>(std::vector<double>& c,
             std::pair<double, double> const& dom,
             chebkind_t kind, bool balance);
 
     /* long double precision */
 
-    template void cos<long double>(std::vector<long double>& out,
-            std::vector<long double> const& in);
+    template std::vector<long double> cos<long double>(std::vector<long double> const &in);
 
-    template void chgvar<long double>(std::vector<long double>& out,
-            std::vector<long double> const& in,
-            long double& a, long double& b);
+    template std::vector<long double> chgvar<long double>(std::vector<long double> const& in,
+            long double const& a, long double const& b);
 
-    template void equipts<long double>(std::vector<long double>& v, std::size_t n);
+    template std::vector<long double> equipts<long double>(std::size_t n);
 
 
-    template void chebcoeffs<long double>(std::vector<long double>& c,
-                    std::vector<long double>& fv);
+    template std::vector<long double> chebcoeffs<long double>(std::vector<long double>& fv);
 
-    template void diffcoeffs<long double>(std::vector<long double>& dc,
-                    std::vector<long double>& c,
+    template std::vector<long double> diffcoeffs<long double>(std::vector<long double> const& c,
                     chebkind_t kind);
 
-    template void roots<long double>(std::vector<long double>& r, std::vector<long double>& c,
+    template std::vector<long double> roots<long double>(std::vector<long double>& c,
             std::pair<long double, long double> const& dom,
             chebkind_t kind, bool balance);
 
 #ifdef HAVE_MPFR
-    template void cos<mpfr::mpreal>(std::vector<mpfr::mpreal>& out,
-            std::vector<mpfr::mpreal> const& in);
+    template std::vector<mpfr::mpreal> cos<mpfr::mpreal>(std::vector<mpfr::mpreal> const &in);
 
-    template void chgvar<mpfr::mpreal>(std::vector<mpfr::mpreal>& out,
-            std::vector<mpfr::mpreal> const& in,
-            mpfr::mpreal& a, mpfr::mpreal& b);
+    template std::vector<mpfr::mpreal> chgvar<mpfr::mpreal>(std::vector<mpfr::mpreal> const& in,
+            mpfr::mpreal const& a, mpfr::mpreal const& b);
 
-    template void equipts<mpfr::mpreal>(std::vector<mpfr::mpreal>& v, std::size_t n);
+    template std::vector<mpfr::mpreal> equipts<mpfr::mpreal>(std::size_t n);
 
 
-    template void chebcoeffs<mpfr::mpreal>(std::vector<mpfr::mpreal>& c,
-                    std::vector<mpfr::mpreal>& fv);
+    template std::vector<mpfr::mpreal> chebcoeffs<mpfr::mpreal>(std::vector<mpfr::mpreal>& fv);
 
-    template void diffcoeffs<mpfr::mpreal>(std::vector<mpfr::mpreal>& dc,
-                    std::vector<mpfr::mpreal>& c,
+    template std::vector<mpfr::mpreal> diffcoeffs<mpfr::mpreal>(std::vector<mpfr::mpreal> const& c,
                     chebkind_t kind);
 
-    template void roots<mpfr::mpreal>(std::vector<mpfr::mpreal>& r, std::vector<mpfr::mpreal>& c,
+    template std::vector<mpfr::mpreal> roots<mpfr::mpreal>(std::vector<mpfr::mpreal>& c,
             std::pair<mpfr::mpreal, mpfr::mpreal> const& dom,
             chebkind_t kind, bool balance);
 #endif
