@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.12)
+cmake_minimum_required (VERSION 3.16)
 set(PROJECT_NAME_STR firpmlib)
 project(${PROJECT_NAME_STR})
 # The project version number.
@@ -17,9 +17,9 @@ find_package(OpenMP REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
 find_package(GMP 6.0.0)
 find_package(MPFR 4.0.0)
-find_package(Doxygen)
-find_package(pybind11)
-find_package(Python3)
+# find_package(Doxygen)
+find_package(Python COMPONENTS Interpreter Development)
+find_package(pybind11 CONFIG)
 
 if( MPFR_FOUND AND GMP_FOUND)
     add_definitions(-DHAVE_MPFR)
@@ -29,13 +29,20 @@ endif( MPFR_FOUND AND GMP_FOUND)
 # build configuration
 #-----------------------------------------------------------------------
 set(CMAKE_BUILD_TYPE Release)
-add_definitions(-std=c++11 -Wall)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #-----------------------------------------------------------------------
 # common include directories
 #-----------------------------------------------------------------------
 if( MPFR_FOUND AND GMP_FOUND )
-    set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/include ${MPFR_INCLUDES})
+    set(MPREAL_HEADER mpreal.h)
+    find_path(MPREAL_INCLUDE_DIR NAMES ${MPREAL_HEADER})
+    if (NOT MPREAL_INCLUDE_DIR)
+        message(FATAL_ERROR "\t ${MPREAL_HEADER} header not found.")
+    endif()
+    message("${MPREAL_HEADER} found in ${MPREAL_INCLUDE_DIR}")
+    set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/include ${MPFR_INCLUDES} ${MPREAL_INCLUDE_DIR})
 else()
     set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 endif( MPFR_FOUND AND GMP_FOUND )
@@ -45,100 +52,19 @@ if(DOXYGEN_FOUND)
     add_subdirectory(${PROJECT_SOURCE_DIR}/doc)
 endif()
 
+add_subdirectory(${PROJECT_SOURCE_DIR}/test)
+
 #-----------------------------------------------------------------------
 # Python bindings
 #-----------------------------------------------------------------------
 
 if( pybind11_FOUND )
 	pybind11_add_module(pyfirpm py/bindings.cpp)
+    include_directories(${COMMON_INCLUDES} ${EIGEN3_INCLUDE_DIRS})
 	target_link_libraries(pyfirpm PRIVATE firpm)
 endif()
 
-#-----------------------------------------------------------------------
-# tests
-#-----------------------------------------------------------------------
-# use the solution proposed at:
-# https://github.com/google/googletest/blob/master/googletest/README.md
-# for downloading and compiling the googletest framework inside the
-# project build directory
 
-configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
-execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-    RESULT_VARIABLE result
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
-if(result)
-    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
-endif()
-execute_process(COMMAND ${CMAKE_COMMAND} --build .
-    RESULT_VARIABLE result
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
-if(result)
-    message(FATAL_ERROR "Build step for googletest failed: ${result}")
-endif()
-
-# Prevent overriding the parent project's compiler/linker settings
-# on Windows
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-# add googletest directory to our build. This defines the gtest
-# and gtest_main targets.
-add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
-                 ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
-                 EXCLUDE_FROM_ALL)
-
-
-# add the test files and generate the test executables
-# they can be run by calling *make test* after the initial *make*
-enable_testing()
-set(PROJECT_TEST_SCALING ${PROJECT_NAME_STR}_scaling_test)
-set(PROJECT_TEST_EXTENSIVE ${PROJECT_NAME_STR}_extensive_test)
-set(CMAKE_CTEST_COMMAND ctest -V)
-include_directories(${GTEST_INCLUDE_DIR} ${COMMON_INCLUDES} ${EIGEN3_INCLUDE_DIRS})
-
-set(TEST_SRC_SCALING ${PROJECT_SOURCE_DIR}/test/scaling_tests.cpp)
-set(TEST_SRC_EXTENSIVE ${PROJECT_SOURCE_DIR}/test/extensive_tests.cpp)
-
-add_executable(${PROJECT_TEST_SCALING} ${TEST_SRC_SCALING})
-add_executable(${PROJECT_TEST_EXTENSIVE} ${TEST_SRC_EXTENSIVE})
-
-if( MPFR_FOUND AND GMP_FOUND )
-    target_link_libraries(${PROJECT_TEST_SCALING}
-        gtest
-        gtest_main
-        pthread
-        ${GMP_LIBRARIES}
-        ${MPFR_LIBRARIES}
-        firpm
-    )
-else()
-    target_link_libraries(${PROJECT_TEST_SCALING}
-        gtest
-        gtest_main
-        pthread
-        firpm
-    )
-endif()
-
-if( MPFR_FOUND AND GMP_FOUND )
-    target_link_libraries(${PROJECT_TEST_EXTENSIVE}
-        gtest
-        gtest_main
-        pthread
-        ${GMP_LIBRARIES}
-        ${MPFR_LIBRARIES}
-        firpm
-    )
-else()
-    target_link_libraries(${PROJECT_TEST_EXTENSIVE}
-        gtest
-        gtest_main
-        pthread
-        firpm
-    )
-endif()
-
-add_test(ScalingTests ${PROJECT_TEST_SCALING})
-add_test(ExtensiveTests ${PROJECT_TEST_EXTENSIVE})
-
-if( pybind11_FOUND AND Python3_FOUND )
+if( pybind11_FOUND AND Python_FOUND )
 	add_test(NAME PythonTests COMMAND ${Python3_EXECUTABLE} -m pytest test/firpm_tests.py)
 endif()

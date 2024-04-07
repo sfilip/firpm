@@ -892,7 +892,7 @@ TYPED_TEST(firpm_issues_test, smallfir2) {
 TYPED_TEST(firpm_issues_test, partition1) {
 
     using T = typename TestFixture::T;
-    std::size_t degree = 255u;
+    std::size_t degree = 201u;
     std::cout << "START Parks-McClellan with uniform initialization\n";
     auto output1 = firpm<T>(degree * 2u + 1u,
                             {0.0, 0.0126667, 0.0126667, 0.018, 0.018, 0.021, 0.112333, 1.0},

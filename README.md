@@ -14,14 +14,14 @@ They have now been merged into one template version.
 ## Installation instructions
 
 This code has been tested on recent Mac OS X (>= 10.14) and Linux installations.
-In order to compile and use it, a recent C++ compiler with C++11 support is necessary
-(recent g++ and clang compilers have been shown to work). An active internet
+In order to compile and use it, a recent C++ compiler with C++14 and OpenMP support is necessary (recent g++ and clang compilers have been shown to work). An active internet
 connection and some external utilities and libraries must also be installed and
 available on your system search paths:
-* CMake version 3.12 or newer
+* CMake version 3.16 or newer
 * Eigen version 3.3 or newer
 * (optional) GMP version 6.0 or newer for multiple precision support
 * (optional) MPFR version 4.0 or newer for multiple precision support
+* (optional) [mpreal](https://github.com/advanpix/mpreal) wrapper for MPFR
 * (optional) doxygen to generate the accompanying code documentation
 * Google gtest framework for generating the test executables will be downloaded during CMake configuration
 
@@ -89,7 +89,7 @@ Examples of how to use the library can be found in the **test** folder.
 
 ## Licensing
 
-The provided code is primarily GPLv3+ licensed.
+Up until April 7, 2024 the code was GPLv3+ licensed. It has since switched to a more permissive 3-Clause BSD license.
 
 ## References
 [1] S.-I. Filip, A robust and scalable implementation of the Parks-McClellan
