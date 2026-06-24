@@ -770,9 +770,7 @@ namespace pm {
 
         try {
             parseSpecification(output.status, f, a, w);
-            std::vector<T> h;
             std::vector<band_t<T>> fbands;
-            std::vector<band_t<T>> cbands;
             std::vector<std::vector<std::size_t>> bIdx;
 
             std::size_t nbands{0u};
@@ -796,8 +794,110 @@ namespace pm {
             }
             fbands.resize(bIdx.size());
 
+            for(std::size_t i{0u}; i < fbands.size(); ++i) {
+                fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][0u]]));
+                for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
+                    fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][j]+1u]));
+                }
+            }
+            for(std::size_t i{0u}; i < fbands.size(); ++i) {
+                fbands[i].start = fbands[i].part[0u];
+                fbands[i].stop  = fbands[i].part[fbands[i].part.size()-1u];
+                fbands[i].space = space_t::FREQ;
+
+                fbands[i].amplitude = [i, &a, &bIdx, &fbands](space_t space, T x) -> T {
+                    if(space == space_t::CHEBY)
+                        x = pmmath::acos(x);
+                    for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
+                        if(fbands[i].part[j]*(1.0-1e-12) <= x &&
+                        x <= fbands[i].part[j+1u]*(1.0+1e-12)) {
+                            if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
+                                return ((x-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] -
+                                        (x-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
+                                        (fbands[i].part[j+1u] - fbands[i].part[j]);
+                            } else {
+                                return a[2u*bIdx[i][j]];
+                            }
+                        }
+                    }
+                    // this should never happen
+                    return a[2u*bIdx[i][0u]];
+                };
+                fbands[i].weight = [i, &w, &bIdx](space_t, T x) -> T {
+                    return w[bIdx[i][0u]];
+                };
+            }
+
+            return firpm<T>(n, fbands, eps, nmax, strategy, depth, rstrategy, prec);
+        }
+        catch (std::domain_error &err) {
+            std::cerr << "Invalid specification detected:" << std::endl;
+            std::cerr << err.what() << std::endl;
+            output.q = 2.0;
+        }
+        catch (std::runtime_error &err) {
+            std::cerr << "Runtime error detected:" << std::endl;
+            std::cerr << err.what() << std::endl;
+            output.q = 2.0;
+        }
+        catch (...) {
+            std::cerr << "Unknown exception" << std::endl;
+            output.status = status_t::STATUS_UNKNOWN_FAILURE;
+        }
+        return output;
+    }
+
+    template<typename T>
+    pmoutput_t<T> firpm(std::size_t n,
+                std::vector<band_t<T>> fbands,
+                double eps,
+                std::size_t nmax,
+                init_t strategy,
+                std::size_t depth,
+                init_t rstrategy,
+                unsigned long prec)
+    {
+        pmoutput_t<T> output;
+        output.status = status_t::STATUS_UNKNOWN_FAILURE;
+
+        try {
+            std::vector<T> h;
+            std::vector<band_t<T>> cbands;
+            T pi = pmmath::const_pi<T>();
+
+            /* Validate the band layout: this overload is reachable directly
+             * (and from Python), so it cannot rely on parseSpecification(). */
+            if(fbands.empty()) {
+                output.status = status_t::STATUS_FREQUENCY_INVALID_INTERVAL;
+                throw std::domain_error("ERROR: no bands specified");
+            }
+            for(std::size_t i{0u}; i < fbands.size(); ++i) {
+                band_t<T>& b = fbands[i];
+                if(b.space != space_t::FREQ) {
+                    output.status = status_t::STATUS_FREQUENCY_INVALID_INTERVAL;
+                    throw std::domain_error("ERROR: bands must be specified in "
+                            "frequency space (space_t::FREQ)");
+                }
+                if(!(T(0) <= b.start && b.start <= b.stop && b.stop <= pi) ||
+                        (i > 0u && !(fbands[i-1u].stop < b.start))) {
+                    output.status = status_t::STATUS_FREQUENCY_INVALID_INTERVAL;
+                    throw std::domain_error("ERROR: bands must be sorted, "
+                            "non-overlapping and contained in [0, pi]");
+                }
+                if(!b.amplitude || !b.weight)
+                    throw std::domain_error("ERROR: every band needs an amplitude "
+                            "and a weight function");
+                if(b.part.empty())
+                    b.part = {b.start, b.stop};
+            }
+
             if(n % 2 != 0) {
-                if(f[f.size()-1u] == 1 && a[a.size()-1u] != 0) {
+                /* A type II filter has a zero at Nyquist, so a nonzero target
+                 * there cannot be met: promote to type I as the flat-vector
+                 * overload always has. */
+                band_t<T>& last = fbands.back();
+                if(last.stop >= pi * T(0.9999) &&
+                        last.amplitude(space_t::FREQ, last.stop) != T(0)) {
                     std::cerr << "WARNING: gain at Nyquist frequency different from 0.\n"
                         << "Increasing the number of taps by one and passing to a "
                         << "type I filter" << std::endl;
@@ -805,85 +905,35 @@ namespace pm {
                 }
             }
             std::size_t deg = n / 2;
-            if(n % 2 == 0) {            // type I filter
-                for(std::size_t i{0u}; i < fbands.size(); ++i) {
-                    fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][0u]]));
-                    for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
-                        fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][j]+1u]));
-                    }
-                }
-                for(std::size_t i{0u}; i < fbands.size(); ++i) {
-                    fbands[i].start = fbands[i].part[0u];
-                    fbands[i].stop  = fbands[i].part[fbands[i].part.size()-1u];
-                    fbands[i].space = space_t::FREQ;
 
-                    fbands[i].amplitude = [i, &a, &bIdx, &fbands](space_t space, T x) -> T {
-                        if(space == space_t::CHEBY)
-                            x = pmmath::acos(x);
-                        for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
-                            if(fbands[i].part[j]*(1.0-1e-12) <= x && 
-                            x <= fbands[i].part[j+1u]*(1.0+1e-12)) {
-                                if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
-                                    return ((x-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] -
-                                            (x-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
-                                            (fbands[i].part[j+1u] - fbands[i].part[j]);
-                                } else {
-                                    return a[2u*bIdx[i][j]];
-                                }
-                            }
-                        }
-                        // this should never happen
-                        return a[2u*bIdx[i][0u]];
-                    };
-                    fbands[i].weight = [i, &w, &bIdx](space_t, T x) -> T {
-                        return w[bIdx[i][0u]];
-                    };
-                }
-            } else {                    // type II filter
-                for(std::size_t i{0u}; i < fbands.size(); ++i) {
-                    fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][0u]]));
-                    for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
-                        if(f[2u*bIdx[i][j]+1u] == 1.0) {
-                            if(f[2u*bIdx[i][j]] < 0.9999)
-                                fbands[i].part.push_back(T(pmmath::const_pi<T>() * T(0.9999)));
-                            else
-                                fbands[i].part.push_back(T(pmmath::const_pi<T>() * 
-                                                        ((f[2u*bIdx[i][j]]+1u) / 2)));
-                        } else {
-                            fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][j]+1u]));
-                        }
-                    }
-                }
-                for(std::size_t i{0u}; i < fbands.size(); ++i) {
-                    fbands[i].start = fbands[i].part[0u];
-                    fbands[i].stop  = fbands[i].part[fbands[i].part.size()-1u];
-                    fbands[i].space = space_t::FREQ;
+            if(n % 2 != 0) {
+                /* Type II: H(omega) = cos(omega/2) * P(omega).  Wrap each band's
+                 * amplitude and weight so exchange() sees P(omega), and clamp any
+                 * band stop at Nyquist away from pi where cos(omega/2) -> 0. */
+                for(auto& b : fbands) {
+                    if(b.stop >= pi * T(0.9999))
+                        b.stop = b.part.back() = (b.start < pi * T(0.9999))
+                            ? pi * T(0.9999)
+                            : (b.start + pi) / 2;
 
-                    fbands[i].amplitude = [i, &a, &bIdx, &fbands](space_t space, T x) -> T {
+                    auto user_amp = b.amplitude;
+                    auto user_wt  = b.weight;
+                    b.amplitude = [user_amp](space_t space, T x) -> T {
                         T nx = x;
                         if(space == space_t::CHEBY)
                             nx = pmmath::acos(x);
-                        for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
-                            if(fbands[i].part[j]*(1.0-1e-12) <= nx && 
-                            nx <= fbands[i].part[j+1u]*(1.0+1e-12)) {
-                                if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
-                                    return ((nx-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] -
-                                            (nx-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
-                                            (fbands[i].part[j+1u] - fbands[i].part[j]) / 
-                                            pmmath::cos(nx/2);
-                                }
-                            }
-                        }
+                        T a = user_amp(space, x);
                         if(space == space_t::FREQ)
-                            return a[2u*bIdx[i][0u]] / pmmath::cos(x/2);
+                            return a / pmmath::cos(nx/2);
                         else
-                            return a[2u*bIdx[i][0u]] / pmmath::sqrt((x+1)/2);
+                            return a / pmmath::sqrt((x+1)/2);
                     };
-                    fbands[i].weight = [i, &w, &bIdx](space_t space, T x) -> T {
+                    b.weight = [user_wt](space_t space, T x) -> T {
+                        T w = user_wt(space, x);
                         if(space == space_t::FREQ)
-                            return pmmath::cos(x/2) * w[bIdx[i][0u]];
+                            return pmmath::cos(x/2) * w;
                         else
-                            return pmmath::sqrt((x+1)/2) * w[bIdx[i][0u]];
+                            return pmmath::sqrt((x+1)/2) * w;
                     };
                 }
             }
@@ -1505,6 +1555,15 @@ namespace pm {
                 init_t rstrategy,
                 unsigned long prec);
 
+    template pmoutput_t<double> firpm<double>(std::size_t n,
+                std::vector<band_t<double>> fbands,
+                double eps,
+                std::size_t nmax,
+                init_t strategy,
+                std::size_t depth,
+                init_t rstrategy,
+                unsigned long prec);
+
     template pmoutput_t<double> firpmRS<double>(std::size_t n,
                 std::vector<double>const& f,
                 std::vector<double>const& a,
@@ -1583,6 +1642,15 @@ namespace pm {
                 init_t rstrategy,
                 unsigned long prec);
 
+    template pmoutput_t<long double> firpm<long double>(std::size_t n,
+                std::vector<band_t<long double>> fbands,
+                double eps,
+                std::size_t nmax,
+                init_t strategy,
+                std::size_t depth,
+                init_t rstrategy,
+                unsigned long prec);
+
     template pmoutput_t<long double> firpmRS<long double>(std::size_t n,
                 std::vector<long double>const& f,
                 std::vector<long double>const& a,
@@ -1654,6 +1722,15 @@ namespace pm {
                 std::vector<mpfr::mpreal>const& a,
                 std::vector<mpfr::mpreal>const& w,
                 filter_t type,
+                double eps,
+                std::size_t nmax,
+                init_t strategy,
+                std::size_t depth,
+                init_t rstrategy,
+                unsigned long prec);
+
+    template pmoutput_t<mpfr::mpreal> firpm<mpfr::mpreal>(std::size_t n,
+                std::vector<band_t<mpfr::mpreal>> fbands,
                 double eps,
                 std::size_t nmax,
                 init_t strategy,

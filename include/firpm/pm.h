@@ -232,6 +232,38 @@ namespace pm {
                 init_t rstrategy = init_t::UNIFORM,
                 unsigned long prec = 165ul);
 
+    /*! Parks-McClellan routine for implementing type I and II FIR filters,
+    * accepting pre-built band specifications with arbitrary callable amplitude
+    * and weight functions.  This is the primary implementation: the flat-vector
+    * firpm(n, f, a, w) overload constructs bands and delegates here.  Callers
+    * supply one band_t<T> per band with amplitude and weight expressing the true
+    * desired frequency response; the cos(omega/2) basis change for type II is
+    * applied internally.  Bands must be sorted, non-overlapping and contained
+    * in [0, pi]; an empty partition vector is taken to be {start, stop}.  As
+    * with the flat-vector overload, an odd n whose last band has a nonzero
+    * amplitude at Nyquist is promoted to the type I filter of order n+1.
+    * @param[in] n filter order; n+1 coefficients are returned.  Even n gives
+    *   type I, odd n gives type II.
+    * @param[in] fbands frequency-space band specifications (space_t::FREQ)
+    * @param[in] eps convergence threshold
+    * @param[in] nmax CPR degree per subinterval
+    * @param[in] strategy initialization strategy: UNIFORM, SCALING, or AFP
+    * @param[in] depth scaling levels (used when strategy is SCALING)
+    * @param[in] rstrategy initialization strategy for the smallest-order filter
+    *   when SCALING is used
+    * @param[in] prec MPFR precision in bits (ignored for double/long double)
+    * @return pmoutput_t with h containing the full n+1 tap vector
+    */
+    template<typename T>
+    pmoutput_t<T> firpm(std::size_t n,
+                std::vector<band_t<T>> fbands,
+                double eps = 0.01,
+                std::size_t nmax = 4u,
+                init_t strategy = init_t::UNIFORM,
+                std::size_t depth = 0u,
+                init_t rstrategy = init_t::UNIFORM,
+                unsigned long prec = 165ul);
+
     /*! Parks-McClellan routine for implementing type I and II FIR filters. This routine uses 
     * reference scaling by default and is just a wrapper over the <tt>firpm</tt>.
     * @param[in] n \f$n+1\f$ denotes the number of coefficients of the final transfer function. 
