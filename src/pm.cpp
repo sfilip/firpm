@@ -372,7 +372,7 @@ namespace pm {
 
         std::vector<std::vector<T>> pExs(subIntervals.size());
         #pragma omp parallel for
-        for (std::size_t i = 0u; i < subIntervals.size(); ++i)
+        for(std::ptrdiff_t i = 0; i < std::ssize(subIntervals); ++i)
         {
             #ifdef HAVE_MPFR
                 mpfr_prec_t prevPrec = mpfr::mpreal::get_default_prec();
@@ -421,7 +421,7 @@ namespace pm {
         std::size_t startingOffset = potentialExtrema.size();
         potentialExtrema.resize(potentialExtrema.size() + pEx.size());
         #pragma omp parallel for
-        for(std::size_t i = 0u; i < pEx.size(); ++i)
+        for(std::ptrdiff_t i = 0; i < std::ssize(pEx); ++i)
         {
             #ifdef HAVE_MPFR
                 mpfr_prec_t prevPrec = mpfr::mpreal::get_default_prec();
