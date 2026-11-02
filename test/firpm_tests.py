@@ -13,8 +13,12 @@ import firpm
     (2003, 0.1, 0.105, 0.1, -90),
 ])
 def test_lpf_spectrum(numtaps, fpass, fstop, ripple, attenuation):
+    # Around 2000 taps the uniform initial reference leaves the leveled error
+    # below double-precision noise, so whether the exchange converges depends
+    # on libm rounding. Use reference scaling there, as the C++ tests do.
+    kwargs = dict(strategy=firpm.Strategy.SCALING, depth=1) if numtaps > 2000 else {}
     h = firpm.firpm(numtaps - 1, [0.0, fpass, fstop, 1.0],
-                    [1.0, 1.0, 0.0, 0.0], [1.0, 10.0])
+                    [1.0, 1.0, 0.0, 0.0], [1.0, 10.0], **kwargs)
 
     # Spectrum in dB, against frequency normalized to Nyquist
     hdb = 20 * np.log10(np.abs(np.fft.fft(h)))
