@@ -52,3 +52,19 @@ def test_lpf_spectrum(request, n, fpass, fstop, ripple, attenuation):
 
     # Raise deferred exception if we failed
     assert success
+
+
+def test_narrow_band_reference_allocation():
+    # Four bands whose widths round to 6 + 6 + 4 initial references used to
+    # leave the narrow last band with none and corrupt the reference set.
+    f = [0.0, 0.23, 0.3, 0.53, 0.6, 0.74, 0.8, 0.8000001]
+    a = [1, 1, 0, 0, 1, 1, 0, 0]
+    w = [1.0, 1.0, 1.0, 1.0]
+    h = np.array(pyfirpm.firpm(28, f, a, w))
+    assert len(h) == 29 and np.all(np.isfinite(h))
+    H = np.abs(np.fft.fft(h, 8192))[:4097]
+    fr = np.linspace(0, 1, 4097)
+    for i in range(4):
+        m = (fr >= f[2*i]) & (fr <= f[2*i+1])
+        if m.any():
+            assert np.max(np.abs(H[m] - a[2*i])) < 0.1

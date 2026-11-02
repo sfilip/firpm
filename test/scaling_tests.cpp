@@ -976,3 +976,80 @@ TYPED_TEST(firpm_issues_test, partition2) {
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
 }
+// Reference allocation in pm::uniform(): the per-band counts must sum to the
+// requested size, every band of nonzero width must keep both of its edges and
+// the references must be non-decreasing.  The first case used to hand the
+// narrow fourth band zero references (6 + 6 + 4 already exhausted the 16) and
+// the fill loop then ran off the end of omega.
+TYPED_TEST(firpm_issues_test, uniformallocation)
+{
+#ifdef HAVE_MPFR
+    mpfr::mpreal::set_default_prec(165ul);
+#endif
+    using T = typename TestFixture::T;
+    const T pi = pm::pmmath::const_pi<T>();
+
+    auto makeBands = [&](std::vector<double> const& f) {
+        std::vector<pm::band_t<T>> bands(f.size() / 2u);
+        for(std::size_t i{0u}; i < bands.size(); ++i) {
+            bands[i].start = pi * T(f[2u*i]);
+            bands[i].stop  = pi * T(f[2u*i+1u]);
+            bands[i].space = pm::space_t::FREQ;
+        }
+        return bands;
+    };
+
+    std::vector<std::pair<std::vector<double>, std::size_t>> cases = {
+        {{0.0, 0.23, 0.3, 0.53, 0.6, 0.74, 0.8, 0.8000001}, 16u},   // narrow last band
+        {{0.0, 0.001, 0.1, 1.0}, 12u},                               // narrow first band
+        {{0.0, 0.2, 0.3, 0.5, 0.6, 0.8, 0.9, 0.9}, 14u},             // equal widths, point band
+        {{0.0, 0.4, 0.5, 1.0}, 52u},                                 // plain lowpass
+    };
+    for(auto const& c : cases) {
+        auto bands = makeBands(c.first);
+        std::vector<T> omega;
+        pm::uniform(omega, bands, c.second);
+
+        ASSERT_EQ(omega.size(), c.second);
+        std::size_t total{0u};
+        for(auto const& b : bands) {
+            total += b.xs;
+            if(b.stop > b.start)
+                EXPECT_GE(b.xs, 2u);
+            else
+                EXPECT_EQ(b.xs, 1u);
+        }
+        EXPECT_EQ(total, c.second);
+
+        std::size_t offset{0u};
+        for(auto const& b : bands) {
+            EXPECT_EQ(omega[offset], b.start);
+            EXPECT_EQ(omega[offset + b.xs - 1u], b.stop);
+            offset += b.xs;
+        }
+        for(std::size_t i{1u}; i < omega.size(); ++i)
+            EXPECT_LE(omega[i-1u], omega[i]);
+    }
+
+    // Degenerate requests are rejected instead of indexing out of range.
+    {
+        auto bands = makeBands({0.1, 0.1, 0.5, 0.5});   // only point bands
+        std::vector<T> omega;
+        EXPECT_THROW(pm::uniform(omega, bands, 4u), std::domain_error);
+    }
+    {
+        auto bands = makeBands({0.0, 0.4, 0.5, 1.0});   // fewer references than edges
+        std::vector<T> omega;
+        EXPECT_THROW(pm::uniform(omega, bands, 3u), std::domain_error);
+    }
+
+    // The same four-band specification end to end.
+    {
+        std::vector<T> f{0.0, 0.23, 0.3, 0.53, 0.6, 0.74, 0.8, 0.8000001};
+        std::vector<T> a{1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
+        std::vector<T> w{1.0, 1.0, 1.0, 1.0};
+        auto output = firpm<T>(28u, f, a, w);
+        ASSERT_EQ(output.h.size(), 29u);
+        ASSERT_LT(output.q, 1e-2);
+    }
+}

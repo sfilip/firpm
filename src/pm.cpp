@@ -103,39 +103,48 @@ namespace pm {
     void uniform(std::vector<T>& omega,
             std::vector<band_t<T>>& B, std::size_t n)
     {
-        T avgDist = 0;
         omega.resize(n);
 
         std::vector<T> bandwidths(B.size());
         std::vector<std::size_t> nonPointBands;
+        T totalWidth = 0;
         for(std::size_t i{0u}; i < B.size(); ++i) {
             bandwidths[i] = B[i].stop - B[i].start;
             if(bandwidths[i] > 0.0)
             {
                 nonPointBands.push_back(i);
-                avgDist += bandwidths[i];
+                totalWidth += bandwidths[i];
             }
             B[i].xs = 1u;
         }
-
-        avgDist /= (omega.size() - B.size());
         std::size_t npSize = nonPointBands.size();
 
-        B[nonPointBands[npSize - 1u]].xs = omega.size() - (B.size() - npSize);
+        // Every band keeps its start as a reference and a band of nonzero
+        // width also its stop; the references left over are shared among the
+        // nonzero-width bands in proportion to bandwidth with a largest-
+        // remainder rule, so the counts always sum to exactly omega.size().
+        // (Rounding each share independently and giving the last band whatever
+        // was left could go negative, which underflowed as a size_t.)
+        if(omega.size() < B.size() + npSize || (npSize == 0u && omega.size() > B.size()))
+            throw std::domain_error("ERROR: cannot distribute the references over the bands");
+        std::size_t remaining = omega.size() - B.size() - npSize;
+        const std::size_t spare = remaining;
+        std::vector<T> frac(npSize);
+        std::vector<std::size_t> order(npSize);
+        for(std::size_t k{0u}; k < npSize; ++k) {
+            T share = bandwidths[nonPointBands[k]] / totalWidth * T(spare);
+            long fl = pmmath::floor(share);
+            B[nonPointBands[k]].xs = 2u + fl;
+            remaining -= fl;
+            frac[k] = share - T(fl);
+            order[k] = k;
+        }
+        std::stable_sort(order.begin(), order.end(),
+                [&frac](std::size_t a, std::size_t b) { return frac[a] > frac[b]; });
+        for(std::size_t k{0u}; remaining > 0u; ++k, --remaining)
+            ++B[nonPointBands[order[k % npSize]]].xs;
+
         T buffer;
-        buffer = bandwidths[nonPointBands[0]] / avgDist;
-
-        if (npSize > 1) {
-            B[nonPointBands[0]].xs = pmmath::round(buffer) + 1;
-            B[nonPointBands[npSize - 1u]].xs -= B[nonPointBands[0]].xs;
-        }
-
-        for(std::size_t i{1u}; i < npSize - 1u; ++i) {
-            buffer = bandwidths[nonPointBands[i]] / avgDist;
-            B[nonPointBands[i]].xs = pmmath::round(buffer) + 1;
-            B[nonPointBands[npSize - 1u]].xs -= B[nonPointBands[i]].xs;
-        }
-
 
         std::size_t startIndex = 0ul;
         for(std::size_t i{0ul}; i < B.size(); ++i) {
@@ -889,6 +898,14 @@ namespace pm {
                             "and a weight function");
                 if(b.part.empty())
                     b.part = {b.start, b.stop};
+            }
+            bool pointBands{true};
+            for(auto const& b : fbands)
+                if(b.stop > b.start)
+                    pointBands = false;
+            if(pointBands) {
+                output.status = status_t::STATUS_FREQUENCY_INVALID_INTERVAL;
+                throw std::domain_error("ERROR: All frequency band intervals are points");
             }
 
             if(n % 2 != 0) {

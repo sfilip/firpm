@@ -41,6 +41,7 @@ namespace pm {
 		template<typename T> bool isnan(T);
 
 		template<typename T> long round(T);
+		template<typename T> long floor(T);
 
 		template<typename T> T const_pi(void);
 
@@ -67,6 +68,7 @@ namespace pm {
 		template<> inline bool isnan<double>(double x) { return std::isnan(x); };
 
 		template<> inline long round<double>(double x) { return std::round(x); };
+		template<> inline long floor<double>(double x) { return std::floor(x); };
 
 		template<> inline double const_pi<double>(void) { return M_PI; };
 
@@ -93,6 +95,7 @@ namespace pm {
 		template<> inline bool isnan<long double>(long double x) { return std::isnan(x); };
 
 		template<> inline long round<long double>(long double x) { return std::round(x); };
+		template<> inline long floor<long double>(long double x) { return std::floor(x); };
 
 		template<> inline long double const_pi<long double>(void) { return M_PI; };
 
@@ -120,6 +123,7 @@ namespace pm {
 		template<> inline bool isnan<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::isnan(x); };
 
 		template<> inline long round<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::round(x).toLong(); };
+		template<> inline long floor<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::floor(x).toLong(); };
 
 		template<> inline mpfr::mpreal const_pi<mpfr::mpreal>(void) { return mpfr::const_pi(); };
 #endif
