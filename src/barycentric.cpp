@@ -10,39 +10,22 @@ namespace pm {
     void baryweights(std::vector<T>& w,
             std::vector<T>& x)
     {
-        if(x.size() > 500u)
+        // w[i] = 1 / prod_{j != i} 2 (x[i] - x[j]).  The product can leave
+        // the exponent range of T, so its exponent is carried separately.
+        #pragma omp parallel for
+        for(std::ptrdiff_t i = 0; i < std::ssize(x); ++i)
         {
-            for(std::size_t i{0u}; i < x.size(); ++i)
+            T m = 1;
+            int e = 0;
+            for(std::ptrdiff_t j = 0; j < std::ssize(x); ++j)
             {
-                T one = 1;
-                T denom = 0.0;
-                T xi = x[i];
-                for(std::size_t j{0u}; j < x.size(); ++j)
-                {
-                    if (j != i) {
-                        denom += pmmath::log(((xi - x[j] > 0) ? (xi - x[j]) : (x[j] - xi)));
-                        one *= ((xi - x[j] > 0) ? 1 : -1);
-                    }
+                if (j != i) {
+                    int k;
+                    m = pmmath::frexp(m * ((x[i] - x[j]) * 2), &k);
+                    e += k;
                 }
-                w[i] = one / pmmath::exp(denom + pmmath::log(2.0)* (x.size() - 1));
             }
-        }
-        else
-        {
-            std::size_t step = (x.size() - 2) / 15 + 1;
-            T one = 1u;
-            for(std::size_t i{0u}; i < x.size(); ++i)
-            {
-                T denom = 1.0;
-                T xi = x[i];
-                for(std::size_t j{0u}; j < step; ++j)
-                {
-                    for(std::size_t k{j}; k < x.size(); k += step)
-                        if (k != i)
-                            denom *= ((xi - x[k]) * 2);
-                }
-                w[i] = one / denom;
-            }
+            w[i] = pmmath::ldexp(1 / m, -e);
         }
     }
 
@@ -218,27 +201,11 @@ namespace pm {
             std::vector<band_t<long double>>& bands);
 
 #ifdef HAVE_MPFR
-    // separate implementation for the MPFR version; it is much faster and
-    // the higher precision should usually compensate for any eventual
-    // ill-conditioning
-    template<> void baryweights<mpfr::mpreal>(std::vector<mpfr::mpreal>& w,
-            std::vector<mpfr::mpreal>& x)
-    {
-        std::size_t step = (x.size() - 2u) / 15 + 1;
-        mpfr::mpreal one = 1u;
-        for(std::size_t i{0u}; i < x.size(); ++i)
-        {
-            mpfr::mpreal denom = 1.0;
-            mpfr::mpreal xi = x[i];
-            for(std::size_t j{0u}; j < step; ++j)
-            {
-                for(std::size_t k{j}; k < x.size(); k += step)
-                    if (k != i)
-                        denom *= ((xi - x[k]) << 1);
-            }
-            w[i] = one / denom;
-        }
-    }
+    // The generic template serves mpreal: its worker threads start at the
+    // default precision, but every operation takes the larger precision of
+    // its operands, so the weights come out at the precision of x.
+    template void baryweights<mpfr::mpreal>(std::vector<mpfr::mpreal>& w,
+            std::vector<mpfr::mpreal>& x);
     template void compdelta<mpfr::mpreal>(mpfr::mpreal& delta,
             std::vector<mpfr::mpreal>& x, std::vector<band_t<mpfr::mpreal>>& bands);
 
