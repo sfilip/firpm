@@ -12,122 +12,43 @@
 // Copyright (C) 2019  G. Smecher
 
 #include <cmath>
+#include <numbers>
 #ifdef HAVE_MPFR
 	#include "mpreal.h"
 #endif
 
 namespace pm {
-
 	namespace pmmath {
-		template<typename T> T sin(T);
-		template<typename T> T cos(T);
-		template<typename T> T tan(T);
+		/* Unqualified calls resolve by argument-dependent lookup: std:: for
+		 * double and long double, mpfr:: for mpreal. */
+		template<typename T> T sin(T x) { using std::sin; return sin(x); };
+		template<typename T> T cos(T x) { using std::cos; return cos(x); };
+		template<typename T> T tan(T x) { using std::tan; return tan(x); };
+		template<typename T> T asin(T x) { using std::asin; return asin(x); };
+		template<typename T> T acos(T x) { using std::acos; return acos(x); };
+		template<typename T> T atan(T x) { using std::atan; return atan(x); };
+		template<typename T> T log(T x) { using std::log; return log(x); };
+		template<typename T> T exp(T x) { using std::exp; return exp(x); };
+		template<typename T> T sqrt(T x) { using std::sqrt; return sqrt(x); };
+		template<typename T> T fabs(T x) { using std::fabs; return fabs(x); };
+		template<typename T> T pow(T x, T y) { using std::pow; return pow(x, y); };
+		template<typename T> T fmax(T x, T y) { using std::fmax; return fmax(x, y); };
+		template<typename T> T fmin(T x, T y) { using std::fmin; return fmin(x, y); };
+		template<typename T> bool signbit(T x) { using std::signbit; return signbit(x); };
+		template<typename T> bool isfinite(T x) { using std::isfinite; return isfinite(x); };
+		template<typename T> bool isnan(T x) { using std::isnan; return isnan(x); };
+		template<typename T> long round(T x) { using std::round; return static_cast<long>(round(x)); };
+		template<typename T> long floor(T x) { using std::floor; return static_cast<long>(floor(x)); };
+		/* x = m * 2^e with |m| in [0.5, 1): mpreal supplies frexp(x, int*)
+		 * and ldexp(x, mp_exp_t), both found by ADL. */
+		template<typename T> T frexp(T x, int* e) { using std::frexp; return frexp(x, e); };
+		template<typename T> T ldexp(T x, int e) { using std::ldexp; return ldexp(x, e); };
 
-		template<typename T> T asin(T);
-		template<typename T> T acos(T);
-		template<typename T> T atan(T);
-
-		template<typename T> T log(T);
-		template<typename T> T exp(T);
-		template<typename T> T sqrt(T);
-		template<typename T> T pow(T, T);
-
-		template<typename T> T fabs(T);
-		template<typename T> T fmax(T, T);
-		template<typename T> T fmin(T, T);
-
-		template<typename T> bool signbit(T);
-		template<typename T> bool isfinite(T);
-		template<typename T> bool isnan(T);
-
-		template<typename T> long round(T);
-		template<typename T> long floor(T);
-
-		template<typename T> T const_pi(void);
-
-		/* Specializations: double precision */
-		template<> inline double sin<double>(double x) { return std::sin(x); };
-		template<> inline double cos<double>(double x) { return std::cos(x); };
-		template<> inline double tan<double>(double x) { return std::tan(x); };
-
-		template<> inline double asin<double>(double x) { return std::asin(x); };
-		template<> inline double acos<double>(double x) { return std::acos(x); };
-		template<> inline double atan<double>(double x) { return std::atan(x); };
-
-		template<> inline double log<double>(double x) { return std::log(x); };
-		template<> inline double exp<double>(double x) { return std::exp(x); };
-		template<> inline double sqrt<double>(double x) { return std::sqrt(x); };
-		template<> inline double pow<double>(double x, double y) { return std::pow(x, y); };
-
-		template<> inline double fabs<double>(double x) { return std::fabs(x); };
-		template<> inline double fmax<double>(double x, double y) { return std::fmax(x, y); };
-		template<> inline double fmin<double>(double x, double y) { return std::fmin(x, y); };
-
-		template<> inline bool signbit<double>(double x) { return std::signbit(x); };
-		template<> inline bool isfinite<double>(double x) { return std::isfinite(x); };
-		template<> inline bool isnan<double>(double x) { return std::isnan(x); };
-
-		template<> inline long round<double>(double x) { return std::round(x); };
-		template<> inline long floor<double>(double x) { return std::floor(x); };
-
-		template<> inline double const_pi<double>(void) { return M_PI; };
-
-		/* Specializations: long double precision */
-		template<> inline long double sin<long double>(long double x) { return sinl(x); };
-		template<> inline long double cos<long double>(long double x) { return cosl(x); };
-		template<> inline long double tan<long double>(long double x) { return tanl(x); };
-
-		template<> inline long double asin<long double>(long double x) { return asinl(x); };
-		template<> inline long double acos<long double>(long double x) { return acosl(x); };
-		template<> inline long double atan<long double>(long double x) { return atanl(x); };
-
-		template<> inline long double log<long double>(long double x) { return logl(x); };
-		template<> inline long double exp<long double>(long double x) { return expl(x); };
-		template<> inline long double sqrt<long double>(long double x) { return sqrtl(x); };
-		template<> inline long double pow<long double>(long double x, long double y) { return powl(x, y); };
-
-		template<> inline long double fabs<long double>(long double x) { return fabsl(x); };
-		template<> inline long double fmax<long double>(long double x, long double y) { return fmaxl(x, y); };
-		template<> inline long double fmin<long double>(long double x, long double y) { return fminl(x, y); };
-
-		template<> inline bool signbit<long double>(long double x) { return std::signbit(x); };
-		template<> inline bool isfinite<long double>(long double x) { return std::isfinite(x); };
-		template<> inline bool isnan<long double>(long double x) { return std::isnan(x); };
-
-		template<> inline long round<long double>(long double x) { return std::round(x); };
-		template<> inline long floor<long double>(long double x) { return std::floor(x); };
-
-		template<> inline long double const_pi<long double>(void) { return M_PI; };
-
-		/* Specialization: multiple precision mpreal */
+		template<typename T> T const_pi(void) { return std::numbers::pi_v<T>; };
 #ifdef HAVE_MPFR
-		template<> inline mpfr::mpreal sin<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::sin(x); };
-		template<> inline mpfr::mpreal cos<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::cos(x); };
-		template<> inline mpfr::mpreal tan<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::tan(x); };
-
-		template<> inline mpfr::mpreal asin<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::asin(x); };
-		template<> inline mpfr::mpreal acos<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::acos(x); };
-		template<> inline mpfr::mpreal atan<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::atan(x); };
-
-		template<> inline mpfr::mpreal log<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::log(x); };
-		template<> inline mpfr::mpreal exp<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::exp(x); };
-		template<> inline mpfr::mpreal sqrt<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::sqrt(x); };
-		template<> inline mpfr::mpreal pow<mpfr::mpreal>(mpfr::mpreal x, mpfr::mpreal y) { return mpfr::pow(x, y); };
-
-		template<> inline mpfr::mpreal fabs<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::abs(x); };
-		template<> inline mpfr::mpreal fmax<mpfr::mpreal>(mpfr::mpreal x, mpfr::mpreal y) { return mpfr::max(x, y); };
-		template<> inline mpfr::mpreal fmin<mpfr::mpreal>(mpfr::mpreal x, mpfr::mpreal y) { return mpfr::min(x, y); };
-
-		template<> inline bool signbit<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::signbit(x); };
-		template<> inline bool isfinite<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::isfinite(x); };
-		template<> inline bool isnan<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::isnan(x); };
-
-		template<> inline long round<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::round(x).toLong(); };
-		template<> inline long floor<mpfr::mpreal>(mpfr::mpreal x) { return mpfr::floor(x).toLong(); };
-
+		/* Computed at the current default precision. */
 		template<> inline mpfr::mpreal const_pi<mpfr::mpreal>(void) { return mpfr::const_pi(); };
 #endif
-
 	} // namespace pmmath
 } // namespace pm
 

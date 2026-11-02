@@ -145,7 +145,7 @@ namespace pm {
     * @code
     * // frequency band specification
     * std::vector<band_t<double>> fbands(2);
-    * double pi = M_PI;
+    * double pi = std::numbers::pi;
     *
     * fbands[0].start = 0;
     * fbands[0].stop = pi * 0.4;

@@ -25,14 +25,14 @@ namespace pm {
                 out[i].space = space_t::CHEBY;
                 for(std::size_t j{0}; j < out[i].part.size(); ++j)
                     out[i].part[j] = pmmath::cos(out[i].part[j]);
-                std::sort(begin(out[i].part), end(out[i].part));
+                std::ranges::sort(out[i].part);
             } else {
                 out[i].start = pmmath::acos(in[n - i].stop);
                 out[i].stop  = pmmath::acos(in[n - i].start);
                 out[i].space = space_t::FREQ;
                 for(std::size_t j{0}; j < out[i].part.size(); ++j)
                     out[i].part[j] = pmmath::acos(out[i].part[j]);
-                std::sort(begin(out[i].part), end(out[i].part));
+                std::ranges::sort(out[i].part);
             }
         }
     }

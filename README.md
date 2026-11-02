@@ -14,7 +14,7 @@ They have now been merged into one template version.
 ## Installation instructions
 
 This code has been tested on recent Mac OS X (>= 10.14) and Linux installations.
-In order to compile and use it, a recent C++ compiler with C++14 and OpenMP support is necessary (recent g++ and clang compilers have been shown to work). An active internet
+In order to compile and use it, a recent C++ compiler with C++20 and OpenMP support is necessary (recent g++ and clang compilers have been shown to work). An active internet
 connection and some external utilities and libraries must also be installed and
 available on your system search paths:
 * CMake version 3.16 or newer

@@ -7,7 +7,6 @@
 #include "firpm/pmmath.h"
 #include <set>
 #include <fstream>
-#include <sstream>
 #include <algorithm>
 #include <stdexcept>
 
@@ -54,11 +53,7 @@ namespace pm {
         for(Eigen::Index i{0}; i < y.rows(); ++i)
             if(y(i) != 0.0)
                 points.push_back(mesh[i]);
-        std::sort(points.begin(), points.end(),
-                [](const T& lhs,
-                const T& rhs) {
-                    return lhs < rhs;
-                });
+        std::ranges::sort(points);
     }
 
     template<typename T>
@@ -82,7 +77,7 @@ namespace pm {
         std::vector<T> cp;
         equipts(cp, deg + 2u);
         cos(cp, cp);
-        std::sort(begin(cp), end(cp));
+        std::ranges::sort(cp);
         for(std::size_t i{0u}; i < cb.size(); ++i)
         {
             if(cb[i].start != cb[i].stop)
@@ -251,7 +246,7 @@ namespace pm {
         }
 
         newX.resize(newXSize);
-        std::sort(newX.begin(), newX.end());
+        std::ranges::sort(newX);
         std::size_t total = 0u;
         for(std::size_t i{0u}; i < newX.size(); ++i)
         {
@@ -287,7 +282,7 @@ namespace pm {
 
         std::set<T> s(splitpts.begin(), splitpts.end());
         splitpts.assign(s.begin(), s.end());
-        std::sort(splitpts.begin(), splitpts.end());
+        std::ranges::sort(splitpts);
 
         std::size_t bidx{0u};
         for(std::size_t i{0u}; i < splitpts.size()-1u; ++i) {
@@ -442,11 +437,7 @@ namespace pm {
         }
 
         // sort list of potential extrema in increasing order
-        std::sort(potentialExtrema.begin(), potentialExtrema.end(),
-                [](const std::pair<T, T>& lhs,
-                const std::pair<T, T>& rhs) {
-                    return lhs.first < rhs.first;
-                });
+        std::ranges::sort(potentialExtrema, {}, &std::pair<T, T>::first);
 
         eigenExtrema.clear();
         std::size_t extremaIt{0u};
@@ -478,12 +469,11 @@ namespace pm {
         if(alternatingExtrema.size() < x.size())
         {
             status = status_t::STATUS_EXCHANGE_FAILURE;
-            std::stringstream message;
-            message << "ERROR: The exchange algorithm did not converge\n"
-                << "TRIGGER: Not enough alternating extrema\n"
-                << "POSSIBLE CAUSE: nmax too small\n";
             convergenceOrder = 2.0;
-            throw std::runtime_error(message.str());
+            throw std::runtime_error(
+                "ERROR: The exchange algorithm did not converge\n"
+                "TRIGGER: Not enough alternating extrema\n"
+                "POSSIBLE CAUSE: nmax too small\n");
         }
         else if (alternatingExtrema.size() > x.size())
         {
@@ -568,12 +558,11 @@ namespace pm {
         }
         if (alternatingExtrema.size() < x.size()) {
             status = status_t::STATUS_EXCHANGE_FAILURE;
-            std::stringstream message;
-            message << "ERROR: The exchange algorithm did not converge\n"
-                << "TRIGGER: Not enough alternating extrema\n"
-                << "POSSIBLE CAUSE: nmax too small\n";
             convergenceOrder = 2.0;
-            throw std::runtime_error(message.str());
+            throw std::runtime_error(
+                "ERROR: The exchange algorithm did not converge\n"
+                "TRIGGER: Not enough alternating extrema\n"
+                "POSSIBLE CAUSE: nmax too small\n");
         }
 
         for (auto& it : alternatingExtrema)
@@ -623,11 +612,7 @@ namespace pm {
         output.status = status_t::STATUS_UNKNOWN_FAILURE;
 
         std::size_t degree = x.size() - 2u;
-        std::sort(x.begin(), x.end(),
-                [](const T& lhs,
-                const T& rhs) {
-                    return lhs < rhs;
-                });
+        std::ranges::sort(x);
         std::vector<T> startX{x};
         cycle = false;
         T qp1 = 0;
@@ -690,12 +675,10 @@ namespace pm {
                     finalC, finalAlpha);
             if (!pmmath::isfinite(fv[i])) {
                 output.status = status_t::STATUS_COEFFICIENT_SET_INVALID;
-                std::stringstream message;
-                message << "ERROR: Invalid frequency response generated.\n"
-                    << "TRIGGER: infinite/NaN values in the final frequency response.\n"
-                    << "POSSIBLE CAUSE: too small numerical precision and/or a too "
-                    << "small value for nmax.";
-                throw std::runtime_error(message.str());
+                throw std::runtime_error(
+                    "ERROR: Invalid frequency response generated.\n"
+                    "TRIGGER: infinite/NaN values in the final frequency response.\n"
+                    "POSSIBLE CAUSE: too small numerical precision and/or a too small value for nmax.");
             }
         }
 
@@ -722,10 +705,8 @@ namespace pm {
 
         if(f.size() != w.size() * 2u) {
             status = status_t::STATUS_WEIGHT_VECTOR_MISMATCH;
-            std::stringstream message;
-            message << "ERROR: Weight vector size does not match the"
-                << " the number of frequency bands in the specification";
-            throw std::domain_error(message.str());
+            throw std::domain_error(
+                "ERROR: Weight vector size does not match the the number of frequency bands in the specification");
         }
 
         for(std::size_t i{0u}; i < f.size() - 1u; ++i) {
@@ -985,11 +966,9 @@ namespace pm {
                         afp(x, A, mesh);
                         if(x.size() != deg + 2u) {
                             output.status = status_t::STATUS_AFP_INVALID;
-                            std::stringstream message;
-                            message << "ERROR: AFP strategy failed to produce a valid starting "
-                                << "reference\n"
-                                << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
-                            throw std::runtime_error(message.str());
+                            throw std::runtime_error(
+                                "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                                "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                         }
                         countBand(cbands, x);
                     }
@@ -1017,12 +996,9 @@ namespace pm {
                             afp(x, A, mesh);
                             if(x.size() != sdegs[0] + 2u) {
                                 output.status = status_t::STATUS_AFP_INVALID;
-                                std::stringstream message;
-                                message << "ERROR: AFP strategy failed to produce a valid "
-                                    << "starting reference\n"
-                                    << "POSSIBLE CAUSE: badly conditioned Chebyshev "
-                                    << "Vandermonde matrix";
-                                throw std::runtime_error(message.str());
+                                throw std::runtime_error(
+                                    "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                                    "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                             }
                             countBand(cbands, x);
                         }
@@ -1035,11 +1011,9 @@ namespace pm {
                         afp(x, A, mesh);
                         if(x.size() != sdegs[0] + 2u) {
                             output.status = status_t::STATUS_AFP_INVALID;
-                            std::stringstream message;
-                            message << "ERROR: AFP strategy failed to produce a valid "
-                                << "starting reference\n"
-                                << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
-                            throw std::runtime_error(message.str());
+                            throw std::runtime_error(
+                                "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                                "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                         }
                         countBand(cbands, x);
                         output = exchange(x, cbands, eps, nmax, prec);
@@ -1059,10 +1033,9 @@ namespace pm {
                     afp(x, A, mesh);
                     if(x.size() != deg + 2u) {
                         output.status = status_t::STATUS_AFP_INVALID;
-                        std::stringstream message;
-                        message << "ERROR: AFP strategy failed to produce a valid starting reference\n"
-                            << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
-                        throw std::runtime_error(message.str());
+                        throw std::runtime_error(
+                            "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                            "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                     }
                     countBand(cbands, x);
                     output = exchange(x, cbands, eps, nmax, prec);
@@ -1360,11 +1333,9 @@ namespace pm {
                         afp(x, A, mesh);
                         if(x.size() != deg + 2u) {
                             output.status = status_t::STATUS_AFP_INVALID;
-                            std::stringstream message;
-                            message << "ERROR: AFP strategy failed to produce a valid starting "
-                                << "reference\n"
-                                << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
-                            throw std::runtime_error(message.str());
+                            throw std::runtime_error(
+                                "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                                "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                         }
                         countBand(cbands, x);
                     }
@@ -1392,10 +1363,9 @@ namespace pm {
                             afp(x, A, mesh);
                             if(x.size() != sdegs[0] + 2u) {
                                 output.status = status_t::STATUS_AFP_INVALID;
-                                std::stringstream message;
-                                message << "ERROR: AFP strategy failed to produce a valid starting "        << "reference\n"
-                                    << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
-                                throw std::runtime_error(message.str());
+                                throw std::runtime_error(
+                                    "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                                    "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                             }
                             countBand(cbands, x);
                         }
@@ -1408,10 +1378,9 @@ namespace pm {
                         afp(x, A, mesh);
                         if(x.size() != sdegs[0] + 2u) {
                             output.status = status_t::STATUS_AFP_INVALID;
-                            std::stringstream message;
-                            message << "ERROR: AFP strategy failed to produce a valid starting "            << "reference\n"
-                                << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
-                            throw std::runtime_error(message.str());
+                            throw std::runtime_error(
+                                "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                                "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                         }
                         countBand(cbands, x);
                         output = exchange(x, cbands, eps, nmax);
@@ -1431,10 +1400,9 @@ namespace pm {
                     afp(x, A, mesh);
                     if(x.size() != deg + 2u) {
                         output.status = status_t::STATUS_AFP_INVALID;
-                        std::stringstream message;
-                        message << "ERROR: AFP strategy failed to produce a valid starting reference\n"
-                            << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
-                        throw std::runtime_error(message.str());
+                        throw std::runtime_error(
+                            "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                            "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                     }
                     countBand(cbands, x);
                     output = exchange(x, cbands, eps, nmax, prec);
