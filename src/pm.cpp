@@ -319,8 +319,8 @@ namespace pm {
 
         compdelta(delta, w, x, chebyBands);
 
-        std::vector<T> C(x.size());
-        compc(C, delta, x, chebyBands);
+        std::vector<T> D(x.size()), S(x.size());
+        compref(D, S, x, chebyBands);
 
         // 3.   Use an eigenvalue solver on each subinterval to find the
         //      local extrema that are located inside the frequency bands
@@ -334,16 +334,16 @@ namespace pm {
         T extremaErrorValueRight;
         T extremaErrorValue;
         comperror(extremaErrorValue, chebyBands[0].start,
-                delta, x, C, w, chebyBands);
+                delta, x, D, S, w, chebyBands);
         potentialExtrema.push_back(std::make_pair(
                 chebyBands[0].start, extremaErrorValue));
 
         for (std::size_t i{0u}; i < chebyBands.size() - 1u; ++i)
         {
             comperror(extremaErrorValueLeft, chebyBands[i].stop,
-                    delta, x, C, w, chebyBands);
+                    delta, x, D, S, w, chebyBands);
             comperror(extremaErrorValueRight, chebyBands[i + 1].start,
-                    delta, x, C, w, chebyBands);
+                    delta, x, D, S, w, chebyBands);
             bool sgnLeft = pmmath::signbit(extremaErrorValueLeft);
             bool sgnRight = pmmath::signbit(extremaErrorValueRight);
             if (sgnLeft != sgnRight) {
@@ -364,7 +364,7 @@ namespace pm {
         }
         comperror(extremaErrorValue,
                 chebyBands[chebyBands.size() - 1u].stop,
-                delta, x, C, w, chebyBands);
+                delta, x, D, S, w, chebyBands);
         potentialExtrema.push_back(std::make_pair(
                 chebyBands[chebyBands.size() - 1u].stop,
                 extremaErrorValue));
@@ -386,7 +386,7 @@ namespace pm {
             // current subinterval
             std::vector<T> fx(Nmax + 1u);
             for (std::size_t j{0u}; j < fx.size(); ++j)
-                comperror(fx[j], siCN[j], delta, x, C, w,
+                comperror(fx[j], siCN[j], delta, x, D, S, w,
                         chebyBands);
 
             // compute the values of the CI coefficients and those of its
@@ -428,7 +428,7 @@ namespace pm {
             #endif
             T valBuffer;
             comperror(valBuffer, pEx[i],
-                    delta, x, C, w, chebyBands);
+                    delta, x, D, S, w, chebyBands);
             potentialExtrema[startingOffset + i] = std::make_pair(pEx[i], valBuffer);
             #ifdef HAVE_MPFR
                 mpfr::mpreal::set_default_prec(prevPrec);

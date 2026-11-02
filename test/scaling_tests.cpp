@@ -350,6 +350,10 @@ TYPED_TEST(firpm_scaling_test, combfir)
     std::vector<T> a = {1.0, 1.0, 0.0, 0.0};
     std::vector<T> w = {1.0, 1.0};
 
+    // From a uniform reference the leveled error of this specification
+    // starts near 1e-21, far below the rounding of the ideal response, so
+    // this case exercises the cancellation-free evaluation of delta and of
+    // the error function in compdelta() and comperror().
     std::size_t degree = 520;
     std::cout << "START Parks-McClellan with uniform initialization\n";
     auto output1 = firpm<T>(degree * 2u, f, a, w);
