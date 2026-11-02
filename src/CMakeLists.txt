@@ -14,7 +14,7 @@ else()
     include_directories (${PROJECT_INCLUDE_DIR})
 endif( MPFR_FOUND AND GMP_FOUND )
 
-add_library(firpm SHARED ${PROJECT_SRC_FILES})
+add_library(firpm ${PROJECT_SRC_FILES})
 target_link_libraries(firpm PUBLIC Eigen3::Eigen)
 
 if( MPFR_FOUND AND GMP_FOUND )

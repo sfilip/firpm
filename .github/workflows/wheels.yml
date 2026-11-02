@@ -1,0 +1,97 @@
+name: Test and build wheels
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: C++ tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libeigen3-dev libgmp-dev libmpfr-dev libmpfrc++-dev \
+              python3-dev pybind11-dev python3-pytest python3-numpy python3-scipy
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  wheels:
+    name: Wheels on ${{ matrix.os }}
+    needs: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-14, windows-latest]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pypa/cibuildwheel@v3.2.1
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}
+          path: wheelhouse/*.whl
+
+  sdist:
+    name: Source distribution
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - run: pipx run build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
+  # Runs only for pushed v* tags. PyPI trusts this workflow via Trusted
+  # Publishing, so no API token is stored in the repository.
+  publish:
+    name: Publish to PyPI
+    needs: [wheels, sdist]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/firpm
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Check the tag matches the package version
+        run: |
+          expected="dist/firpm-${GITHUB_REF_NAME#v}.tar.gz"
+          if [ ! -f "$expected" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match the version in CMakeLists.txt (found: $(ls dist/*.tar.gz))"
+            exit 1
+          fi
+
+      - uses: pypa/gh-action-pypi-publish@release/v1

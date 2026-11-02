@@ -13,6 +13,9 @@ set(doxy_main_page ${PROJECT_SOURCE_DIR}/README.md)
 #-----------------------------------------------------------------------
 list (INSERT CMAKE_MODULE_PATH 0 ${PROJECT_SOURCE_DIR}/cmake)
 
+option(BUILD_SHARED_LIBS "Build libfirpm as a shared library" ON)
+option(FIRPM_BUILD_TESTS "Build the C++ test suite (fetches googletest)" ON)
+
 find_package(OpenMP REQUIRED)
 # Eigen's config only accepts requests for its own major version.
 find_package(Eigen3 3.3 QUIET)
@@ -22,7 +25,7 @@ endif()
 find_package(GMP 6.0.0)
 find_package(MPFR 4.0.0)
 # find_package(Doxygen)
-find_package(Python COMPONENTS Interpreter Development)
+find_package(Python COMPONENTS Interpreter Development.Module)
 find_package(pybind11 CONFIG)
 
 if( MPFR_FOUND AND GMP_FOUND)
@@ -56,7 +59,10 @@ if(DOXYGEN_FOUND)
     add_subdirectory(${PROJECT_SOURCE_DIR}/doc)
 endif()
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/test)
+if(FIRPM_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(${PROJECT_SOURCE_DIR}/test)
+endif()
 
 #-----------------------------------------------------------------------
 # Python bindings
@@ -79,11 +85,13 @@ if( pybind11_FOUND )
 	set(FIRPM_PY_FILES __init__.py _firpm.pyi py.typed)
 	foreach(file ${FIRPM_PY_FILES})
 		configure_file(py/firpm/${file} ${FIRPM_PY_DIR}/${file} COPYONLY)
+		install(FILES py/firpm/${file} DESTINATION firpm COMPONENT python)
 	endforeach()
+	install(TARGETS _firpm DESTINATION firpm COMPONENT python)
 endif()
 
 
-if( pybind11_FOUND AND Python_FOUND )
+if( FIRPM_BUILD_TESTS AND pybind11_FOUND AND Python_FOUND )
 	# No cache, so that running the tests leaves nothing in the source tree.
 	add_test(NAME PythonTests
 		COMMAND ${Python_EXECUTABLE} -m pytest -p no:cacheprovider
