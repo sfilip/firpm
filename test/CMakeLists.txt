@@ -14,7 +14,7 @@ set(PROJECT_TEST_SCALING ${PROJECT_NAME_STR}_scaling_test)
 set(PROJECT_TEST_EXTENSIVE ${PROJECT_NAME_STR}_extensive_test)
 
 set(CMAKE_CTEST_COMMAND ctest -V)
-include_directories(${GTEST_INCLUDE_DIR} ${COMMON_INCLUDES} ${EIGEN3_INCLUDE_DIRS})
+include_directories(${GTEST_INCLUDE_DIR} ${COMMON_INCLUDES})
 
 set(TEST_SRC_SCALING scaling_tests.cpp)
 set(TEST_SRC_EXTENSIVE ${PROJECT_SOURCE_DIR}/test/extensive_tests.cpp)

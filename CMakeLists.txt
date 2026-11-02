@@ -14,7 +14,11 @@ set(doxy_main_page ${PROJECT_SOURCE_DIR}/README.md)
 list (INSERT CMAKE_MODULE_PATH 0 ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(OpenMP REQUIRED)
-find_package(Eigen3 3.3 REQUIRED)
+# Eigen's config only accepts requests for its own major version.
+find_package(Eigen3 3.3 QUIET)
+if(NOT Eigen3_FOUND)
+    find_package(Eigen3 5 REQUIRED)
+endif()
 find_package(GMP 6.0.0)
 find_package(MPFR 4.0.0)
 # find_package(Doxygen)
