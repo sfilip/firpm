@@ -28,6 +28,7 @@
 *.app
 test/firpmlib_extensive_test
 test/firpmlib_scaling_test
+test/firpmlib_numerics_test
 
 # Python build output
 build/

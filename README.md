@@ -177,11 +177,12 @@ specifying an explicit install prefix:
 
 
 With gtest downloaded in the build directory, the *make all* command should
-have generated two test executables:
+have generated three test executables:
 * firpmlib_scaling_test : should contain code to generate all the example filters used in [1] and tests for subsequent bugs
 * firpmlib_extensive_test : contains a more extensive set of over 50 different filters, giving an iteration count comparison for uniform initialization, reference scaling and AFP initialization, when applicable
+* firpmlib_numerics_test : unit tests for the numerical kernels (barycentric weights and error evaluation, checked against MPFR when available)
 
-The *make test* command will launch these two test executables on your system.
+The *make test* command will launch these test executables on your system.
 
 The *make all* target also generates the documentation if Doxygen was found on
 your system when running CMake. It can also be generated individually by running
