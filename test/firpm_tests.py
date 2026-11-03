@@ -1,3 +1,6 @@
+import functools
+import warnings
+
 import numpy as np
 import pytest
 
@@ -394,3 +397,51 @@ def test_narrow_band_reference_allocation():
         if m.any():
             assert np.max(np.abs(H[m] - a[2*i])) < 0.1
 
+
+# scipy's own remez tests, replayed against firpm.remez. They ship with
+# scipy (its wheels, and e.g. Debian's python3-scipy); without them, these
+# are skipped.
+with warnings.catch_warnings():
+    # Marks registered only in scipy's own test configuration
+    warnings.simplefilter("ignore", pytest.PytestUnknownMarkWarning)
+    try:
+        from scipy.signal.tests import test_fir_filter_design as scipy_fir_tests
+    except ImportError:
+        scipy_fir_tests = None
+
+
+@pytest.fixture
+def xp():
+    # scipy's array API fixture, for the tests that take one: NumPy only.
+    return np
+
+
+@pytest.mark.skipif(scipy_fir_tests is None,
+                    reason="scipy's tests are not installed")
+class TestScipyRemez(getattr(scipy_fir_tests, "TestRemez", object)):
+    @pytest.fixture(autouse=True)
+    def use_firpm_remez(self, monkeypatch):
+        monkeypatch.setattr(scipy_fir_tests, "remez", firpm.remez)
+
+
+def expect_scipy_failure(name, raises, reason):
+    # Marks one of scipy's tests (if this scipy has it) as an expected
+    # failure, for the given exception only.
+    test = getattr(getattr(scipy_fir_tests, "TestRemez", None), name, None)
+    if test is None:
+        return
+    @functools.wraps(test)   # keeps its fixtures and parametrization
+    def replay(*args, **kwargs):
+        return test(*args, **kwargs)
+    setattr(TestScipyRemez, name, pytest.mark.xfail(
+        strict=True, raises=raises, reason=reason)(replay))
+
+
+expect_scipy_failure("test_compare", AssertionError, (
+    "compares against MATLAB's grid-based design to rtol=1e-7; firpm's is "
+    "grid-free and closer to the optimum (see "
+    "test_firpm_no_worse_than_matlab)"))
+expect_scipy_failure("test_gh_24495_narrow_band", AssertionError, (
+    "scipy rejects bands narrower than its frequency grid, saying so; "
+    "firpm, which has no grid, designs them (warning if they don't "
+    "converge), and rejects only zero-width bands, as invalid band edges"))
