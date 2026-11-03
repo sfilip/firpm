@@ -381,6 +381,12 @@ namespace pm {
             std::vector<T> siCN(Nmax + 1u);
             chgvar(siCN, chebyNodes, subIntervals[i].first,
                     subIntervals[i].second);
+            // chgvar can round the end nodes an ulp outside the subinterval;
+            // at a band edge that puts them outside every band, where
+            // idealvals() has nothing to return.  chebyNodes run from +1
+            // down to -1, so pin them to the exact endpoints as wam() does.
+            siCN[0] = subIntervals[i].second;
+            siCN[Nmax] = subIntervals[i].first;
 
             // compute the Chebyshev interpolation function values on the
             // current subinterval
@@ -404,7 +410,8 @@ namespace pm {
                 chgvar(eigenRoots, eigenRoots,
                         subIntervals[i].first, subIntervals[i].second);
                 for (std::size_t j{0u}; j < eigenRoots.size(); ++j)
-                    pExs[i].push_back(eigenRoots[j]);
+                    pExs[i].push_back(std::clamp(eigenRoots[j],
+                            subIntervals[i].first, subIntervals[i].second));
             }
             pExs[i].push_back(subIntervals[i].first);
             pExs[i].push_back(subIntervals[i].second);
