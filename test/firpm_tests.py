@@ -294,14 +294,16 @@ def test_bands_callback_exception_propagates():
     with pytest.raises(ValueError, match="boom"):
         firpm.remez(51, [(0.0, 0.2, boom), (0.25, 0.5, 0.0)])
 
+    # A well-posed design (about 2700 calls to converge), so the exception
+    # is raised mid-run whichever path the exchange takes.
     calls = [0]
     def late_boom(f):
         calls[0] += 1
-        if calls[0] > 5000:
+        if calls[0] > 1000:
             raise KeyError("late")
         return 1.0
     with pytest.raises(KeyError):
-        firpm.remez(401, [(0.0, 0.2, late_boom, lambda f: 1.0),
+        firpm.remez(201, [(0.0, 0.2, late_boom, lambda f: 1.0),
                           (0.25, 0.5, lambda f: 0.0, lambda f: 1.0)])
 
 
