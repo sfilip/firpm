@@ -7,7 +7,6 @@
 #include "firpm/pmmath.h"
 #include <set>
 #include <fstream>
-#include <sstream>
 #include <algorithm>
 #include <stdexcept>
 
@@ -18,9 +17,6 @@ namespace pm {
 
     template<typename T>
     using VectorXd = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-
-    // global variable used to detect cycling
-    bool cycle;
 
     template<typename T>
     void chebvand(MatrixXd<T>& A, std::size_t degree,
@@ -54,13 +50,11 @@ namespace pm {
         for(Eigen::Index i{0}; i < y.rows(); ++i)
             if(y(i) != 0.0)
                 points.push_back(mesh[i]);
-        std::sort(points.begin(), points.end(),
-                [](const T& lhs,
-                const T& rhs) {
-                    return lhs < rhs;
-                });
+        std::ranges::sort(points);
     }
 
+    // Count the sorted points x per band (x lies within the bands).  A
+    // band may receive none: the search skips as many bands as needed.
     template<typename T>
     void countBand(std::vector<band_t<T>>& cb, std::vector<T>& x)
     {
@@ -69,7 +63,7 @@ namespace pm {
         std::size_t bandIt = 0u;
         for(std::size_t i{0u}; i < x.size(); ++i)
         {
-            while(bandIt < cb.size() && cb[bandIt].stop < x[i])
+            while(bandIt + 1u < cb.size() && cb[bandIt].stop < x[i])
                 bandIt++;
             ++cb[bandIt].xs;
         }
@@ -82,7 +76,7 @@ namespace pm {
         std::vector<T> cp;
         equipts(cp, deg + 2u);
         cos(cp, cp);
-        std::sort(begin(cp), end(cp));
+        std::ranges::sort(cp);
         for(std::size_t i{0u}; i < cb.size(); ++i)
         {
             if(cb[i].start != cb[i].stop)
@@ -103,39 +97,48 @@ namespace pm {
     void uniform(std::vector<T>& omega,
             std::vector<band_t<T>>& B, std::size_t n)
     {
-        T avgDist = 0;
         omega.resize(n);
 
         std::vector<T> bandwidths(B.size());
         std::vector<std::size_t> nonPointBands;
+        T totalWidth = 0;
         for(std::size_t i{0u}; i < B.size(); ++i) {
             bandwidths[i] = B[i].stop - B[i].start;
             if(bandwidths[i] > 0.0)
             {
                 nonPointBands.push_back(i);
-                avgDist += bandwidths[i];
+                totalWidth += bandwidths[i];
             }
             B[i].xs = 1u;
         }
-
-        avgDist /= (omega.size() - B.size());
         std::size_t npSize = nonPointBands.size();
 
-        B[nonPointBands[npSize - 1u]].xs = omega.size() - (B.size() - npSize);
+        // Every band keeps its start as a reference and a band of nonzero
+        // width also its stop; the references left over are shared among the
+        // nonzero-width bands in proportion to bandwidth with a largest-
+        // remainder rule, so the counts always sum to exactly omega.size().
+        // (Rounding each share independently and giving the last band whatever
+        // was left could go negative, which underflowed as a size_t.)
+        if(omega.size() < B.size() + npSize || (npSize == 0u && omega.size() > B.size()))
+            throw std::domain_error("ERROR: cannot distribute the references over the bands");
+        std::size_t remaining = omega.size() - B.size() - npSize;
+        const std::size_t spare = remaining;
+        std::vector<T> frac(npSize);
+        std::vector<std::size_t> order(npSize);
+        for(std::size_t k{0u}; k < npSize; ++k) {
+            T share = bandwidths[nonPointBands[k]] / totalWidth * T(spare);
+            long fl = pmmath::floor(share);
+            B[nonPointBands[k]].xs = 2u + fl;
+            remaining -= fl;
+            frac[k] = share - T(fl);
+            order[k] = k;
+        }
+        std::stable_sort(order.begin(), order.end(),
+                [&frac](std::size_t a, std::size_t b) { return frac[a] > frac[b]; });
+        for(std::size_t k{0u}; remaining > 0u; ++k, --remaining)
+            ++B[nonPointBands[order[k % npSize]]].xs;
+
         T buffer;
-        buffer = bandwidths[nonPointBands[0]] / avgDist;
-
-        if (npSize > 1) {
-            B[nonPointBands[0]].xs = pmmath::round(buffer) + 1;
-            B[nonPointBands[npSize - 1u]].xs -= B[nonPointBands[0]].xs;
-        }
-
-        for(std::size_t i{1u}; i < npSize - 1u; ++i) {
-            buffer = bandwidths[nonPointBands[i]] / avgDist;
-            B[nonPointBands[i]].xs = pmmath::round(buffer) + 1;
-            B[nonPointBands[npSize - 1u]].xs -= B[nonPointBands[i]].xs;
-        }
-
 
         std::size_t startIndex = 0ul;
         for(std::size_t i{0ul}; i < B.size(); ++i) {
@@ -242,7 +245,7 @@ namespace pm {
         }
 
         newX.resize(newXSize);
-        std::sort(newX.begin(), newX.end());
+        std::ranges::sort(newX);
         std::size_t total = 0u;
         for(std::size_t i{0u}; i < newX.size(); ++i)
         {
@@ -278,7 +281,7 @@ namespace pm {
 
         std::set<T> s(splitpts.begin(), splitpts.end());
         splitpts.assign(s.begin(), s.end());
-        std::sort(splitpts.begin(), splitpts.end());
+        std::ranges::sort(splitpts);
 
         std::size_t bidx{0u};
         for(std::size_t i{0u}; i < splitpts.size()-1u; ++i) {
@@ -290,11 +293,100 @@ namespace pm {
         }
     }
 
+    // Refine an extremum r of the error that the degree-Nmax proxy of a
+    // subinterval located to within `gap`, the width of the proxy's node
+    // gap that holds it.  A proxy of that degree over a whole subinterval
+    // does not resolve a ripple lobe (its Chebyshev tail is about 1e-3 at
+    // Nmax = 4) and places an extremum a percent or so of the lobe's width
+    // off, and the exchange then settles on a reference whose nodes sit
+    // that far off the error's true peaks: |E| there equals delta while the
+    // peaks between the nodes stand above it, and the exchange reports
+    // convergence with the filter short of the minimax optimum by O(1e-4)
+    // relative.  So re-interpolate the error with the same proxy on the
+    // bracket of width `gap` centred on r, as Chebfun's rootfinder
+    // subdivides an interval its proxy does not resolve, and move r to the
+    // root of that proxy's derivative nearest it.  The bracket is accepted
+    // once the proxy's tail coefficients are below `tol` of its largest:
+    // the root of the proxy's derivative is then off by about tol * gap
+    // times delta over the error's second derivative, and the error at
+    // that point is short of the true peak by about tol^2 relative, far
+    // below anything eps can see.  Otherwise the bracket is shrunk and the
+    // proxy rebuilt, a few times at most.  With Nmax = 4 the first bracket
+    // usually resolves the error.  The bracket may cross the subinterval's
+    // ends, which are reference nodes the extrema lie next to, but not the
+    // band edges or the partition points of a band's amplitude, beyond
+    // which the error is not smooth.
+    template<typename T>
+    void zoomroot(T& r, T gap, std::pair<T, T> const& subInterval,
+            std::size_t Nmax, std::vector<T> const& chebyNodes,
+            T& delta, std::vector<T>& x, std::vector<T>& D,
+            std::vector<T>& S, std::vector<T>& w,
+            std::vector<band_t<T>>& chebyBands)
+    {
+        const T tol = 1e-6;
+        const int levels = 3;
+
+        // r may lie a little outside its subinterval: pull it into the
+        // subinterval's band, then between the partition points around it
+        T mid = (subInterval.first + subInterval.second) / 2;
+        T blo = subInterval.first, bhi = subInterval.second;
+        for (auto const& b : chebyBands)
+            if (b.start <= mid && mid <= b.stop) {
+                blo = b.start;
+                bhi = b.stop;
+                r = std::clamp(r, blo, bhi);
+                for (auto const& p : b.part) {
+                    if (p <= r && p > blo) blo = p;
+                    if (p >= r && p < bhi) bhi = p;
+                }
+                break;
+            }
+        std::pair<T, T> dom{std::make_pair(-1.0, 1.0)};
+        for (int level = 0; level < levels; ++level, gap /= 4) {
+            T lo = pmmath::fmax(r - gap / 2, blo);
+            T hi = pmmath::fmin(r + gap / 2, bhi);
+            if (!(lo < hi))
+                return;
+            std::vector<T> zn(Nmax + 1u);
+            chgvar(zn, chebyNodes, lo, hi);
+            zn[0] = hi;
+            zn[Nmax] = lo;
+            std::vector<T> fz(Nmax + 1u);
+            for (std::size_t k{0u}; k < fz.size(); ++k)
+                comperror(fz[k], zn[k], delta, x, D, S, w, chebyBands);
+            std::vector<T> c(Nmax + 1u);
+            chebcoeffs(c, fz);
+            T scale = 0;
+            for (auto const& ck : c)
+                scale = pmmath::fmax(scale, pmmath::fabs(ck));
+            bool resolved = pmmath::fmax(pmmath::fabs(c[Nmax]),
+                    pmmath::fabs(c[Nmax - 1u])) <= tol * scale;
+            std::vector<T> dc(Nmax);
+            diffcoeffs(dc, c);
+            std::vector<T> zr;
+            roots(zr, dc, dom);
+            if (zr.empty())
+                return;
+            chgvar(zr, zr, lo, hi);
+            T best = zr[0];
+            for (auto const& cand : zr)
+                if (pmmath::fabs(cand - r) < pmmath::fabs(best - r))
+                    best = cand;
+            r = std::clamp(best, lo, hi);
+            if (resolved)
+                return;
+        }
+    }
+
+    // cycle: set by exchange() when the convergence parameter has stalled;
+    // switches the rule for discarding surplus extrema for one iteration
+    // refine: refine the extrema the proxies locate with zoomroot(); costs
+    // about as many error evaluations again as the proxies themselves
     template<typename T>
     void extrema(status_t& status, T& convergenceOrder,
             T& delta, std::vector<T>& eigenExtrema,
             std::vector<T>& x, std::vector<band_t<T>>& chebyBands,
-            std::size_t Nmax, unsigned long prec)
+            std::size_t Nmax, unsigned long prec, bool& cycle, bool refine)
     {
     #ifdef HAVE_MPFR
         mpfr_prec_t prevPrec = mpfr::mpreal::get_default_prec();
@@ -316,8 +408,8 @@ namespace pm {
 
         compdelta(delta, w, x, chebyBands);
 
-        std::vector<T> C(x.size());
-        compc(C, delta, x, chebyBands);
+        std::vector<T> D(x.size()), S(x.size());
+        compref(D, S, x, chebyBands);
 
         // 3.   Use an eigenvalue solver on each subinterval to find the
         //      local extrema that are located inside the frequency bands
@@ -331,16 +423,16 @@ namespace pm {
         T extremaErrorValueRight;
         T extremaErrorValue;
         comperror(extremaErrorValue, chebyBands[0].start,
-                delta, x, C, w, chebyBands);
+                delta, x, D, S, w, chebyBands);
         potentialExtrema.push_back(std::make_pair(
                 chebyBands[0].start, extremaErrorValue));
 
         for (std::size_t i{0u}; i < chebyBands.size() - 1u; ++i)
         {
             comperror(extremaErrorValueLeft, chebyBands[i].stop,
-                    delta, x, C, w, chebyBands);
+                    delta, x, D, S, w, chebyBands);
             comperror(extremaErrorValueRight, chebyBands[i + 1].start,
-                    delta, x, C, w, chebyBands);
+                    delta, x, D, S, w, chebyBands);
             bool sgnLeft = pmmath::signbit(extremaErrorValueLeft);
             bool sgnRight = pmmath::signbit(extremaErrorValueRight);
             if (sgnLeft != sgnRight) {
@@ -361,14 +453,14 @@ namespace pm {
         }
         comperror(extremaErrorValue,
                 chebyBands[chebyBands.size() - 1u].stop,
-                delta, x, C, w, chebyBands);
+                delta, x, D, S, w, chebyBands);
         potentialExtrema.push_back(std::make_pair(
                 chebyBands[chebyBands.size() - 1u].stop,
                 extremaErrorValue));
 
         std::vector<std::vector<T>> pExs(subIntervals.size());
         #pragma omp parallel for
-        for (std::size_t i = 0u; i < subIntervals.size(); ++i)
+        for(std::ptrdiff_t i = 0; i < std::ssize(subIntervals); ++i)
         {
             #ifdef HAVE_MPFR
                 mpfr_prec_t prevPrec = mpfr::mpreal::get_default_prec();
@@ -378,12 +470,18 @@ namespace pm {
             std::vector<T> siCN(Nmax + 1u);
             chgvar(siCN, chebyNodes, subIntervals[i].first,
                     subIntervals[i].second);
+            // chgvar can round the end nodes an ulp outside the subinterval;
+            // at a band edge that puts them outside every band, where
+            // idealvals() has nothing to return.  chebyNodes run from +1
+            // down to -1, so pin them to the exact endpoints as wam() does.
+            siCN[0] = subIntervals[i].second;
+            siCN[Nmax] = subIntervals[i].first;
 
             // compute the Chebyshev interpolation function values on the
             // current subinterval
             std::vector<T> fx(Nmax + 1u);
             for (std::size_t j{0u}; j < fx.size(); ++j)
-                comperror(fx[j], siCN[j], delta, x, C, w,
+                comperror(fx[j], siCN[j], delta, x, D, S, w,
                         chebyBands);
 
             // compute the values of the CI coefficients and those of its
@@ -395,13 +493,31 @@ namespace pm {
 
             // solve the corresponding eigenvalue problem and determine the
             // local extrema situated in the current subinterval
+            // keep roots up to one node gap outside the subinterval too:
+            // an extremum just past a reference node, where the exchange's
+            // extrema lie, can be placed by the proxy on the node's other
+            // side, and discarding it would leave only the node itself as
+            // a candidate.  zoomroot() refines and bounds them.
             std::vector<T> eigenRoots;
-            roots(eigenRoots, dc, dom);
+            T margin = 1 - chebyNodes[1];
+            std::pair<T, T> wdom{std::make_pair(-1 - margin, 1 + margin)};
+            roots(eigenRoots, dc, wdom);
             if(!eigenRoots.empty()) {
                 chgvar(eigenRoots, eigenRoots,
                         subIntervals[i].first, subIntervals[i].second);
-                for (std::size_t j{0u}; j < eigenRoots.size(); ++j)
-                    pExs[i].push_back(eigenRoots[j]);
+                for (std::size_t j{0u}; j < eigenRoots.size(); ++j) {
+                    T r = eigenRoots[j];
+                    std::size_t k = 0;
+                    while (k + 1u < Nmax && siCN[k + 1u] > r)
+                        ++k;
+                    if (refine)
+                        zoomroot(r, siCN[k] - siCN[k + 1u], subIntervals[i],
+                                Nmax, chebyNodes, delta, x, D, S, w, chebyBands);
+                    else
+                        r = std::clamp(r, subIntervals[i].first,
+                                subIntervals[i].second);
+                    pExs[i].push_back(r);
+                }
             }
             pExs[i].push_back(subIntervals[i].first);
             pExs[i].push_back(subIntervals[i].second);
@@ -417,7 +533,7 @@ namespace pm {
         std::size_t startingOffset = potentialExtrema.size();
         potentialExtrema.resize(potentialExtrema.size() + pEx.size());
         #pragma omp parallel for
-        for(std::size_t i = 0u; i < pEx.size(); ++i)
+        for(std::ptrdiff_t i = 0; i < std::ssize(pEx); ++i)
         {
             #ifdef HAVE_MPFR
                 mpfr_prec_t prevPrec = mpfr::mpreal::get_default_prec();
@@ -425,7 +541,7 @@ namespace pm {
             #endif
             T valBuffer;
             comperror(valBuffer, pEx[i],
-                    delta, x, C, w, chebyBands);
+                    delta, x, D, S, w, chebyBands);
             potentialExtrema[startingOffset + i] = std::make_pair(pEx[i], valBuffer);
             #ifdef HAVE_MPFR
                 mpfr::mpreal::set_default_prec(prevPrec);
@@ -433,17 +549,12 @@ namespace pm {
         }
 
         // sort list of potential extrema in increasing order
-        std::sort(potentialExtrema.begin(), potentialExtrema.end(),
-                [](const std::pair<T, T>& lhs,
-                const std::pair<T, T>& rhs) {
-                    return lhs.first < rhs.first;
-                });
+        std::ranges::sort(potentialExtrema, {}, &std::pair<T, T>::first);
 
         eigenExtrema.clear();
         std::size_t extremaIt{0u};
         std::vector<std::pair<T, T>> alternatingExtrema;
-        T minError = INT_MAX;
-        T maxError = INT_MIN;
+        T minError, maxError;
         T absError;
 
         while (extremaIt < potentialExtrema.size())
@@ -469,12 +580,11 @@ namespace pm {
         if(alternatingExtrema.size() < x.size())
         {
             status = status_t::STATUS_EXCHANGE_FAILURE;
-            std::stringstream message;
-            message << "ERROR: The exchange algorithm did not converge\n"
-                << "TRIGGER: Not enough alternating extrema\n"
-                << "POSSIBLE CAUSE: nmax too small\n";
             convergenceOrder = 2.0;
-            throw std::runtime_error(message.str());
+            throw std::runtime_error(
+                "ERROR: The exchange algorithm did not converge\n"
+                "TRIGGER: Not enough alternating extrema\n"
+                "POSSIBLE CAUSE: nmax too small\n");
         }
         else if (alternatingExtrema.size() > x.size())
         {
@@ -559,14 +669,14 @@ namespace pm {
         }
         if (alternatingExtrema.size() < x.size()) {
             status = status_t::STATUS_EXCHANGE_FAILURE;
-            std::stringstream message;
-            message << "ERROR: The exchange algorithm did not converge\n"
-                << "TRIGGER: Not enough alternating extrema\n"
-                << "POSSIBLE CAUSE: nmax too small\n";
             convergenceOrder = 2.0;
-            throw std::runtime_error(message.str());
+            throw std::runtime_error(
+                "ERROR: The exchange algorithm did not converge\n"
+                "TRIGGER: Not enough alternating extrema\n"
+                "POSSIBLE CAUSE: nmax too small\n");
         }
 
+        minError = maxError = pmmath::fabs(alternatingExtrema[0].second);
         for (auto& it : alternatingExtrema)
         {
             eigenExtrema.push_back(it.first);
@@ -578,23 +688,7 @@ namespace pm {
         convergenceOrder = (maxError - minError) / maxError;
 
         // update the extrema count in each frequency band
-        std::size_t bIndex{0u};
-        for(std::size_t i{0u}; i < chebyBands.size(); ++i)
-        {
-            chebyBands[i].xs = 0u;
-        }
-        for(auto &it : eigenExtrema)
-        {
-            if(chebyBands[bIndex].start <= it && it <= chebyBands[bIndex].stop)
-            {
-                ++chebyBands[bIndex].xs;
-            }
-            else
-            {
-                ++bIndex;
-                ++chebyBands[bIndex].xs;
-            }
-        }
+        countBand(chebyBands, eigenExtrema);
     #ifdef HAVE_MPFR
         mpfr::mpreal::set_default_prec(prevPrec);
     #endif
@@ -614,23 +708,30 @@ namespace pm {
         output.status = status_t::STATUS_UNKNOWN_FAILURE;
 
         std::size_t degree = x.size() - 2u;
-        std::sort(x.begin(), x.end(),
-                [](const T& lhs,
-                const T& rhs) {
-                    return lhs < rhs;
-                });
+        std::ranges::sort(x);
         std::vector<T> startX{x};
-        cycle = false;
+        bool cycle = false;
         T qp1 = 0;
         T qp2 = 0;
+
+        // The proxies' placement of the extrema is refined from the
+        // iteration after the one that brought q under 0.1, which is where
+        // the placement error starts to matter, and no stop on q is taken
+        // from an unrefined iteration: a reference levelled on unrefined
+        // extrema sits off the error's true peaks (see zoomroot()).
+        bool refine = false;
+        bool refined = false;
 
         output.q = 1;
         output.iter = 0u;
         do {
             ++output.iter;
+            refined = refine;
             extrema(output.status, output.q, output.delta,
-                    output.x, startX, chebyBands, Nmax, prec);
+                    output.x, startX, chebyBands, Nmax, prec, cycle, refine);
             startX = output.x;
+            if(output.q < 0.1 || output.q <= eps)
+                refine = true;
             if(output.iter == 1u)
                 qp2 = output.q;
             else if(output.iter == 2u)
@@ -645,7 +746,7 @@ namespace pm {
             }
             if(output.q > 1.0)
                 break;
-        } while (output.q > eps && output.iter <= 100u);
+        } while ((output.q > eps || !refined) && output.iter <= 100u);
         output.status = status_t::STATUS_SUCCESS;
 
         if(pmmath::isnan(output.delta) || pmmath::isnan(output.q)) {
@@ -664,12 +765,25 @@ namespace pm {
                 << "a too small value for nmax.\n";
         }
 
+        // The final polynomial is the one levelled on the last reference
+        // output.x.  output.delta is the levelled error extrema() computed
+        // for the reference the last iteration started from, so it is only
+        // an approximation of the levelled error on output.x, and when the
+        // last iteration shifted the reference by one node (the leftmost
+        // extremum dropped, a new one entered on the right) the alternation
+        // parity of the reference flips and so does the sign of delta.
+        // Levelling on output.x with the stale delta then gives a
+        // polynomial of degree deg + 1 that chebcoeffs() aliases into the
+        // lower coefficients, and the returned filter is wrong by O(delta)
+        // although the reported q says it converged.  So compute the
+        // levelled error of output.x itself.
         output.h.resize(degree + 1u);
         std::vector<T> finalC(output.x.size());
         std::vector<T> finalAlpha(output.x.size());
         baryweights(finalAlpha, output.x);
-        T finalDelta = output.delta;
-        output.delta = pmmath::fabs(output.delta);
+        T finalDelta;
+        compdelta(finalDelta, finalAlpha, output.x, chebyBands);
+        output.delta = pmmath::fabs(finalDelta);
         compc(finalC, finalDelta, output.x, chebyBands);
         std::vector<T> finalChebyNodes(degree + 1);
         equipts(finalChebyNodes, degree + 1);
@@ -681,12 +795,10 @@ namespace pm {
                     finalC, finalAlpha);
             if (!pmmath::isfinite(fv[i])) {
                 output.status = status_t::STATUS_COEFFICIENT_SET_INVALID;
-                std::stringstream message;
-                message << "ERROR: Invalid frequency response generated.\n"
-                    << "TRIGGER: infinite/NaN values in the final frequency response.\n"
-                    << "POSSIBLE CAUSE: too small numerical precision and/or a too "
-                    << "small value for nmax.";
-                throw std::runtime_error(message.str());
+                throw std::runtime_error(
+                    "ERROR: Invalid frequency response generated.\n"
+                    "TRIGGER: infinite/NaN values in the final frequency response.\n"
+                    "POSSIBLE CAUSE: too small numerical precision and/or a too small value for nmax.");
             }
         }
 
@@ -713,10 +825,8 @@ namespace pm {
 
         if(f.size() != w.size() * 2u) {
             status = status_t::STATUS_WEIGHT_VECTOR_MISMATCH;
-            std::stringstream message;
-            message << "ERROR: Weight vector size does not match the"
-                << " the number of frequency bands in the specification";
-            throw std::domain_error(message.str());
+            throw std::domain_error(
+                "ERROR: Weight vector size does not match the the number of frequency bands in the specification");
         }
 
         for(std::size_t i{0u}; i < f.size() - 1u; ++i) {
@@ -770,9 +880,7 @@ namespace pm {
 
         try {
             parseSpecification(output.status, f, a, w);
-            std::vector<T> h;
             std::vector<band_t<T>> fbands;
-            std::vector<band_t<T>> cbands;
             std::vector<std::vector<std::size_t>> bIdx;
 
             std::size_t nbands{0u};
@@ -796,8 +904,118 @@ namespace pm {
             }
             fbands.resize(bIdx.size());
 
+            for(std::size_t i{0u}; i < fbands.size(); ++i) {
+                fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][0u]]));
+                for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
+                    fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][j]+1u]));
+                }
+            }
+            for(std::size_t i{0u}; i < fbands.size(); ++i) {
+                fbands[i].start = fbands[i].part[0u];
+                fbands[i].stop  = fbands[i].part[fbands[i].part.size()-1u];
+                fbands[i].space = space_t::FREQ;
+
+                fbands[i].amplitude = [i, &a, &bIdx, &fbands](space_t space, T x) -> T {
+                    if(space == space_t::CHEBY)
+                        x = pmmath::acos(x);
+                    for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
+                        if(fbands[i].part[j]*(1.0-1e-12) <= x &&
+                        x <= fbands[i].part[j+1u]*(1.0+1e-12)) {
+                            if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
+                                return ((x-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] -
+                                        (x-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
+                                        (fbands[i].part[j+1u] - fbands[i].part[j]);
+                            } else {
+                                return a[2u*bIdx[i][j]];
+                            }
+                        }
+                    }
+                    // this should never happen
+                    return a[2u*bIdx[i][0u]];
+                };
+                fbands[i].weight = [i, &w, &bIdx](space_t, T x) -> T {
+                    return w[bIdx[i][0u]];
+                };
+            }
+
+            return firpm<T>(n, fbands, eps, nmax, strategy, depth, rstrategy, prec);
+        }
+        catch (std::domain_error &err) {
+            std::cerr << "Invalid specification detected:" << std::endl;
+            std::cerr << err.what() << std::endl;
+            output.q = 2.0;
+        }
+        catch (std::runtime_error &err) {
+            std::cerr << "Runtime error detected:" << std::endl;
+            std::cerr << err.what() << std::endl;
+            output.q = 2.0;
+        }
+        catch (...) {
+            std::cerr << "Unknown exception" << std::endl;
+            output.status = status_t::STATUS_UNKNOWN_FAILURE;
+        }
+        return output;
+    }
+
+    template<typename T>
+    pmoutput_t<T> firpm(std::size_t n,
+                std::vector<band_t<T>> fbands,
+                double eps,
+                std::size_t nmax,
+                init_t strategy,
+                std::size_t depth,
+                init_t rstrategy,
+                unsigned long prec)
+    {
+        pmoutput_t<T> output;
+        output.status = status_t::STATUS_UNKNOWN_FAILURE;
+
+        try {
+            std::vector<T> h;
+            std::vector<band_t<T>> cbands;
+            T pi = pmmath::const_pi<T>();
+
+            /* Validate the band layout: this overload is reachable directly
+             * (and from Python), so it cannot rely on parseSpecification(). */
+            if(fbands.empty()) {
+                output.status = status_t::STATUS_FREQUENCY_INVALID_INTERVAL;
+                throw std::domain_error("ERROR: no bands specified");
+            }
+            for(std::size_t i{0u}; i < fbands.size(); ++i) {
+                band_t<T>& b = fbands[i];
+                if(b.space != space_t::FREQ) {
+                    output.status = status_t::STATUS_FREQUENCY_INVALID_INTERVAL;
+                    throw std::domain_error("ERROR: bands must be specified in "
+                            "frequency space (space_t::FREQ)");
+                }
+                if(!(T(0) <= b.start && b.start <= b.stop && b.stop <= pi) ||
+                        (i > 0u && !(fbands[i-1u].stop < b.start))) {
+                    output.status = status_t::STATUS_FREQUENCY_INVALID_INTERVAL;
+                    throw std::domain_error("ERROR: bands must be sorted, "
+                            "non-overlapping and contained in [0, pi]");
+                }
+                if(!b.amplitude || !b.weight)
+                    throw std::domain_error("ERROR: every band needs an amplitude "
+                            "and a weight function");
+                if(b.part.empty())
+                    b.part = {b.start, b.stop};
+            }
+            bool pointBands{true};
+            for(auto const& b : fbands)
+                if(b.stop > b.start)
+                    pointBands = false;
+            if(pointBands) {
+                output.status = status_t::STATUS_FREQUENCY_INVALID_INTERVAL;
+                throw std::domain_error("ERROR: All frequency band intervals are points");
+            }
+
             if(n % 2 != 0) {
-                if(f[f.size()-1u] == 1 && a[a.size()-1u] != 0) {
+                /* A type II filter has a zero at Nyquist, so a nonzero target
+                 * there cannot be met: promote to type I as the flat-vector
+                 * overload always has. */
+                band_t<T>& last = fbands.back();
+                if(last.stop >= pi * T(0.9999) &&
+                        last.amplitude(space_t::FREQ, last.stop) != T(0)) {
                     std::cerr << "WARNING: gain at Nyquist frequency different from 0.\n"
                         << "Increasing the number of taps by one and passing to a "
                         << "type I filter" << std::endl;
@@ -805,85 +1023,35 @@ namespace pm {
                 }
             }
             std::size_t deg = n / 2;
-            if(n % 2 == 0) {            // type I filter
-                for(std::size_t i{0u}; i < fbands.size(); ++i) {
-                    fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][0u]]));
-                    for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
-                        fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][j]+1u]));
-                    }
-                }
-                for(std::size_t i{0u}; i < fbands.size(); ++i) {
-                    fbands[i].start = fbands[i].part[0u];
-                    fbands[i].stop  = fbands[i].part[fbands[i].part.size()-1u];
-                    fbands[i].space = space_t::FREQ;
 
-                    fbands[i].amplitude = [i, &a, &bIdx, &fbands](space_t space, T x) -> T {
-                        if(space == space_t::CHEBY)
-                            x = pmmath::acos(x);
-                        for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
-                            if(fbands[i].part[j]*(1.0-1e-12) <= x && 
-                            x <= fbands[i].part[j+1u]*(1.0+1e-12)) {
-                                if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
-                                    return ((x-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] -
-                                            (x-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
-                                            (fbands[i].part[j+1u] - fbands[i].part[j]);
-                                } else {
-                                    return a[2u*bIdx[i][j]];
-                                }
-                            }
-                        }
-                        // this should never happen
-                        return a[2u*bIdx[i][0u]];
-                    };
-                    fbands[i].weight = [i, &w, &bIdx](space_t, T x) -> T {
-                        return w[bIdx[i][0u]];
-                    };
-                }
-            } else {                    // type II filter
-                for(std::size_t i{0u}; i < fbands.size(); ++i) {
-                    fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][0u]]));
-                    for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
-                        if(f[2u*bIdx[i][j]+1u] == 1.0) {
-                            if(f[2u*bIdx[i][j]] < 0.9999)
-                                fbands[i].part.push_back(T(pmmath::const_pi<T>() * T(0.9999)));
-                            else
-                                fbands[i].part.push_back(T(pmmath::const_pi<T>() * 
-                                                        ((f[2u*bIdx[i][j]]+1u) / 2)));
-                        } else {
-                            fbands[i].part.push_back(T(pmmath::const_pi<T>() * f[2u*bIdx[i][j]+1u]));
-                        }
-                    }
-                }
-                for(std::size_t i{0u}; i < fbands.size(); ++i) {
-                    fbands[i].start = fbands[i].part[0u];
-                    fbands[i].stop  = fbands[i].part[fbands[i].part.size()-1u];
-                    fbands[i].space = space_t::FREQ;
+            if(n % 2 != 0) {
+                /* Type II: H(omega) = cos(omega/2) * P(omega).  Wrap each band's
+                 * amplitude and weight so exchange() sees P(omega), and clamp any
+                 * band stop at Nyquist away from pi where cos(omega/2) -> 0. */
+                for(auto& b : fbands) {
+                    if(b.stop >= pi * T(0.9999))
+                        b.stop = b.part.back() = (b.start < pi * T(0.9999))
+                            ? pi * T(0.9999)
+                            : (b.start + pi) / 2;
 
-                    fbands[i].amplitude = [i, &a, &bIdx, &fbands](space_t space, T x) -> T {
+                    auto user_amp = b.amplitude;
+                    auto user_wt  = b.weight;
+                    b.amplitude = [user_amp](space_t space, T x) -> T {
                         T nx = x;
                         if(space == space_t::CHEBY)
                             nx = pmmath::acos(x);
-                        for(std::size_t j{0u}; j < bIdx[i].size(); ++j) {
-                            if(fbands[i].part[j]*(1.0-1e-12) <= nx && 
-                            nx <= fbands[i].part[j+1u]*(1.0+1e-12)) {
-                                if(a[2u*bIdx[i][j]] != a[2u*bIdx[i][j]+1u]) {
-                                    return ((nx-fbands[i].part[j]) * a[2u*bIdx[i][j]+1u] -
-                                            (nx-fbands[i].part[j+1u]) * a[2u*bIdx[i][j]]) /
-                                            (fbands[i].part[j+1u] - fbands[i].part[j]) / 
-                                            pmmath::cos(nx/2);
-                                }
-                            }
-                        }
+                        T a = user_amp(space, x);
                         if(space == space_t::FREQ)
-                            return a[2u*bIdx[i][0u]] / pmmath::cos(x/2);
+                            return a / pmmath::cos(nx/2);
                         else
-                            return a[2u*bIdx[i][0u]] / pmmath::sqrt((x+1)/2);
+                            return a / pmmath::sqrt((x+1)/2);
                     };
-                    fbands[i].weight = [i, &w, &bIdx](space_t space, T x) -> T {
+                    b.weight = [user_wt](space_t space, T x) -> T {
+                        T w = user_wt(space, x);
                         if(space == space_t::FREQ)
-                            return pmmath::cos(x/2) * w[bIdx[i][0u]];
+                            return pmmath::cos(x/2) * w;
                         else
-                            return pmmath::sqrt((x+1)/2) * w[bIdx[i][0u]];
+                            return pmmath::sqrt((x+1)/2) * w;
                     };
                 }
             }
@@ -918,11 +1086,9 @@ namespace pm {
                         afp(x, A, mesh);
                         if(x.size() != deg + 2u) {
                             output.status = status_t::STATUS_AFP_INVALID;
-                            std::stringstream message;
-                            message << "ERROR: AFP strategy failed to produce a valid starting "
-                                << "reference\n"
-                                << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
-                            throw std::runtime_error(message.str());
+                            throw std::runtime_error(
+                                "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                                "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                         }
                         countBand(cbands, x);
                     }
@@ -950,12 +1116,9 @@ namespace pm {
                             afp(x, A, mesh);
                             if(x.size() != sdegs[0] + 2u) {
                                 output.status = status_t::STATUS_AFP_INVALID;
-                                std::stringstream message;
-                                message << "ERROR: AFP strategy failed to produce a valid "
-                                    << "starting reference\n"
-                                    << "POSSIBLE CAUSE: badly conditioned Chebyshev "
-                                    << "Vandermonde matrix";
-                                throw std::runtime_error(message.str());
+                                throw std::runtime_error(
+                                    "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                                    "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                             }
                             countBand(cbands, x);
                         }
@@ -968,11 +1131,9 @@ namespace pm {
                         afp(x, A, mesh);
                         if(x.size() != sdegs[0] + 2u) {
                             output.status = status_t::STATUS_AFP_INVALID;
-                            std::stringstream message;
-                            message << "ERROR: AFP strategy failed to produce a valid "
-                                << "starting reference\n"
-                                << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
-                            throw std::runtime_error(message.str());
+                            throw std::runtime_error(
+                                "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                                "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                         }
                         countBand(cbands, x);
                         output = exchange(x, cbands, eps, nmax, prec);
@@ -992,10 +1153,9 @@ namespace pm {
                     afp(x, A, mesh);
                     if(x.size() != deg + 2u) {
                         output.status = status_t::STATUS_AFP_INVALID;
-                        std::stringstream message;
-                        message << "ERROR: AFP strategy failed to produce a valid starting reference\n"
-                            << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
-                        throw std::runtime_error(message.str());
+                        throw std::runtime_error(
+                            "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                            "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                     }
                     countBand(cbands, x);
                     output = exchange(x, cbands, eps, nmax, prec);
@@ -1293,11 +1453,9 @@ namespace pm {
                         afp(x, A, mesh);
                         if(x.size() != deg + 2u) {
                             output.status = status_t::STATUS_AFP_INVALID;
-                            std::stringstream message;
-                            message << "ERROR: AFP strategy failed to produce a valid starting "
-                                << "reference\n"
-                                << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
-                            throw std::runtime_error(message.str());
+                            throw std::runtime_error(
+                                "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                                "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                         }
                         countBand(cbands, x);
                     }
@@ -1325,10 +1483,9 @@ namespace pm {
                             afp(x, A, mesh);
                             if(x.size() != sdegs[0] + 2u) {
                                 output.status = status_t::STATUS_AFP_INVALID;
-                                std::stringstream message;
-                                message << "ERROR: AFP strategy failed to produce a valid starting "        << "reference\n"
-                                    << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
-                                throw std::runtime_error(message.str());
+                                throw std::runtime_error(
+                                    "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                                    "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                             }
                             countBand(cbands, x);
                         }
@@ -1341,10 +1498,9 @@ namespace pm {
                         afp(x, A, mesh);
                         if(x.size() != sdegs[0] + 2u) {
                             output.status = status_t::STATUS_AFP_INVALID;
-                            std::stringstream message;
-                            message << "ERROR: AFP strategy failed to produce a valid starting "            << "reference\n"
-                                << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
-                            throw std::runtime_error(message.str());
+                            throw std::runtime_error(
+                                "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                                "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                         }
                         countBand(cbands, x);
                         output = exchange(x, cbands, eps, nmax);
@@ -1364,10 +1520,9 @@ namespace pm {
                     afp(x, A, mesh);
                     if(x.size() != deg + 2u) {
                         output.status = status_t::STATUS_AFP_INVALID;
-                        std::stringstream message;
-                        message << "ERROR: AFP strategy failed to produce a valid starting reference\n"
-                            << "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix";
-                        throw std::runtime_error(message.str());
+                        throw std::runtime_error(
+                            "ERROR: AFP strategy failed to produce a valid starting reference\n"
+                            "POSSIBLE CAUSE: badly conditioned Chebyshev Vandermonde matrix");
                     }
                     countBand(cbands, x);
                     output = exchange(x, cbands, eps, nmax, prec);
@@ -1505,6 +1660,15 @@ namespace pm {
                 init_t rstrategy,
                 unsigned long prec);
 
+    template pmoutput_t<double> firpm<double>(std::size_t n,
+                std::vector<band_t<double>> fbands,
+                double eps,
+                std::size_t nmax,
+                init_t strategy,
+                std::size_t depth,
+                init_t rstrategy,
+                unsigned long prec);
+
     template pmoutput_t<double> firpmRS<double>(std::size_t n,
                 std::vector<double>const& f,
                 std::vector<double>const& a,
@@ -1583,6 +1747,15 @@ namespace pm {
                 init_t rstrategy,
                 unsigned long prec);
 
+    template pmoutput_t<long double> firpm<long double>(std::size_t n,
+                std::vector<band_t<long double>> fbands,
+                double eps,
+                std::size_t nmax,
+                init_t strategy,
+                std::size_t depth,
+                init_t rstrategy,
+                unsigned long prec);
+
     template pmoutput_t<long double> firpmRS<long double>(std::size_t n,
                 std::vector<long double>const& f,
                 std::vector<long double>const& a,
@@ -1654,6 +1827,15 @@ namespace pm {
                 std::vector<mpfr::mpreal>const& a,
                 std::vector<mpfr::mpreal>const& w,
                 filter_t type,
+                double eps,
+                std::size_t nmax,
+                init_t strategy,
+                std::size_t depth,
+                init_t rstrategy,
+                unsigned long prec);
+
+    template pmoutput_t<mpfr::mpreal> firpm<mpfr::mpreal>(std::size_t n,
+                std::vector<band_t<mpfr::mpreal>> fbands,
                 double eps,
                 std::size_t nmax,
                 init_t strategy,

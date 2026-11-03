@@ -4,7 +4,7 @@ project(${PROJECT_NAME_STR})
 # The project version number.
 set(VERSION_MAJOR   0   CACHE STRING "Project major version number.")
 set(VERSION_MINOR   2   CACHE STRING "Project minor version number.")
-set(VERSION_PATCH   1   CACHE STRING "Project patch version number.")
+set(VERSION_PATCH   2   CACHE STRING "Project patch version number.")
 mark_as_advanced(VERSION_MAJOR VERSION_MINOR VERSION_PATCH)
 set(doxy_main_page ${PROJECT_SOURCE_DIR}/README.md)
 
@@ -13,12 +13,19 @@ set(doxy_main_page ${PROJECT_SOURCE_DIR}/README.md)
 #-----------------------------------------------------------------------
 list (INSERT CMAKE_MODULE_PATH 0 ${PROJECT_SOURCE_DIR}/cmake)
 
+option(BUILD_SHARED_LIBS "Build libfirpm as a shared library" ON)
+option(FIRPM_BUILD_TESTS "Build the C++ test suite (fetches googletest)" ON)
+
 find_package(OpenMP REQUIRED)
-find_package(Eigen3 3.3 REQUIRED)
+# Eigen's config only accepts requests for its own major version.
+find_package(Eigen3 3.3 QUIET)
+if(NOT Eigen3_FOUND)
+    find_package(Eigen3 5 REQUIRED)
+endif()
 find_package(GMP 6.0.0)
 find_package(MPFR 4.0.0)
 # find_package(Doxygen)
-find_package(Python COMPONENTS Interpreter Development)
+find_package(Python COMPONENTS Interpreter Development.Module)
 find_package(pybind11 CONFIG)
 
 if( MPFR_FOUND AND GMP_FOUND)
@@ -29,7 +36,7 @@ endif( MPFR_FOUND AND GMP_FOUND)
 # build configuration
 #-----------------------------------------------------------------------
 set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #-----------------------------------------------------------------------
@@ -52,19 +59,43 @@ if(DOXYGEN_FOUND)
     add_subdirectory(${PROJECT_SOURCE_DIR}/doc)
 endif()
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/test)
+if(FIRPM_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(${PROJECT_SOURCE_DIR}/test)
+endif()
 
 #-----------------------------------------------------------------------
 # Python bindings
 #-----------------------------------------------------------------------
 
 if( pybind11_FOUND )
-	pybind11_add_module(pyfirpm py/bindings.cpp)
-    include_directories(${COMMON_INCLUDES} ${EIGEN3_INCLUDE_DIRS})
-	target_link_libraries(pyfirpm PRIVATE firpm)
+	# The extension is the private half of the firpm package. Both halves
+	# are assembled under python/ in the build tree, so it can be imported
+	# from there without installing.
+	set(FIRPM_PY_DIR ${CMAKE_CURRENT_BINARY_DIR}/python/firpm)
+	pybind11_add_module(_firpm py/bindings.cpp)
+    include_directories(${COMMON_INCLUDES})
+	target_link_libraries(_firpm PRIVATE firpm)
+	# The generator expression keeps multi-config generators from adding a
+	# per-configuration subdirectory.
+	set_target_properties(_firpm PROPERTIES
+		LIBRARY_OUTPUT_DIRECTORY $<1:${FIRPM_PY_DIR}>)
+	target_compile_definitions(_firpm PRIVATE
+		FIRPM_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+	set(FIRPM_PY_FILES __init__.py _firpm.pyi py.typed)
+	foreach(file ${FIRPM_PY_FILES})
+		configure_file(py/firpm/${file} ${FIRPM_PY_DIR}/${file} COPYONLY)
+		install(FILES py/firpm/${file} DESTINATION firpm COMPONENT python)
+	endforeach()
+	install(TARGETS _firpm DESTINATION firpm COMPONENT python)
 endif()
 
 
-if( pybind11_FOUND AND Python_FOUND )
-	add_test(NAME PythonTests COMMAND ${Python3_EXECUTABLE} -m pytest test/firpm_tests.py)
+if( FIRPM_BUILD_TESTS AND pybind11_FOUND AND Python_FOUND )
+	# No cache, so that running the tests leaves nothing in the source tree.
+	add_test(NAME PythonTests
+		COMMAND ${Python_EXECUTABLE} -m pytest -p no:cacheprovider
+			${PROJECT_SOURCE_DIR}/test/firpm_tests.py)
+	set_tests_properties(PythonTests PROPERTIES
+		ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/python")
 endif()

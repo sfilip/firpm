@@ -1,0 +1,68 @@
+[build-system]
+requires = ["scikit-build-core>=0.10", "pybind11>=2.10"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "firpm"
+dynamic = ["version"]
+description = "Robust Parks-McClellan FIR filter design"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+dependencies = ["numpy>=1.21"]
+classifiers = [
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering",
+]
+
+[project.urls]
+Homepage = "https://github.com/gsmecher/firpm"
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+cmake.version = ">=3.16"
+build-dir = "build/{wheel_tag}"
+# Only the Python package goes in the wheel, not libfirpm or its headers.
+install.components = ["python"]
+sdist.exclude = [".github", "build"]
+
+# The version lives in CMakeLists.txt; it's the only place to bump it.
+[tool.scikit-build.metadata.version]
+provider = "scikit_build_core.metadata.regex"
+input = "CMakeLists.txt"
+regex = 'VERSION_MAJOR\s+(?P<major>\d+)[\s\S]*?VERSION_MINOR\s+(?P<minor>\d+)[\s\S]*?VERSION_PATCH\s+(?P<patch>\d+)'
+result = "{major}.{minor}.{patch}"
+
+[tool.scikit-build.cmake.define]
+BUILD_SHARED_LIBS = "OFF"
+CMAKE_POSITION_INDEPENDENT_CODE = "ON"
+FIRPM_BUILD_TESTS = "OFF"
+# MPFR is LGPL and needs mpreal.h; leave it out of redistributable wheels.
+CMAKE_DISABLE_FIND_PACKAGE_GMP = "ON"
+CMAKE_DISABLE_FIND_PACKAGE_MPFR = "ON"
+
+[tool.cibuildwheel]
+build-frontend = "build"
+test-extras = ["test"]
+test-command = "pytest {project}/test/firpm_tests.py"
+
+[tool.cibuildwheel.linux]
+before-all = "dnf install -y eigen3-devel"
+
+[[tool.cibuildwheel.overrides]]
+select = "*-musllinux*"
+before-all = "apk add eigen-dev"
+
+[tool.cibuildwheel.macos]
+# AppleClang has no OpenMP; use Homebrew's libomp (delocate vendors it).
+before-all = "brew install libomp eigen"
+environment = { OpenMP_ROOT = "$(brew --prefix libomp)", MACOSX_DEPLOYMENT_TARGET = "14.0" }
+
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]
+before-all = "vcpkg install eigen3:x64-windows"
+environment = { CMAKE_PREFIX_PATH = "$VCPKG_INSTALLATION_ROOT/installed/x64-windows" }

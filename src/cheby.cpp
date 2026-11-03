@@ -286,7 +286,7 @@ namespace pm {
                     }
             }
 
-            std::sort(begin(r), end(r));
+            std::ranges::sort(r);
         } else if(idx == 1) {
             r.push_back(-c[0u] / c[1u]);
         }

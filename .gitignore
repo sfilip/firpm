@@ -26,3 +26,24 @@
 *.exe
 *.out
 *.app
+test/firpmlib_extensive_test
+test/firpmlib_scaling_test
+test/firpmlib_numerics_test
+
+# Python build output
+build/
+dist/
+wheelhouse/
+__pycache__/
+
+# Editors
+*.swp
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+Makefile
+Testing/
+_deps/
+cmake_install.cmake
+test/CTestTestfile.cmake

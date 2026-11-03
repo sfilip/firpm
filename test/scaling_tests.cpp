@@ -15,8 +15,10 @@ using pm::filter_t;
 #ifdef HAVE_MPFR
     #include <unsupported/Eigen/MPRealSupport>
     using types = testing::Types<double, long double, mpfr::mpreal>;
+    template<typename T> constexpr bool is_mpreal = std::is_same_v<T, mpfr::mpreal>;
 #else
     using types = testing::Types<double, long double>;
+    template<typename T> constexpr bool is_mpreal = false;
 #endif
 
 template<typename _T>
@@ -306,9 +308,8 @@ TYPED_TEST(firpm_scaling_test, bandstop100)
     std::vector<T> w = {1.0, 1.0, 1.0};
 
     std::size_t degree = 100;
-#ifdef HAVE_MPFR
     pm::pmoutput_t<T> output1;
-    if(!std::is_same<T, mpfr::mpreal>::value) {
+    if constexpr(!is_mpreal<T>) {
         std::cout << "START Parks-McClellan with uniform initialization\n";
         output1 = firpm<T>(degree * 2u, f, a, w);
         std::cout << "Final Delta     = " << output1.delta << std::endl;
@@ -316,7 +317,6 @@ TYPED_TEST(firpm_scaling_test, bandstop100)
         std::cout << "FINISH Parks-McClellan with uniform initialization\n";
         ASSERT_LT(output1.q, 1e-2);
     }
-#endif
 
     std::cout << "START Parks-McClellan with reference scaling\n";
     auto output2 = firpmRS<T>(degree * 2u, f, a, w);
@@ -334,13 +334,11 @@ TYPED_TEST(firpm_scaling_test, bandstop100)
     ASSERT_LT(output3.q, 1e-2);
     ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
 
-#ifdef HAVE_MPFR
-    if(!std::is_same<T, mpfr::mpreal>::value) {
+    if constexpr(!is_mpreal<T>) {
         std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
         std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
         ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
     }
-#endif
 
 }
 
@@ -352,6 +350,10 @@ TYPED_TEST(firpm_scaling_test, combfir)
     std::vector<T> a = {1.0, 1.0, 0.0, 0.0};
     std::vector<T> w = {1.0, 1.0};
 
+    // From a uniform reference the leveled error of this specification
+    // starts near 1e-21, far below the rounding of the ideal response, so
+    // this case exercises the cancellation-free evaluation of delta and of
+    // the error function in compdelta() and comperror().
     std::size_t degree = 520;
     std::cout << "START Parks-McClellan with uniform initialization\n";
     auto output1 = firpm<T>(degree * 2u, f, a, w);
@@ -463,13 +465,12 @@ TYPED_TEST(firpm_lebesgue_test, lowpass1000)
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-2);
 
-#ifdef HAVE_MPFR
     pm::pmoutput_t<T> output3;
     // takes way too long with the mpfr version of the code to generate
     // the AFP initialization (AFP is meant to be used in conjunction with
     // double/long double versions of the code for filter lengths that
     // are not too high (e.g. < 5000))
-    if(!std::is_same<T, mpfr::mpreal>::value) {
+    if constexpr(!is_mpreal<T>) {
         std::cout << "START Parks-McClellan with AFP\n";
         output3 = firpmAFP<T>(degree * 2u, f, a, w);
         std::cout << "Final Delta     = " << output3.delta << std::endl;
@@ -478,7 +479,6 @@ TYPED_TEST(firpm_lebesgue_test, lowpass1000)
         ASSERT_LT(output3.q, 1e-2);
         ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
     }
-#endif
 }
 
 TYPED_TEST(firpm_lebesgue_test, bandpass60)
@@ -764,10 +764,9 @@ TYPED_TEST(firpm_lebesgue_test, multiband600)
     std::cout << "FINISH Parks-McClellan with reference scaling\n";
     ASSERT_LT(output2.q, 1e-5);
 
-#ifdef HAVE_MPFR
     pm::pmoutput_t<T> output3;
     // idem to lowpass1000
-    if(!std::is_same<T, mpfr::mpreal>::value) {
+    if constexpr(!is_mpreal<T>) {
         std::cout << "START Parks-McClellan with AFP\n";
         output3 = firpmAFP<T>(degree * 2u, f, a, w, 1e-5);
         std::cout << "Final Delta     = " << output3.delta << std::endl;
@@ -776,7 +775,6 @@ TYPED_TEST(firpm_lebesgue_test, multiband600)
         ASSERT_LT(output3.q, 1e-5);
         ASSERT_LE(pm::pmmath::fabs((output2.delta-output3.delta)/output2.delta), 2e-2);
     }
-#endif
 }
 
 TYPED_TEST(firpm_cic_test, cic119) {
@@ -912,7 +910,7 @@ TYPED_TEST(firpm_issues_test, partition1) {
     ASSERT_LT(output1.q, 1e-2);
 
     std::cout << "START Parks-McClellan with reference scaling\n";
-    auto output2 = firpm<T>(degree * 2u + 1u,
+    auto output2 = firpmRS<T>(degree * 2u + 1u,
                             {0.0, 0.0126667, 0.0126667, 0.018, 0.018, 0.021, 0.112333, 1.0},
                             {1.0, 1.00055, 1.00055, 1.00111, 1.00111, 1.00151, 0.0, 0.0},
                             {1, 1, 1, 1});
@@ -923,7 +921,7 @@ TYPED_TEST(firpm_issues_test, partition1) {
     ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
-    auto output3 = firpm<T>(degree * 2u + 1u,
+    auto output3 = firpmAFP<T>(degree * 2u + 1u,
                             {0.0, 0.0126667, 0.0126667, 0.018, 0.018, 0.021, 0.112333, 1.0},
                             {1.0, 1.00055, 1.00055, 1.00111, 1.00111, 1.00151, 0.0, 0.0},
                             {1, 1, 1, 1});
@@ -975,4 +973,162 @@ TYPED_TEST(firpm_issues_test, partition2) {
 
     std::cout << "Iteration count reduction for final filter  RS: " << 1.0 - (double)output2.iter / output1.iter << std::endl;
     std::cout << "Iteration count reduction for final filter AFP: " << 1.0 - (double)output3.iter / output1.iter << std::endl;
+}
+// Reference allocation in pm::uniform(): the per-band counts must sum to the
+// requested size, every band of nonzero width must keep both of its edges and
+// the references must be non-decreasing.  The first case used to hand the
+// narrow fourth band zero references (6 + 6 + 4 already exhausted the 16) and
+// the fill loop then ran off the end of omega.
+TYPED_TEST(firpm_issues_test, uniformallocation)
+{
+#ifdef HAVE_MPFR
+    mpfr::mpreal::set_default_prec(165ul);
+#endif
+    using T = typename TestFixture::T;
+    const T pi = pm::pmmath::const_pi<T>();
+
+    auto makeBands = [&](std::vector<double> const& f) {
+        std::vector<pm::band_t<T>> bands(f.size() / 2u);
+        for(std::size_t i{0u}; i < bands.size(); ++i) {
+            bands[i].start = pi * T(f[2u*i]);
+            bands[i].stop  = pi * T(f[2u*i+1u]);
+            bands[i].space = pm::space_t::FREQ;
+        }
+        return bands;
+    };
+
+    std::vector<std::pair<std::vector<double>, std::size_t>> cases = {
+        {{0.0, 0.23, 0.3, 0.53, 0.6, 0.74, 0.8, 0.8000001}, 16u},   // narrow last band
+        {{0.0, 0.001, 0.1, 1.0}, 12u},                               // narrow first band
+        {{0.0, 0.2, 0.3, 0.5, 0.6, 0.8, 0.9, 0.9}, 14u},             // equal widths, point band
+        {{0.0, 0.4, 0.5, 1.0}, 52u},                                 // plain lowpass
+    };
+    for(auto const& c : cases) {
+        auto bands = makeBands(c.first);
+        std::vector<T> omega;
+        pm::uniform(omega, bands, c.second);
+
+        ASSERT_EQ(omega.size(), c.second);
+        std::size_t total{0u};
+        for(auto const& b : bands) {
+            total += b.xs;
+            if(b.stop > b.start)
+                EXPECT_GE(b.xs, 2u);
+            else
+                EXPECT_EQ(b.xs, 1u);
+        }
+        EXPECT_EQ(total, c.second);
+
+        std::size_t offset{0u};
+        for(auto const& b : bands) {
+            EXPECT_EQ(omega[offset], b.start);
+            EXPECT_EQ(omega[offset + b.xs - 1u], b.stop);
+            offset += b.xs;
+        }
+        for(std::size_t i{1u}; i < omega.size(); ++i)
+            EXPECT_LE(omega[i-1u], omega[i]);
+    }
+
+    // Degenerate requests are rejected instead of indexing out of range.
+    {
+        auto bands = makeBands({0.1, 0.1, 0.5, 0.5});   // only point bands
+        std::vector<T> omega;
+        EXPECT_THROW(pm::uniform(omega, bands, 4u), std::domain_error);
+    }
+    {
+        auto bands = makeBands({0.0, 0.4, 0.5, 1.0});   // fewer references than edges
+        std::vector<T> omega;
+        EXPECT_THROW(pm::uniform(omega, bands, 3u), std::domain_error);
+    }
+
+    // The same four-band specification end to end.
+    {
+        std::vector<T> f{0.0, 0.23, 0.3, 0.53, 0.6, 0.74, 0.8, 0.8000001};
+        std::vector<T> a{1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
+        std::vector<T> w{1.0, 1.0, 1.0, 1.0};
+        auto output = firpm<T>(28u, f, a, w);
+        ASSERT_EQ(output.h.size(), 29u);
+        ASSERT_LT(output.q, 1e-2);
+    }
+}
+
+// A unity-gain Hilbert transformer on a passband symmetric about pi/2 (scipy's
+// TestRemez.test_hilbert case).  Its error has deg + 3 alternating extrema,
+// one more than the reference holds, and the exchange drops a different band
+// edge from one iteration to the next.  When the last iteration dropped the
+// left edge, the reference's alternation parity flipped and so did the sign
+// of its levelled error; exchange() levelled the final polynomial on the new
+// reference with the previous reference's delta and returned a filter wrong
+// by O(delta) while reporting convergence.  The final filter's amplitude
+// response has to stay within the reported delta of 1 across the passband.
+TYPED_TEST(firpm_issues_test, hilbert_symmetric_passband) {
+#ifdef HAVE_MPFR
+    mpfr::mpreal::set_default_prec(165ul);
+#endif
+    using T = typename TestFixture::T;
+    T pi = pm::pmmath::const_pi<T>();
+    std::vector<T> f{0.2, 0.8};
+    std::vector<T> a{1.0, 1.0};
+    std::vector<T> w{1.0};
+    for (std::size_t numtaps : {11u, 15u, 31u, 12u, 22u}) {
+        for (auto strategy : {pm::init_t::UNIFORM, pm::init_t::AFP}) {
+            auto output = firpm<T>(numtaps - 1u, f, a, w, filter_t::FIR_HILBERT,
+                                   0.01, 4u, strategy);
+            ASSERT_EQ(output.status, pm::status_t::STATUS_SUCCESS);
+            ASSERT_EQ(output.h.size(), numtaps);
+            T dev = 0;
+            for (std::size_t k = 0; k <= 600u; ++k) {
+                T omega = pi * (f[0] + (f[1] - f[0]) * T(k) / T(600));
+                T re = 0, im = 0;
+                for (std::size_t n = 0; n < numtaps; ++n) {
+                    re += output.h[n] * pm::pmmath::cos(omega * T(n));
+                    im -= output.h[n] * pm::pmmath::sin(omega * T(n));
+                }
+                T mag = pm::pmmath::sqrt(re * re + im * im);
+                dev = pm::pmmath::fmax(dev, pm::pmmath::fabs(mag - T(1)));
+            }
+            EXPECT_LT(dev, output.delta * T(1.02))
+                << "numtaps=" << numtaps << " strategy=" << (int)strategy;
+            if (numtaps % 2 == 1)   // type III: the spec's symmetry zeroes the odd taps
+                for (std::size_t n = 1; n < numtaps; n += 2)
+                    EXPECT_LT(pm::pmmath::fabs(output.h[n]), T(1e-10))
+                        << "numtaps=" << numtaps << " tap " << n;
+        }
+    }
+}
+
+// The two designs of scipy's TestRemez.test_compare.  With the default
+// nmax = 4 the per-subinterval proxy placed the extrema about a percent of
+// the ripple width off their true positions, and the exchange converged
+// (q = 0 at eps = 1e-12) on a reference levelled there, with the error
+// peaking 2e-4 relative above delta between the nodes.  The refinement in
+// zoomroot() brings the final filter's peak error down to delta itself.
+TYPED_TEST(firpm_issues_test, nmax4_equiripple) {
+#ifdef HAVE_MPFR
+    mpfr::mpreal::set_default_prec(165ul);
+#endif
+    using T = typename TestFixture::T;
+    T pi = pm::pmmath::const_pi<T>();
+    struct spec { std::size_t n; std::vector<T> f, a, w; double delta; };
+    std::vector<spec> specs = {
+        {11u, {0.0, 0.3, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, 0.0594146860},
+        {20u, {0.0, 0.8, 0.9, 1.0}, {0.0, 0.0, 1.0, 1.0}, {1.0, 1.0}, 0.0590116286},
+    };
+    for (auto const& s : specs) {
+        auto output = firpm<T>(s.n, s.f, s.a, s.w, 1e-12, 4u);
+        ASSERT_EQ(output.status, pm::status_t::STATUS_SUCCESS);
+        EXPECT_LT(pm::pmmath::fabs(output.delta - T(s.delta)), T(2e-10)) << "n=" << s.n;
+        T peak = 0;
+        for (std::size_t b = 0; b < s.w.size(); ++b)
+            for (std::size_t k = 0; k <= 4000u; ++k) {
+                T fr = s.f[2 * b] + (s.f[2 * b + 1] - s.f[2 * b]) * T(k) / T(4000);
+                T omega = pi * fr;
+                // zero-phase amplitude of the linear-phase filter
+                T A = 0;
+                for (std::size_t i = 0; i < output.h.size(); ++i)
+                    A += output.h[i] * pm::pmmath::cos(omega * (T(i) - T(s.n) / 2));
+                peak = pm::pmmath::fmax(peak, pm::pmmath::fabs(A - s.a[2 * b]) * s.w[b]);
+            }
+        EXPECT_LT(peak - output.delta, T(1e-9)) << "n=" << s.n;
+    }
 }

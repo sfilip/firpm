@@ -65,6 +65,19 @@ namespace pm {
         void compc(std::vector<T>& C, T& delta,
                 std::vector<T>& x, std::vector<band_t<T>>& bands);
 
+        /*! Computes the reference data at the current reference set, kept
+        * split as \f$D(x_i)\f$ and \f$(-1)^i / W(x_i)\f$ rather than folded
+        * into \f$C_i = D(x_i) + \delta (-1)^i / W(x_i)\f$ as compc() does, so
+        * that \f$\delta\f$ is not rounded away against \f$D(x_i)\f$
+        * @param[out] D the ideal frequency response values at the reference set
+        * @param[out] S the alternating inverse weights \f$(-1)^i / W(x_i)\f$
+        * @param[in] x the current reference vector
+        * @param[in] bands frequency band information for the ideal filter
+        */
+        template<typename T>
+        void compref(std::vector<T>& D, std::vector<T>& S,
+                std::vector<T>& x, std::vector<band_t<T>>& bands);
+
         /*! Computes the frequency response of the current filter
         * @param[out] Pc the frequency response amplitude value at the current node
         * @param[in] xVal the current frequency node where we do our computation
@@ -93,6 +106,24 @@ namespace pm {
         void comperror(T& error, T const& xVal,
                 T& delta, std::vector<T>& x,
                 std::vector<T>& C, std::vector<T>& w,
+                std::vector<band_t<T>>& bands);
+
+        /*! Computes the approximation error at a given node, with the
+        * reference data split so that the error stays accurate when it is far
+        * below the ideal response (used by the exchange algorithm)
+        * @param[out] error the requested error value
+        * @param[in] xVal the current frequency node where we do our computation
+        * @param[in] delta the current reference error
+        * @param[in] x the current reference set
+        * @param[in] D the ideal frequency response values at the x nodes
+        * @param[in] S the alternating inverse weights \f$(-1)^i / W(x_i)\f$
+        * @param[in] w the barycentric weights
+        * @param[in] bands frequency band information for the ideal filter
+        */
+        template<typename T>
+        void comperror(T& error, T const& xVal,
+                T& delta, std::vector<T>& x,
+                std::vector<T>& D, std::vector<T>& S, std::vector<T>& w,
                 std::vector<band_t<T>>& bands);
 
         /*! The ideal frequency response and weight information at the given frequency
