@@ -6,28 +6,39 @@
 
 #include <algorithm>
 #include <numeric>
+#include <limits>
 
 namespace pm {
+
+    // prod_{j != skip} 2 (x0 - x[j]) as m * 2^e with |m| in [0.5, 1), so the
+    // product cannot leave the exponent range of T however many factors
+    // there are or how small they get.  Serves the weights and the first
+    // barycentric form's denominator.
+    template<typename T>
+    static void scaledprod(T& m, int& e, T const& x0, T const* x,
+            std::size_t n, std::size_t skip)
+    {
+        m = 1;
+        e = 0;
+        int k;
+        for (std::size_t j = 0; j < n; ++j)
+            if (j != skip) {
+                m = pmmath::frexp(m * ((x0 - x[j]) * 2), &k);
+                e += k;
+            }
+    }
 
     template<typename T>
     void baryweights(std::vector<T>& w,
             std::vector<T>& x)
     {
-        // w[i] = 1 / prod_{j != i} 2 (x[i] - x[j]).  The product can leave
-        // the exponent range of T, so its exponent is carried separately.
+        // w[i] = 1 / prod_{j != i} 2 (x[i] - x[j])
         #pragma omp parallel for
         for(std::ptrdiff_t i = 0; i < std::ssize(x); ++i)
         {
-            T m = 1;
-            int e = 0;
-            for(std::ptrdiff_t j = 0; j < std::ssize(x); ++j)
-            {
-                if (j != i) {
-                    int k;
-                    m = pmmath::frexp(m * ((x[i] - x[j]) * 2), &k);
-                    e += k;
-                }
-            }
+            T m;
+            int e;
+            scaledprod(m, e, x[i], x.data(), x.size(), i);
             w[i] = pmmath::ldexp(1 / m, -e);
         }
     }
@@ -176,39 +187,88 @@ namespace pm {
         error *= W;
     }
 
-    // Error evaluation for the exchange.  P(xVal) - D = sum_i b_i (C_i - D)
-    // / sum_i b_i with b_i = w_i / (xVal - x_i), since the barycentric
-    // formula reproduces constants; subtracting D inside the sum rather than
-    // from P(xVal) keeps the error accurate when it is far smaller than D.
-    // The reference values C_i = D_i + delta s_i arrive from compref() as D_i
-    // and s_i = (-1)^i / W_i, so that C_i - D = (D_i - D) + delta s_i is
-    // formed without first rounding delta s_i into D_i.
+    // Error evaluation for the exchange.  With b_i = w_i / (xVal - x_i),
+    //
+    //   P(xVal) - D = sum_i b_i (C_i - D) / sum_i b_i            (second form)
+    //               = (l(xVal) / 2) sum_i b_i (C_i - D),          (first form)
+    //   l(x) = prod_j 2 (x - x_j),
+    //
+    // using that the barycentric formula reproduces constants, so D can be
+    // subtracted inside the sum, which keeps the error accurate when it is
+    // far smaller than D.  The reference values C_i = D_i + delta s_i arrive
+    // from compref() as D_i and s_i = (-1)^i / W_i, so that C_i - D =
+    // (D_i - D) + delta s_i is formed without first rounding delta s_i into
+    // D_i.
+    //
+    // The denominator of the second form equals 2 / l(xVal) exactly, but as
+    // a sum it cancels in proportion to the Lebesgue constant of the node
+    // set.  At a poor starting reference (partition1's uniform one, say)
+    // its terms reach 1e9 at stopband points while the total is below
+    // 1e-7, so the quotient was rounding noise and the outcome of the
+    // exchange depended on summation order.  Where the sum falls within
+    // 1e6 eps of its rounding floor the first form is used instead: the
+    // product has no cancellation (Higham 2004: the first form is backward
+    // stable for any nodes).  Elsewhere the sum is accurate and cheaper.
+    //
+    // The numerator cancels too, and where it falls below its own rounding
+    // floor neither form can give the error: the first form then returns
+    // that noise scaled by the Lebesgue function, which at a bad enough
+    // reference (the uniform start of a 2280-tap lowpass, say) grows past
+    // 1e100 and derails the exchange, whereas the second form's
+    // noise-over-noise stays of the order of the data, which the exchange
+    // tolerates.  So the second form is kept for that regime too.
+    //
+    // The sums are accumulated serially on purpose.  The terms alternate
+    // in sign and consecutive terms nearly cancel, so serial accumulation
+    // keeps every partial sum small; a vectorised reduction sums strided
+    // subsets of one sign each to the full magnitude of the terms and
+    // loses the result when it combines them.
     template<typename T>
     void comperror(T& error, T const& xVal,
             T& delta, std::vector<T>& x,
             std::vector<T>& D, std::vector<T>& S, std::vector<T>& w,
             std::vector<band_t<T>>& bands)
     {
-        for (std::size_t i{0u}; i < x.size(); ++i)
-        {
-            if (xVal == x[i]) {
-                error = (i % 2 == 0) ? delta : -delta;
-                return;
-            }
-        }
-
         T Dx, W;
         Dx = W = 0;
         idealvals(Dx, W, xVal, bands);
 
-        T num = 0, denom = 0;
-        for (std::size_t i{0u}; i < x.size(); ++i)
-        {
-            T buff = w[i] / (xVal - x[i]);
-            num += buff * ((D[i] - Dx) + delta * S[i]);
-            denom += buff;
+        const std::size_t n = x.size();
+        const T* xp = x.data();
+        const T* wp = w.data();
+        const T* Dp = D.data();
+        const T* Sp = S.data();
+        T num = 0, sabs = 0, sden = 0, dabs = 0;
+        for (std::size_t i = 0; i < n; ++i) {
+            T b = wp[i] / (xVal - xp[i]);
+            T t = b * ((Dp[i] - Dx) + delta * Sp[i]);
+            num += t;
+            sabs += pmmath::fabs(t);
+            sden += b;
+            dabs += pmmath::fabs(b);
         }
-        error = W * (num / denom);
+
+        const T eps = std::numeric_limits<T>::epsilon();
+        if (pmmath::fabs(sden) > dabs * (eps * 1e6) ||
+                !(pmmath::fabs(num) > sabs * (eps * 64))) {
+            error = W * (num / sden);
+        } else {
+            T m;
+            int e;
+            scaledprod(m, e, xVal, xp, n, n);
+            error = W * pmmath::ldexp(num * m, e - 1);
+        }
+
+        // At a node the sums have an infinite term, so the error is not
+        // finite above but known: +-delta.  A non-finite value from a user
+        // callback also lands here and is passed on unchanged.
+        if (!pmmath::isfinite(error)) {
+            for (std::size_t i{0u}; i < n; ++i)
+                if (xVal == xp[i]) {
+                    error = (i % 2 == 0) ? delta : -delta;
+                    return;
+                }
+        }
     }
 
     /* Template instantiations */
