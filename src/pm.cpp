@@ -53,6 +53,8 @@ namespace pm {
         std::ranges::sort(points);
     }
 
+    // Count the sorted points x per band (x lies within the bands).  A
+    // band may receive none: the search skips as many bands as needed.
     template<typename T>
     void countBand(std::vector<band_t<T>>& cb, std::vector<T>& x)
     {
@@ -61,7 +63,7 @@ namespace pm {
         std::size_t bandIt = 0u;
         for(std::size_t i{0u}; i < x.size(); ++i)
         {
-            while(bandIt < cb.size() && cb[bandIt].stop < x[i])
+            while(bandIt + 1u < cb.size() && cb[bandIt].stop < x[i])
                 bandIt++;
             ++cb[bandIt].xs;
         }
@@ -448,8 +450,7 @@ namespace pm {
         eigenExtrema.clear();
         std::size_t extremaIt{0u};
         std::vector<std::pair<T, T>> alternatingExtrema;
-        T minError = INT_MAX;
-        T maxError = INT_MIN;
+        T minError, maxError;
         T absError;
 
         while (extremaIt < potentialExtrema.size())
@@ -571,6 +572,7 @@ namespace pm {
                 "POSSIBLE CAUSE: nmax too small\n");
         }
 
+        minError = maxError = pmmath::fabs(alternatingExtrema[0].second);
         for (auto& it : alternatingExtrema)
         {
             eigenExtrema.push_back(it.first);
@@ -582,23 +584,7 @@ namespace pm {
         convergenceOrder = (maxError - minError) / maxError;
 
         // update the extrema count in each frequency band
-        std::size_t bIndex{0u};
-        for(std::size_t i{0u}; i < chebyBands.size(); ++i)
-        {
-            chebyBands[i].xs = 0u;
-        }
-        for(auto &it : eigenExtrema)
-        {
-            if(chebyBands[bIndex].start <= it && it <= chebyBands[bIndex].stop)
-            {
-                ++chebyBands[bIndex].xs;
-            }
-            else
-            {
-                ++bIndex;
-                ++chebyBands[bIndex].xs;
-            }
-        }
+        countBand(chebyBands, eigenExtrema);
     #ifdef HAVE_MPFR
         mpfr::mpreal::set_default_prec(prevPrec);
     #endif
