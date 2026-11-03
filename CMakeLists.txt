@@ -59,12 +59,31 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/test)
 #-----------------------------------------------------------------------
 
 if( pybind11_FOUND )
-	pybind11_add_module(pyfirpm py/bindings.cpp)
-    include_directories(${COMMON_INCLUDES} ${EIGEN3_INCLUDE_DIRS})
-	target_link_libraries(pyfirpm PRIVATE firpm)
+	# The extension is the private half of the firpm package. Both halves
+	# are assembled under python/ in the build tree, so it can be imported
+	# from there without installing.
+	set(FIRPM_PY_DIR ${CMAKE_CURRENT_BINARY_DIR}/python/firpm)
+	pybind11_add_module(_firpm py/bindings.cpp)
+    include_directories(${COMMON_INCLUDES})
+	target_link_libraries(_firpm PRIVATE firpm)
+	# The generator expression keeps multi-config generators from adding a
+	# per-configuration subdirectory.
+	set_target_properties(_firpm PROPERTIES
+		LIBRARY_OUTPUT_DIRECTORY $<1:${FIRPM_PY_DIR}>)
+	target_compile_definitions(_firpm PRIVATE
+		FIRPM_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+	set(FIRPM_PY_FILES __init__.py _firpm.pyi py.typed)
+	foreach(file ${FIRPM_PY_FILES})
+		configure_file(py/firpm/${file} ${FIRPM_PY_DIR}/${file} COPYONLY)
+	endforeach()
 endif()
 
 
 if( pybind11_FOUND AND Python_FOUND )
-	add_test(NAME PythonTests COMMAND ${Python3_EXECUTABLE} -m pytest test/firpm_tests.py)
+	# No cache, so that running the tests leaves nothing in the source tree.
+	add_test(NAME PythonTests
+		COMMAND ${Python_EXECUTABLE} -m pytest -p no:cacheprovider
+			${PROJECT_SOURCE_DIR}/test/firpm_tests.py)
+	set_tests_properties(PythonTests PROPERTIES
+		ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}/python")
 endif()
