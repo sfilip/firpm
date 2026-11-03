@@ -906,7 +906,7 @@ TYPED_TEST(firpm_issues_test, partition1) {
     ASSERT_LT(output1.q, 1e-2);
 
     std::cout << "START Parks-McClellan with reference scaling\n";
-    auto output2 = firpm<T>(degree * 2u + 1u,
+    auto output2 = firpmRS<T>(degree * 2u + 1u,
                             {0.0, 0.0126667, 0.0126667, 0.018, 0.018, 0.021, 0.112333, 1.0},
                             {1.0, 1.00055, 1.00055, 1.00111, 1.00111, 1.00151, 0.0, 0.0},
                             {1, 1, 1, 1});
@@ -917,7 +917,7 @@ TYPED_TEST(firpm_issues_test, partition1) {
     ASSERT_LE(pm::pmmath::fabs((output1.delta-output2.delta)/output1.delta), 2e-2);
 
     std::cout << "START Parks-McClellan with AFP\n";
-    auto output3 = firpm<T>(degree * 2u + 1u,
+    auto output3 = firpmAFP<T>(degree * 2u + 1u,
                             {0.0, 0.0126667, 0.0126667, 0.018, 0.018, 0.021, 0.112333, 1.0},
                             {1.0, 1.00055, 1.00055, 1.00111, 1.00111, 1.00151, 0.0, 0.0},
                             {1, 1, 1, 1});
