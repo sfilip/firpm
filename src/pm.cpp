@@ -18,9 +18,6 @@ namespace pm {
     template<typename T>
     using VectorXd = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 
-    // global variable used to detect cycling
-    bool cycle;
-
     template<typename T>
     void chebvand(MatrixXd<T>& A, std::size_t degree,
             std::vector<T>& meshPoints,
@@ -294,11 +291,13 @@ namespace pm {
         }
     }
 
+    // cycle: set by exchange() when the convergence parameter has stalled;
+    // switches the rule for discarding surplus extrema for one iteration
     template<typename T>
     void extrema(status_t& status, T& convergenceOrder,
             T& delta, std::vector<T>& eigenExtrema,
             std::vector<T>& x, std::vector<band_t<T>>& chebyBands,
-            std::size_t Nmax, unsigned long prec)
+            std::size_t Nmax, unsigned long prec, bool& cycle)
     {
     #ifdef HAVE_MPFR
         mpfr_prec_t prevPrec = mpfr::mpreal::get_default_prec();
@@ -614,7 +613,7 @@ namespace pm {
         std::size_t degree = x.size() - 2u;
         std::ranges::sort(x);
         std::vector<T> startX{x};
-        cycle = false;
+        bool cycle = false;
         T qp1 = 0;
         T qp2 = 0;
 
@@ -623,7 +622,7 @@ namespace pm {
         do {
             ++output.iter;
             extrema(output.status, output.q, output.delta,
-                    output.x, startX, chebyBands, Nmax, prec);
+                    output.x, startX, chebyBands, Nmax, prec, cycle);
             startX = output.x;
             if(output.iter == 1u)
                 qp2 = output.q;
