@@ -1051,3 +1051,48 @@ TYPED_TEST(firpm_issues_test, uniformallocation)
         ASSERT_LT(output.q, 1e-2);
     }
 }
+
+// A unity-gain Hilbert transformer on a passband symmetric about pi/2 (scipy's
+// TestRemez.test_hilbert case).  Its error has deg + 3 alternating extrema,
+// one more than the reference holds, and the exchange drops a different band
+// edge from one iteration to the next.  When the last iteration dropped the
+// left edge, the reference's alternation parity flipped and so did the sign
+// of its levelled error; exchange() levelled the final polynomial on the new
+// reference with the previous reference's delta and returned a filter wrong
+// by O(delta) while reporting convergence.  The final filter's amplitude
+// response has to stay within the reported delta of 1 across the passband.
+TYPED_TEST(firpm_issues_test, hilbert_symmetric_passband) {
+#ifdef HAVE_MPFR
+    mpfr::mpreal::set_default_prec(165ul);
+#endif
+    using T = typename TestFixture::T;
+    T pi = pm::pmmath::const_pi<T>();
+    std::vector<T> f{0.2, 0.8};
+    std::vector<T> a{1.0, 1.0};
+    std::vector<T> w{1.0};
+    for (std::size_t numtaps : {11u, 15u, 31u, 12u, 22u}) {
+        for (auto strategy : {pm::init_t::UNIFORM, pm::init_t::AFP}) {
+            auto output = firpm<T>(numtaps - 1u, f, a, w, filter_t::FIR_HILBERT,
+                                   0.01, 4u, strategy);
+            ASSERT_EQ(output.status, pm::status_t::STATUS_SUCCESS);
+            ASSERT_EQ(output.h.size(), numtaps);
+            T dev = 0;
+            for (std::size_t k = 0; k <= 600u; ++k) {
+                T omega = pi * (f[0] + (f[1] - f[0]) * T(k) / T(600));
+                T re = 0, im = 0;
+                for (std::size_t n = 0; n < numtaps; ++n) {
+                    re += output.h[n] * pm::pmmath::cos(omega * T(n));
+                    im -= output.h[n] * pm::pmmath::sin(omega * T(n));
+                }
+                T mag = pm::pmmath::sqrt(re * re + im * im);
+                dev = pm::pmmath::fmax(dev, pm::pmmath::fabs(mag - T(1)));
+            }
+            EXPECT_LT(dev, output.delta * T(1.02))
+                << "numtaps=" << numtaps << " strategy=" << (int)strategy;
+            if (numtaps % 2 == 1)   // type III: the spec's symmetry zeroes the odd taps
+                for (std::size_t n = 1; n < numtaps; n += 2)
+                    EXPECT_LT(pm::pmmath::fabs(output.h[n]), T(1e-10))
+                        << "numtaps=" << numtaps << " tap " << n;
+        }
+    }
+}

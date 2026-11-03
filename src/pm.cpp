@@ -650,12 +650,25 @@ namespace pm {
                 << "a too small value for nmax.\n";
         }
 
+        // The final polynomial is the one levelled on the last reference
+        // output.x.  output.delta is the levelled error extrema() computed
+        // for the reference the last iteration started from, so it is only
+        // an approximation of the levelled error on output.x, and when the
+        // last iteration shifted the reference by one node (the leftmost
+        // extremum dropped, a new one entered on the right) the alternation
+        // parity of the reference flips and so does the sign of delta.
+        // Levelling on output.x with the stale delta then gives a
+        // polynomial of degree deg + 1 that chebcoeffs() aliases into the
+        // lower coefficients, and the returned filter is wrong by O(delta)
+        // although the reported q says it converged.  So compute the
+        // levelled error of output.x itself.
         output.h.resize(degree + 1u);
         std::vector<T> finalC(output.x.size());
         std::vector<T> finalAlpha(output.x.size());
         baryweights(finalAlpha, output.x);
-        T finalDelta = output.delta;
-        output.delta = pmmath::fabs(output.delta);
+        T finalDelta;
+        compdelta(finalDelta, finalAlpha, output.x, chebyBands);
+        output.delta = pmmath::fabs(finalDelta);
         compc(finalC, finalDelta, output.x, chebyBands);
         std::vector<T> finalChebyNodes(degree + 1);
         equipts(finalChebyNodes, degree + 1);
