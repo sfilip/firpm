@@ -4,7 +4,7 @@ project(${PROJECT_NAME_STR})
 # The project version number.
 set(VERSION_MAJOR   0   CACHE STRING "Project major version number.")
 set(VERSION_MINOR   2   CACHE STRING "Project minor version number.")
-set(VERSION_PATCH   1   CACHE STRING "Project patch version number.")
+set(VERSION_PATCH   2   CACHE STRING "Project patch version number.")
 mark_as_advanced(VERSION_MAJOR VERSION_MINOR VERSION_PATCH)
 set(doxy_main_page ${PROJECT_SOURCE_DIR}/README.md)
 
