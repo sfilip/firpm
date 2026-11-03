@@ -1096,3 +1096,39 @@ TYPED_TEST(firpm_issues_test, hilbert_symmetric_passband) {
         }
     }
 }
+
+// The two designs of scipy's TestRemez.test_compare.  With the default
+// nmax = 4 the per-subinterval proxy placed the extrema about a percent of
+// the ripple width off their true positions, and the exchange converged
+// (q = 0 at eps = 1e-12) on a reference levelled there, with the error
+// peaking 2e-4 relative above delta between the nodes.  The refinement in
+// zoomroot() brings the final filter's peak error down to delta itself.
+TYPED_TEST(firpm_issues_test, nmax4_equiripple) {
+#ifdef HAVE_MPFR
+    mpfr::mpreal::set_default_prec(165ul);
+#endif
+    using T = typename TestFixture::T;
+    T pi = pm::pmmath::const_pi<T>();
+    struct spec { std::size_t n; std::vector<T> f, a, w; double delta; };
+    std::vector<spec> specs = {
+        {11u, {0.0, 0.3, 0.5, 1.0}, {1.0, 1.0, 0.0, 0.0}, {1.0, 1.0}, 0.0594146860},
+        {20u, {0.0, 0.8, 0.9, 1.0}, {0.0, 0.0, 1.0, 1.0}, {1.0, 1.0}, 0.0590116286},
+    };
+    for (auto const& s : specs) {
+        auto output = firpm<T>(s.n, s.f, s.a, s.w, 1e-12, 4u);
+        ASSERT_EQ(output.status, pm::status_t::STATUS_SUCCESS);
+        EXPECT_LT(pm::pmmath::fabs(output.delta - T(s.delta)), T(2e-10)) << "n=" << s.n;
+        T peak = 0;
+        for (std::size_t b = 0; b < s.w.size(); ++b)
+            for (std::size_t k = 0; k <= 4000u; ++k) {
+                T fr = s.f[2 * b] + (s.f[2 * b + 1] - s.f[2 * b]) * T(k) / T(4000);
+                T omega = pi * fr;
+                // zero-phase amplitude of the linear-phase filter
+                T A = 0;
+                for (std::size_t i = 0; i < output.h.size(); ++i)
+                    A += output.h[i] * pm::pmmath::cos(omega * (T(i) - T(s.n) / 2));
+                peak = pm::pmmath::fmax(peak, pm::pmmath::fabs(A - s.a[2 * b]) * s.w[b]);
+            }
+        EXPECT_LT(peak - output.delta, T(1e-9)) << "n=" << s.n;
+    }
+}

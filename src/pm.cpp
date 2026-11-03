@@ -293,13 +293,100 @@ namespace pm {
         }
     }
 
+    // Refine an extremum r of the error that the degree-Nmax proxy of a
+    // subinterval located to within `gap`, the width of the proxy's node
+    // gap that holds it.  A proxy of that degree over a whole subinterval
+    // does not resolve a ripple lobe (its Chebyshev tail is about 1e-3 at
+    // Nmax = 4) and places an extremum a percent or so of the lobe's width
+    // off, and the exchange then settles on a reference whose nodes sit
+    // that far off the error's true peaks: |E| there equals delta while the
+    // peaks between the nodes stand above it, and the exchange reports
+    // convergence with the filter short of the minimax optimum by O(1e-4)
+    // relative.  So re-interpolate the error with the same proxy on the
+    // bracket of width `gap` centred on r, as Chebfun's rootfinder
+    // subdivides an interval its proxy does not resolve, and move r to the
+    // root of that proxy's derivative nearest it.  The bracket is accepted
+    // once the proxy's tail coefficients are below `tol` of its largest:
+    // the root of the proxy's derivative is then off by about tol * gap
+    // times delta over the error's second derivative, and the error at
+    // that point is short of the true peak by about tol^2 relative, far
+    // below anything eps can see.  Otherwise the bracket is shrunk and the
+    // proxy rebuilt, a few times at most.  With Nmax = 4 the first bracket
+    // usually resolves the error.  The bracket may cross the subinterval's
+    // ends, which are reference nodes the extrema lie next to, but not the
+    // band edges or the partition points of a band's amplitude, beyond
+    // which the error is not smooth.
+    template<typename T>
+    void zoomroot(T& r, T gap, std::pair<T, T> const& subInterval,
+            std::size_t Nmax, std::vector<T> const& chebyNodes,
+            T& delta, std::vector<T>& x, std::vector<T>& D,
+            std::vector<T>& S, std::vector<T>& w,
+            std::vector<band_t<T>>& chebyBands)
+    {
+        const T tol = 1e-6;
+        const int levels = 3;
+
+        // r may lie a little outside its subinterval: pull it into the
+        // subinterval's band, then between the partition points around it
+        T mid = (subInterval.first + subInterval.second) / 2;
+        T blo = subInterval.first, bhi = subInterval.second;
+        for (auto const& b : chebyBands)
+            if (b.start <= mid && mid <= b.stop) {
+                blo = b.start;
+                bhi = b.stop;
+                r = std::clamp(r, blo, bhi);
+                for (auto const& p : b.part) {
+                    if (p <= r && p > blo) blo = p;
+                    if (p >= r && p < bhi) bhi = p;
+                }
+                break;
+            }
+        std::pair<T, T> dom{std::make_pair(-1.0, 1.0)};
+        for (int level = 0; level < levels; ++level, gap /= 4) {
+            T lo = pmmath::fmax(r - gap / 2, blo);
+            T hi = pmmath::fmin(r + gap / 2, bhi);
+            if (!(lo < hi))
+                return;
+            std::vector<T> zn(Nmax + 1u);
+            chgvar(zn, chebyNodes, lo, hi);
+            zn[0] = hi;
+            zn[Nmax] = lo;
+            std::vector<T> fz(Nmax + 1u);
+            for (std::size_t k{0u}; k < fz.size(); ++k)
+                comperror(fz[k], zn[k], delta, x, D, S, w, chebyBands);
+            std::vector<T> c(Nmax + 1u);
+            chebcoeffs(c, fz);
+            T scale = 0;
+            for (auto const& ck : c)
+                scale = pmmath::fmax(scale, pmmath::fabs(ck));
+            bool resolved = pmmath::fmax(pmmath::fabs(c[Nmax]),
+                    pmmath::fabs(c[Nmax - 1u])) <= tol * scale;
+            std::vector<T> dc(Nmax);
+            diffcoeffs(dc, c);
+            std::vector<T> zr;
+            roots(zr, dc, dom);
+            if (zr.empty())
+                return;
+            chgvar(zr, zr, lo, hi);
+            T best = zr[0];
+            for (auto const& cand : zr)
+                if (pmmath::fabs(cand - r) < pmmath::fabs(best - r))
+                    best = cand;
+            r = std::clamp(best, lo, hi);
+            if (resolved)
+                return;
+        }
+    }
+
     // cycle: set by exchange() when the convergence parameter has stalled;
     // switches the rule for discarding surplus extrema for one iteration
+    // refine: refine the extrema the proxies locate with zoomroot(); costs
+    // about as many error evaluations again as the proxies themselves
     template<typename T>
     void extrema(status_t& status, T& convergenceOrder,
             T& delta, std::vector<T>& eigenExtrema,
             std::vector<T>& x, std::vector<band_t<T>>& chebyBands,
-            std::size_t Nmax, unsigned long prec, bool& cycle)
+            std::size_t Nmax, unsigned long prec, bool& cycle, bool refine)
     {
     #ifdef HAVE_MPFR
         mpfr_prec_t prevPrec = mpfr::mpreal::get_default_prec();
@@ -406,14 +493,31 @@ namespace pm {
 
             // solve the corresponding eigenvalue problem and determine the
             // local extrema situated in the current subinterval
+            // keep roots up to one node gap outside the subinterval too:
+            // an extremum just past a reference node, where the exchange's
+            // extrema lie, can be placed by the proxy on the node's other
+            // side, and discarding it would leave only the node itself as
+            // a candidate.  zoomroot() refines and bounds them.
             std::vector<T> eigenRoots;
-            roots(eigenRoots, dc, dom);
+            T margin = 1 - chebyNodes[1];
+            std::pair<T, T> wdom{std::make_pair(-1 - margin, 1 + margin)};
+            roots(eigenRoots, dc, wdom);
             if(!eigenRoots.empty()) {
                 chgvar(eigenRoots, eigenRoots,
                         subIntervals[i].first, subIntervals[i].second);
-                for (std::size_t j{0u}; j < eigenRoots.size(); ++j)
-                    pExs[i].push_back(std::clamp(eigenRoots[j],
-                            subIntervals[i].first, subIntervals[i].second));
+                for (std::size_t j{0u}; j < eigenRoots.size(); ++j) {
+                    T r = eigenRoots[j];
+                    std::size_t k = 0;
+                    while (k + 1u < Nmax && siCN[k + 1u] > r)
+                        ++k;
+                    if (refine)
+                        zoomroot(r, siCN[k] - siCN[k + 1u], subIntervals[i],
+                                Nmax, chebyNodes, delta, x, D, S, w, chebyBands);
+                    else
+                        r = std::clamp(r, subIntervals[i].first,
+                                subIntervals[i].second);
+                    pExs[i].push_back(r);
+                }
             }
             pExs[i].push_back(subIntervals[i].first);
             pExs[i].push_back(subIntervals[i].second);
@@ -610,13 +714,24 @@ namespace pm {
         T qp1 = 0;
         T qp2 = 0;
 
+        // The proxies' placement of the extrema is refined from the
+        // iteration after the one that brought q under 0.1, which is where
+        // the placement error starts to matter, and no stop on q is taken
+        // from an unrefined iteration: a reference levelled on unrefined
+        // extrema sits off the error's true peaks (see zoomroot()).
+        bool refine = false;
+        bool refined = false;
+
         output.q = 1;
         output.iter = 0u;
         do {
             ++output.iter;
+            refined = refine;
             extrema(output.status, output.q, output.delta,
-                    output.x, startX, chebyBands, Nmax, prec, cycle);
+                    output.x, startX, chebyBands, Nmax, prec, cycle, refine);
             startX = output.x;
+            if(output.q < 0.1 || output.q <= eps)
+                refine = true;
             if(output.iter == 1u)
                 qp2 = output.q;
             else if(output.iter == 2u)
@@ -631,7 +746,7 @@ namespace pm {
             }
             if(output.q > 1.0)
                 break;
-        } while (output.q > eps && output.iter <= 100u);
+        } while ((output.q > eps || !refined) && output.iter <= 100u);
         output.status = status_t::STATUS_SUCCESS;
 
         if(pmmath::isnan(output.delta) || pmmath::isnan(output.q)) {
